@@ -11,6 +11,7 @@ Lightweight DSL for building interactive UIs. This package includes:
 - `lib/incremental.js` (incremental parsing sketch)
 - `tools/` (CLI tools: format, lint, etc.)
 - `DOCS.md` (full documentation)
+- `DOCS-LLM.md` (LLM/agent-optimized authoring profile)
 - `examples/todo-vite/` (unified Vite demo)
 
 ## Quick Start
