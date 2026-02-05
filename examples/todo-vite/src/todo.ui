@@ -1,0 +1,32 @@
+div (class:'app') {
+  h1 {
+    text 'Todo'
+  }
+  p (class:'subtitle') {
+    text 'Built with RDL by TM'
+  }
+  div (class:'input-row') {
+    input (class:'input', value=@draft, placeholder:'Add a todo', !input { onDraft(@event) })
+    button (class:'btn', disabled?=@draft.trim().length==0, !click { addTodo() }) {
+      text 'Add'
+    }
+  }
+  #if (@todos.length == 0) {
+    p (class:'empty') {
+      text 'No todos yet.'
+    }
+  }
+  ul (class:'list') {
+    #for (item, i in @todos) {
+      li (class:'item') {
+        input (type:'checkbox', checked?=@item.done, !click { toggleTodo(@item.id) })
+        span (class=@(item.done ? 'done' : '')) {
+          @item.text
+        }
+        button (class:'delete', !click { removeTodo(@item.id) }) {
+          text 'Delete'
+        }
+      }
+    }
+  }
+}

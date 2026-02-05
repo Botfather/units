@@ -1,0 +1,109 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "RDL",
+  "scopeName": "source.rdl",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#directives" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#keywords" },
+    { "include": "#events" },
+    { "include": "#expressions" },
+    { "include": "#identifiers" },
+    { "include": "#punctuation" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.rdl",
+          "match": "//.*$"
+        }
+      ]
+    },
+    "directives": {
+      "patterns": [
+        {
+          "name": "keyword.control.directive.rdl",
+          "match": "#(if|for|slot|key)\\b"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.single.rdl",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.rdl",
+              "match": "\\\\.'"
+            },
+            {
+              "name": "constant.character.escape.rdl",
+              "match": "\\\\\\\\"
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.rdl",
+          "match": "-?\\d+(?:\\.\\d+)?"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.other.rdl",
+          "match": "\\btext\\b"
+        },
+        {
+          "name": "constant.language.boolean.rdl",
+          "match": "\\b(true|false|null)\\b"
+        }
+      ]
+    },
+    "events": {
+      "patterns": [
+        {
+          "name": "entity.name.function.event.rdl",
+          "match": "!\\w+"
+        },
+        {
+          "name": "entity.name.function.event.rdl",
+          "match": "\\bon:[A-Za-z_][A-Za-z0-9_:-]*"
+        }
+      ]
+    },
+    "expressions": {
+      "patterns": [
+        {
+          "name": "variable.other.readwrite.rdl",
+          "match": "@[A-Za-z_][A-Za-z0-9_.$]*"
+        }
+      ]
+    },
+    "identifiers": {
+      "patterns": [
+        {
+          "name": "entity.name.tag.rdl",
+          "match": "\\b[A-Za-z_][A-Za-z0-9_:.\\-]*\\b"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.definition.rdl",
+          "match": "[(){}\\[\\],:=]"
+        }
+      ]
+    }
+  }
+}

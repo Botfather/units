@@ -1,0 +1,46 @@
+{
+  "name": "rdl",
+  "displayName": "RDL",
+  "description": "Syntax highlighting and snippets for the RDL DSL (.ui).",
+  "version": "0.1.0",
+  "publisher": "rdl",
+  "main": "./extension.js",
+  "activationEvents": ["onLanguage:rdl"],
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "configuration": {
+      "title": "RDL",
+      "properties": {
+        "rdl.formatOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Format .ui files on save."
+        }
+      }
+    },
+    "languages": [
+      {
+        "id": "rdl",
+        "aliases": ["RDL", "rdl"],
+        "extensions": [".ui"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "rdl",
+        "scopeName": "source.rdl",
+        "path": "./syntaxes/rdl.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "rdl",
+        "path": "./snippets/rdl.json"
+      }
+    ]
+  }
+}
