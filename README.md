@@ -1,12 +1,12 @@
-# RDL (Reactive Declarative Layout)
+# Units
 
-Lightweight DSL for interactive UI. This package includes:
-- `lib/parser.js` (O(n), dependency-free)
-- `lib/rdl-print.js` (AST printer & formatter)
-- `lib/react-runtime.js` (React renderer)
-- `lib/custom-renderer.js` (renderer skeleton)
-- `lib/vite-plugin-rdl.js` (Vite build plugin)
-- `lib/vite-plugin-rdl-tools.js` (Vite dev tools: format/tokens/highlight)
+Lightweight DSL for building interactive UIs. This package includes:
+- `lib/units-parser.js` (O(n), dependency-free)
+- `lib/units-print.js` (AST printer & formatter)
+- `lib/units-runtime.js` (React renderer)
+- `lib/units-custom-renderer.js` (renderer skeleton)
+- `lib/vite-plugin-units.js` (Vite build plugin)
+- `lib/vite-plugin-units-tools.js` (Vite dev tools: format/tokens/highlight)
 - `bench.js` (parse benchmark)
 - `lib/incremental.js` (incremental parsing sketch)
 - `tools/` (CLI tools: format, lint, etc.)
@@ -16,8 +16,8 @@ Lightweight DSL for interactive UI. This package includes:
 ## Quick Start
 
 ```js
-import { parseRDL } from "./lib/parser.js";
-import { renderRDL } from "./lib/react-runtime.js";
+import { parseUnits } from "./lib/units-parser.js";
+import { renderUnits } from "./lib/units-runtime.js";
 
 const dsl = `
 App {
@@ -37,8 +37,8 @@ App {
 }
 `;
 
-const ast = parseRDL(dsl);
-const element = renderRDL(ast, {
+const ast = parseUnits(dsl);
+const element = renderUnits(ast, {
   user: { loggedIn: true },
   items: [{ id: 1, name: "One" }, { id: 2, name: "Two" }],
   set: (path, value) => console.log("set", path, value)
@@ -84,7 +84,7 @@ set('selected', @item.id)
 ```
 
 ## React Runtime
-`renderRDL(ast, scope, options)`
+`renderUnits(ast, scope, options)`
 
 - `scope`: shared data model (can include `set`).
 - `options.components`: map of custom components.
@@ -120,36 +120,36 @@ See `examples/todo-vite` for a unified Vite demo (todo list) implemented purely 
 For full docs, see `DOCS.md`.
 
 ## Vite Plugin
-Use `lib/vite-plugin-rdl.js` to load `.ui` files as AST at build time.
+Use `lib/vite-plugin-units.js` to load `.ui` files as AST at build time.
 
 Example:
 ```js
-import rdl from "./lib/vite-plugin-rdl.js";
-export default { plugins: [rdl()] };
+import units from "./lib/vite-plugin-units.js";
+export default { plugins: [units()] };
 ```
 
 TypeScript:
-- `lib/vite-plugin-rdl.d.ts` for plugin typing
+- `lib/vite-plugin-units.d.ts` for plugin typing
 - `lib/ui.d.ts` for importing `.ui` files
 
 ## Syntax Highlighting / Pretty Print
-Use `lib/vite-plugin-rdl-tools.js` to load:
+Use `lib/vite-plugin-units-tools.js` to load:
 - `.ui?format` for pretty-printed source
 - `.ui?tokens` for tokenized output suitable for syntax highlighting
 - `.ui?highlight` for prebuilt HTML spans
 
 TypeScript Support:
-- `lib/vite-plugin-rdl-tools.d.ts` for plugin typing
+- `lib/vite-plugin-units-tools.d.ts` for plugin typing
 
 ## CLI Tools
-The `tools/` directory contains CLI utilities for managing RDL files:
-- `node tools/format-ui.mjs`: Format `.ui` files (wrapper for `tools/rdl-format.mjs`).
-- `node tools/rdl-format.mjs`: Format all `.ui` files in a directory.
-- `node tools/rdl-lint.mjs`: Lint for syntax and formatting consistency.
-- `node tools/rdl-watch.mjs`: Watch and emit AST changes.
+The `tools/` directory contains CLI utilities for managing Units files:
+- `node tools/format-ui.mjs`: Format `.ui` files (wrapper for `tools/units-format.mjs`).
+- `node tools/units-format.mjs`: Format all `.ui` files in a directory.
+- `node tools/units-lint.mjs`: Lint for syntax and formatting consistency.
+- `node tools/units-watch.mjs`: Watch and emit AST changes.
 
 ## VS Code Extension
-See `vscode/rdl-vscode` for a minimal VS Code extension that adds RDL syntax highlighting, snippets, and formatting.
+See `vscode/units-vscode` for a minimal VS Code extension that adds Units syntax highlighting, snippets, and formatting.
 
 ## Contributing
 See `CONTRIBUTING.md` for development workflow and guidelines.

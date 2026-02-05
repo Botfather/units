@@ -1,5 +1,5 @@
 const vscode = require("vscode");
-const { formatRDL, formatRDLRange } = require("./formatter");
+const { formatUnits, formatUnitsRange } = require("./formatter");
 
 function fullRange(document) {
   const lastLine = document.lineAt(document.lineCount - 1);
@@ -7,28 +7,28 @@ function fullRange(document) {
 }
 
 function activate(context) {
-  const provider = vscode.languages.registerDocumentFormattingEditProvider("rdl", {
+  const provider = vscode.languages.registerDocumentFormattingEditProvider("units", {
     provideDocumentFormattingEdits(document) {
-      const formatted = formatRDL(document.getText());
+      const formatted = formatUnits(document.getText());
       return [vscode.TextEdit.replace(fullRange(document), formatted)];
     },
   });
 
-  const rangeProvider = vscode.languages.registerDocumentRangeFormattingEditProvider("rdl", {
+  const rangeProvider = vscode.languages.registerDocumentRangeFormattingEditProvider("units", {
     provideDocumentRangeFormattingEdits(document, range) {
       const start = document.offsetAt(range.start);
       const end = document.offsetAt(range.end);
-      const result = formatRDLRange(document.getText(), start, end);
+      const result = formatUnitsRange(document.getText(), start, end);
       const targetRange = new vscode.Range(document.positionAt(result.start), document.positionAt(result.end));
       return [vscode.TextEdit.replace(targetRange, result.formatted)];
     },
   });
 
   const onSave = vscode.workspace.onWillSaveTextDocument((event) => {
-    if (event.document.languageId !== "rdl") return;
-    const cfg = vscode.workspace.getConfiguration("rdl", event.document.uri);
+    if (event.document.languageId !== "units") return;
+    const cfg = vscode.workspace.getConfiguration("units", event.document.uri);
     if (!cfg.get("formatOnSave", true)) return;
-    const formatted = formatRDL(event.document.getText());
+    const formatted = formatUnits(event.document.getText());
     event.waitUntil(Promise.resolve([vscode.TextEdit.replace(fullRange(event.document), formatted)]));
   });
 

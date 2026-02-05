@@ -1,30 +1,30 @@
 {
-  "RDL Tag Block": {
+  "Units Tag Block": {
     "prefix": "tag",
     "body": ["${1:Tag} (${2:props}) {", "  $0", "}"],
     "description": "Tag with props and children"
   },
-  "RDL Text": {
+  "Units Text": {
     "prefix": "text",
     "body": ["text '${1:Literal}'"],
     "description": "Text node"
   },
-  "RDL Expr": {
+  "Units Expr": {
     "prefix": "expr",
     "body": ["@${1:expr}"],
     "description": "Inline expression"
   },
-  "RDL If": {
+  "Units If": {
     "prefix": "if",
     "body": ["#if (@${1:cond}) {", "  $0", "}"],
     "description": "Conditional block"
   },
-  "RDL For": {
+  "Units For": {
     "prefix": "for",
     "body": ["#for (${1:item}, ${2:i} in @${3:list}) {", "  $0", "}"],
     "description": "Loop block"
   },
-  "RDL Event": {
+  "Units Event": {
     "prefix": "click",
     "body": ["!click { ${1:handler} }"],
     "description": "Event handler"

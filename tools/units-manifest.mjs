@@ -33,7 +33,7 @@ function toRel(from, file) {
 
 const [rootDir, outFile] = process.argv.slice(2);
 if (!rootDir || !outFile) {
-  console.error("Usage: node rdl-manifest.mjs <rootDir> <outFile>");
+  console.error("Usage: node units-manifest.mjs <rootDir> <outFile>");
   process.exit(1);
 }
 

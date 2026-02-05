@@ -1,7 +1,7 @@
-// Minimal, dependency-free parser for RDL.
-// Single-pass, O(n) over input size.
+// Units formatter used by the VS Code extension (CommonJS).
+// This duplicates the parser + printer to avoid runtime deps.
 
-export function parseRDL(input) {
+function parseUnits(input) {
   const s = String(input ?? "");
   const len = s.length;
   let i = 0;
@@ -25,7 +25,6 @@ export function parseRDL(input) {
         i++;
         continue;
       }
-      // line comments: //...
       if (ch === "/" && s[i + 1] === "/") {
         i += 2;
         while (i < len && s[i] !== "\n") i++;
@@ -65,7 +64,6 @@ export function parseRDL(input) {
       const ch = s[i];
       if (!isIdent(ch)) break;
       if (ch === ":") {
-        // If ":" is followed by a value (after optional whitespace), treat as separator.
         let j = i + 1;
         while (j < len && isWS(s[j])) j++;
         if (isValueStart(s[j], j)) break;
@@ -77,7 +75,7 @@ export function parseRDL(input) {
 
   function readString() {
     if (s[i] !== "'") error("Expected string");
-    i++; // skip '
+    i++;
     let out = "";
     while (i < len) {
       const ch = s[i];
@@ -114,8 +112,6 @@ export function parseRDL(input) {
   }
 
   function readExprUntil(delims) {
-    // Read raw expression until encountering a delimiter (one of delims) at depth 0.
-    // This keeps parsing fast and leaves expression semantics to runtime.
     let depthParen = 0;
     let depthBrack = 0;
     let depthBrace = 0;
@@ -123,15 +119,14 @@ export function parseRDL(input) {
     const start = i;
     while (i < len) {
       const ch = s[i];
-      if (ch === "'" ) {
-        // skip strings inside expressions
+      if (ch === "'") {
         i++; while (i < len && s[i] !== "'") {
           if (s[i] === "\\" && i + 1 < len) i += 2; else i++;
         }
         if (s[i] === "'") i++;
         continue;
       }
-      if (ch === "(" ) {
+      if (ch === "(") {
         depthParen++;
         hadParen = true;
       } else if (ch === ")") {
@@ -142,8 +137,7 @@ export function parseRDL(input) {
             continue;
           }
         }
-      }
-      else if (ch === "[") depthBrack++;
+      } else if (ch === "[") depthBrack++;
       else if (ch === "]") depthBrack = Math.max(0, depthBrack - 1);
       else if (ch === "{") depthBrace++;
       else if (ch === "}") depthBrace = Math.max(0, depthBrace - 1);
@@ -151,7 +145,6 @@ export function parseRDL(input) {
       if (depthParen === 0 && depthBrack === 0 && depthBrace === 0) {
         if (delims.includes(ch)) {
           if (ch === ")") {
-            // If followed by chaining, treat ')' as part of the expression.
             let j = i + 1;
             while (j < len && isWS(s[j])) j++;
             const next = s[j];
@@ -170,7 +163,7 @@ export function parseRDL(input) {
 
   function readBracedRaw() {
     if (s[i] !== "{") error("Expected '{' block");
-    i++; // skip '{'
+    i++;
     const start = i;
     let depth = 1;
     while (i < len) {
@@ -186,7 +179,7 @@ export function parseRDL(input) {
       else if (ch === "}") depth--;
       if (depth === 0) {
         const raw = s.slice(start, i).trim();
-        i++; // consume '}'
+        i++;
         return raw;
       }
       i++;
@@ -246,7 +239,6 @@ export function parseRDL(input) {
       const val = parseValue();
       return { kind: val.kind, key, value: val.value, expr: val.expr };
     }
-    // bare boolean true prop (present implies true)
     return { kind: "value", key, value: true };
   }
 
@@ -255,11 +247,8 @@ export function parseRDL(input) {
     while (i < len) {
       skipWS();
       if (i >= len) break;
-      // DEBUG: uncomment to trace
-      // console.log("parsePropsInline at", i, JSON.stringify(s.slice(i, i + 20)));
       const ch = s[i];
       if (stopChars.includes(ch)) break;
-      // Props must start with an identifier or event shorthand.
       if (!(isIdentStart(ch) || ch === "!")) break;
       props.push(parseProp(stopChars));
       skipWS();
@@ -272,7 +261,7 @@ export function parseRDL(input) {
     if (s[i] !== "(") error("Expected '('");
     i++;
     const props = parsePropsInline([")"]);
-    if (s[i] !== ")") error("Expected ')'");
+    if (s[i] !== ")") error("Expected ')' ");
     i++;
     return props;
   }
@@ -298,7 +287,7 @@ export function parseRDL(input) {
     let args = "";
     if (s[i] === "(") {
       i++;
-      const start = i;
+      const startArgs = i;
       let depth = 1;
       while (i < len && depth > 0) {
         const ch = s[i];
@@ -314,7 +303,7 @@ export function parseRDL(input) {
         if (depth === 0) break;
         i++;
       }
-      args = s.slice(start, i).trim();
+      args = s.slice(startArgs, i).trim();
       if (s[i] === ")") i++;
     }
     skipWS();
@@ -349,7 +338,6 @@ export function parseRDL(input) {
       props = parsePropsParen();
       skipWS();
     } else if (s[i] !== "{" && s[i] !== "}" && i < len) {
-      // inline props until '{' or '}' or end
       props = parsePropsInline(["{", "}"]);
       skipWS();
     }
@@ -364,7 +352,6 @@ export function parseRDL(input) {
     if (ch === "#") return parseDirective();
     if (ch === "@") return parseExprNode();
     if (isIdentStart(ch)) {
-      // 'text' keyword or tag
       const save = i;
       const ident = readIdent();
       i = save;
@@ -384,6 +371,105 @@ export function parseRDL(input) {
   return { type: "document", body, start: 0, end: len };
 }
 
-export function parseRDLOrThrow(input) {
-  return parseRDL(input);
+function escapeString(value) {
+  return value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
+
+function printProp(prop) {
+  if (prop.kind === "event") {
+    if (prop.key.startsWith("on:")) return `${prop.key}={ ${prop.expr.raw} }`;
+    return `!${prop.key} { ${prop.expr.raw} }`;
+  }
+  if (prop.kind === "bool") {
+    const raw = prop.expr.raw.startsWith("@") ? prop.expr.raw.slice(1) : prop.expr.raw;
+    return `${prop.key}?=@${raw}`;
+  }
+  if (prop.kind === "expr") {
+    const raw = prop.expr.raw.startsWith("@") ? prop.expr.raw.slice(1) : prop.expr.raw;
+    return `${prop.key}=@${raw}`;
+  }
+  if (prop.kind === "value") {
+    const v = prop.value;
+    if (typeof v === "string") return `${prop.key}:'${escapeString(v)}'`;
+    if (v === null) return `${prop.key}:null`;
+    return `${prop.key}:${String(v)}`;
+  }
+  return "";
+}
+
+const PRINT_WIDTH = Number(process.env.UNITS_PRINT_WIDTH || process.env.RDL_PRINT_WIDTH || 100);
+
+function printNode(node, indent) {
+  const pad = "  ".repeat(indent);
+  if (node.type === "text") return `${pad}text '${escapeString(node.value)}'`;
+  if (node.type === "expr") return `${pad}@${node.value.raw}`;
+  if (node.type === "directive") {
+    const args = node.args ? ` (${node.args})` : "";
+    if (!node.children || node.children.length === 0) return `${pad}#${node.name}${args}`;
+    const inner = node.children.map((n) => printNode(n, indent + 1)).join("\n");
+    return `${pad}#${node.name}${args} {\n${inner}\n${pad}}`;
+  }
+  if (node.type === "tag") {
+    let props = "";
+    if (node.props && node.props.length) {
+      const parts = node.props.map(printProp);
+      const inline = ` (${parts.join(", ")})`;
+      if ((pad.length + node.name.length + inline.length) > PRINT_WIDTH && parts.length > 1) {
+        const inner = parts.map((p) => `${pad}  ${p}`).join(",\n");
+        props = ` (\n${inner}\n${pad})`;
+      } else {
+        props = inline;
+      }
+    }
+    if (!node.children || node.children.length === 0) return `${pad}${node.name}${props}`;
+    const inner = node.children.map((n) => printNode(n, indent + 1)).join("\n");
+    return `${pad}${node.name}${props} {\n${inner}\n${pad}}`;
+  }
+  return "";
+}
+
+function formatUnits(source) {
+  const ast = parseUnits(source);
+  return ast.body.map((n) => printNode(n, 0)).join("\n") + "\n";
+}
+
+function getLineIndent(source, offset) {
+  const lineStart = source.lastIndexOf("\n", offset - 1) + 1;
+  const line = source.slice(lineStart, offset);
+  const match = line.match(/^[ \t]*/);
+  return match ? match[0] : "";
+}
+
+function findSmallestNode(ast, startOffset, endOffset) {
+  let best = null;
+  function visit(node) {
+    if (!node || node.start == null || node.end == null) return;
+    if (node.start <= startOffset && node.end >= endOffset) {
+      if (!best || (node.end - node.start) < (best.end - best.start)) best = node;
+      if (node.children) node.children.forEach(visit);
+      if (node.body) node.body.forEach(visit);
+    }
+  }
+  visit(ast);
+  return best;
+}
+
+function formatUnitsRange(source, startOffset, endOffset) {
+  const ast = parseUnits(source);
+  const target = findSmallestNode(ast, startOffset, endOffset);
+  if (!target) {
+    return { formatted: formatUnits(source), start: 0, end: source.length };
+  }
+  if (target.type === "document") {
+    return { formatted: formatUnits(source), start: 0, end: source.length };
+  }
+  const indent = getLineIndent(source, target.start);
+  const printed = printNode(target, 0);
+  const formatted = printed
+    .split("\n")
+    .map((line) => (line.length ? indent + line : line))
+    .join("\n");
+  return { formatted, start: target.start, end: target.end };
+}
+
+module.exports = { formatUnits, formatUnitsRange };

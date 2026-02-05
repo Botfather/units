@@ -1,12 +1,12 @@
-# RDL Documentation
+# Units Documentation
 
-RDL (Reactive Declarative Layout) is a minimal DSL for rendering interactive UI trees with React or a custom renderer. It is designed for fast parsing (single pass, O(n)), low token count, and easy extensibility.
+Units is a minimal DSL for rendering interactive UI trees with React or a custom renderer. It is designed for fast parsing (single pass, O(n)), low token count, and easy extensibility.
 
 ## 1) Quick Start
 
 ```js
-import { parseRDL } from "./lib/parser.js";
-import { renderRDL } from "./lib/react-runtime.js";
+import { parseUnits } from "./lib/units-parser.js";
+import { renderUnits } from "./lib/units-runtime.js";
 
 const dsl = `
 App {
@@ -26,8 +26,8 @@ App {
 }
 `;
 
-const ast = parseRDL(dsl);
-const element = renderRDL(ast, {
+const ast = parseUnits(dsl);
+const element = renderUnits(ast, {
   user: { loggedIn: true },
   items: [{ id: 1, name: "One" }, { id: 2, name: "Two" }],
   set: (path, value) => console.log("set", path, value),
@@ -108,7 +108,7 @@ on:input={ set(text:=event.target.value) }
 ## 5) Rendering Model
 
 ### 5.1 React Renderer
-`renderRDL(ast, scope, options)`
+`renderUnits(ast, scope, options)`
 
 - `scope`: data model; can include `set`.
 - `options.components`: map tag names to React components.
@@ -130,7 +130,7 @@ const host = {
 
 ## 6) Data Binding
 
-RDL uses one-way bindings by default for performance. For interactivity, use event handlers:
+Units uses one-way bindings by default for performance. For interactivity, use event handlers:
 
 ```
 !click { set(selected:=@item.id) }
@@ -176,7 +176,7 @@ Expressions are raw JS evaluated with `Function` and `with`. This is powerful bu
 
 ## 11) Error Handling
 
-The parser throws an error with a character offset and a snippet of context. You can wrap `parseRDL` and surface friendly errors.
+The parser throws an error with a character offset and a snippet of context. You can wrap `parseUnits` and surface friendly errors.
 
 ## 12) Demo App
 
@@ -188,7 +188,7 @@ This demo renders a todo list using only `.ui` files for UI structure.
 
 - Keep expressions short and focused.
 - Prefer `#for` + `#key` to keep list rendering stable.
-- Memoize `parseRDL` results.
+- Memoize `parseUnits` results.
 - Provide a controlled `set` function.
 
 ## 14) FAQ

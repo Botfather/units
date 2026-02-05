@@ -1,11 +1,11 @@
 import React from "react";
-import { renderRDL } from "../../../lib/react-runtime.js";
+import { renderUnits } from "../../../lib/units-runtime.js";
 import uiAst from "./todo.ui";
 
 export function App() {
   const [draft, setDraft] = React.useState("");
   const [todos, setTodos] = React.useState([
-    { id: 1, text: "Ship RDL demo", done: false },
+    { id: 1, text: "Ship Units demo", done: false },
     { id: 2, text: "Write docs", done: true },
   ]);
 
@@ -35,5 +35,5 @@ export function App() {
     removeTodo,
   };
 
-  return renderRDL(uiAst, scope);
+  return renderUnits(uiAst, scope);
 }

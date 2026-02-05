@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-  "name": "RDL",
-  "scopeName": "source.rdl",
+  "name": "Units",
+  "scopeName": "source.units",
   "patterns": [
     { "include": "#comments" },
     { "include": "#directives" },
@@ -17,7 +17,7 @@
     "comments": {
       "patterns": [
         {
-          "name": "comment.line.double-slash.rdl",
+          "name": "comment.line.double-slash.units",
           "match": "//.*$"
         }
       ]
@@ -25,7 +25,7 @@
     "directives": {
       "patterns": [
         {
-          "name": "keyword.control.directive.rdl",
+          "name": "keyword.control.directive.units",
           "match": "#(if|for|slot|key)\\b"
         }
       ]
@@ -33,16 +33,16 @@
     "strings": {
       "patterns": [
         {
-          "name": "string.quoted.single.rdl",
+          "name": "string.quoted.single.units",
           "begin": "'",
           "end": "'",
           "patterns": [
             {
-              "name": "constant.character.escape.rdl",
+              "name": "constant.character.escape.units",
               "match": "\\\\.'"
             },
             {
-              "name": "constant.character.escape.rdl",
+              "name": "constant.character.escape.units",
               "match": "\\\\\\\\"
             }
           ]
@@ -52,7 +52,7 @@
     "numbers": {
       "patterns": [
         {
-          "name": "constant.numeric.rdl",
+          "name": "constant.numeric.units",
           "match": "-?\\d+(?:\\.\\d+)?"
         }
       ]
@@ -60,11 +60,11 @@
     "keywords": {
       "patterns": [
         {
-          "name": "keyword.other.rdl",
+          "name": "keyword.other.units",
           "match": "\\btext\\b"
         },
         {
-          "name": "constant.language.boolean.rdl",
+          "name": "constant.language.boolean.units",
           "match": "\\b(true|false|null)\\b"
         }
       ]
@@ -72,11 +72,11 @@
     "events": {
       "patterns": [
         {
-          "name": "entity.name.function.event.rdl",
+          "name": "entity.name.function.event.units",
           "match": "!\\w+"
         },
         {
-          "name": "entity.name.function.event.rdl",
+          "name": "entity.name.function.event.units",
           "match": "\\bon:[A-Za-z_][A-Za-z0-9_:-]*"
         }
       ]
@@ -84,7 +84,7 @@
     "expressions": {
       "patterns": [
         {
-          "name": "variable.other.readwrite.rdl",
+          "name": "variable.other.readwrite.units",
           "match": "@[A-Za-z_][A-Za-z0-9_.$]*"
         }
       ]
@@ -92,7 +92,7 @@
     "identifiers": {
       "patterns": [
         {
-          "name": "entity.name.tag.rdl",
+          "name": "entity.name.tag.units",
           "match": "\\b[A-Za-z_][A-Za-z0-9_:.\\-]*\\b"
         }
       ]
@@ -100,7 +100,7 @@
     "punctuation": {
       "patterns": [
         {
-          "name": "punctuation.definition.rdl",
+          "name": "punctuation.definition.units",
           "match": "[(){}\\[\\],:=]"
         }
       ]

@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for your interest in contributing to RDL.
+Thanks for your interest in contributing to Units.
 
 ## Ways to contribute
 - Report bugs
@@ -13,9 +13,9 @@ Thanks for your interest in contributing to RDL.
 - No dependencies required for the core parser
 
 ## Repo layout
-- `parser.js`: core parser
-- `react-runtime.js`: React renderer
-- `custom-renderer.js`: custom renderer skeleton
+- `lib/units-parser.js`: core parser
+- `lib/units-runtime.js`: React renderer
+- `lib/units-custom-renderer.js`: custom renderer skeleton
 - `tools/`: formatter, linter, manifest/emit tools
 - `examples/`: demos and sample apps
 

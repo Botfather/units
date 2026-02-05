@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { parseRDL } from "../lib/parser.js";
+import { formatUnits } from "../lib/units-print.js";
 
 async function collectUiFiles(entry, isRoot = false) {
   const base = path.basename(entry);
@@ -23,28 +23,30 @@ async function collectUiFiles(entry, isRoot = false) {
   return out;
 }
 
-async function emitAst(file) {
+async function lintFile(file) {
   const src = await fs.readFile(file, "utf-8");
-  const ast = parseRDL(src);
-  const outFile = `${file}.ast.json`;
-  await fs.writeFile(outFile, JSON.stringify(ast), "utf-8");
-  return outFile;
+  const formatted = formatUnits(src);
+  if (formatted !== src) {
+    console.error(`Not formatted: ${file}`);
+    return false;
+  }
+  return true;
 }
 
 const targets = process.argv.slice(2);
 if (targets.length === 0) {
-  console.error("Usage: node rdl-emit.mjs <file-or-dir>...");
+  console.error("Usage: node units-lint.mjs <file-or-dir>...");
   process.exit(1);
 }
 
-let count = 0;
+let ok = true;
 for (const target of targets) {
   const abs = path.resolve(process.cwd(), target);
-const files = await collectUiFiles(abs, true);
+  const files = await collectUiFiles(abs, true);
   for (const file of files) {
-    await emitAst(file);
-    count++;
+    const pass = await lintFile(file);
+    if (!pass) ok = false;
   }
 }
 
-console.log(`Emitted AST for ${count} file(s).`);
+process.exit(ok ? 0 : 1);

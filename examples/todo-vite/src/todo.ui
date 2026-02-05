@@ -3,7 +3,7 @@ div (class:'app') {
     text 'Todo'
   }
   p (class:'subtitle') {
-    text 'Built with RDL by TM'
+    text 'Built with Units'
   }
   div (class:'input-row') {
     input (class:'input', value=@draft, placeholder:'Add a todo', !input { onDraft(@event) })

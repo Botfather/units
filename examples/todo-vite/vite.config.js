@@ -1,8 +1,8 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import rdl from "../../lib/vite-plugin-rdl.js";
-import rdlTools from "../../lib/vite-plugin-rdl-tools.js";
+import units from "../../lib/vite-plugin-units.js";
+import unitsTools from "../../lib/vite-plugin-units-tools.js";
 
 export default defineConfig({
-  plugins: [rdlTools(), rdl(), react()],
+  plugins: [unitsTools(), units(), react()],
 });

@@ -1,20 +1,20 @@
 {
-  "name": "rdl",
-  "displayName": "RDL",
-  "description": "Syntax highlighting and snippets for the RDL DSL (.ui).",
+  "name": "units",
+  "displayName": "Units",
+  "description": "Syntax highlighting and snippets for the Units DSL (.ui).",
   "version": "0.1.0",
-  "publisher": "rdl",
+  "publisher": "units",
   "main": "./extension.js",
-  "activationEvents": ["onLanguage:rdl"],
+  "activationEvents": ["onLanguage:units"],
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": ["Programming Languages"],
   "contributes": {
     "configuration": {
-      "title": "RDL",
+      "title": "Units",
       "properties": {
-        "rdl.formatOnSave": {
+        "units.formatOnSave": {
           "type": "boolean",
           "default": true,
           "description": "Format .ui files on save."
@@ -23,23 +23,23 @@
     },
     "languages": [
       {
-        "id": "rdl",
-        "aliases": ["RDL", "rdl"],
+        "id": "units",
+        "aliases": ["Units", "units"],
         "extensions": [".ui"],
         "configuration": "./language-configuration.json"
       }
     ],
     "grammars": [
       {
-        "language": "rdl",
-        "scopeName": "source.rdl",
-        "path": "./syntaxes/rdl.tmLanguage.json"
+        "language": "units",
+        "scopeName": "source.units",
+        "path": "./syntaxes/units.tmLanguage.json"
       }
     ],
     "snippets": [
       {
-        "language": "rdl",
-        "path": "./snippets/rdl.json"
+        "language": "units",
+        "path": "./snippets/units.json"
       }
     ]
   }

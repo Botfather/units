@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { formatRDL } from "../lib/rdl-print.js";
+import { formatUnits } from "../lib/units-print.js";
 
 async function collectUiFiles(entry, isRoot = false) {
   const base = path.basename(entry);
@@ -25,7 +25,7 @@ async function collectUiFiles(entry, isRoot = false) {
 
 async function formatFile(file) {
   const src = await fs.readFile(file, "utf-8");
-  const formatted = formatRDL(src);
+  const formatted = formatUnits(src);
   if (formatted !== src) {
     await fs.writeFile(file, formatted, "utf-8");
     return true;
@@ -35,7 +35,7 @@ async function formatFile(file) {
 
 const targets = process.argv.slice(2);
 if (targets.length === 0) {
-  console.error("Usage: node rdl-format.mjs <file-or-dir>...");
+  console.error("Usage: node units-format.mjs <file-or-dir>...");
   process.exit(1);
 }
 

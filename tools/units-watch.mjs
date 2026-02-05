@@ -4,7 +4,7 @@ import { spawn } from "node:child_process";
 
 const [rootDir, outFile] = process.argv.slice(2);
 if (!rootDir || !outFile) {
-  console.error("Usage: node rdl-watch.mjs <rootDir> <outFile>");
+  console.error("Usage: node units-watch.mjs <rootDir> <outFile>");
   process.exit(1);
 }
 
@@ -44,8 +44,8 @@ async function rebuild() {
   running = true;
   try {
     const toolsDir = path.resolve(path.dirname(new URL(import.meta.url).pathname));
-    const manifestTool = path.resolve(toolsDir, "rdl-manifest.mjs");
-    const emitTool = path.resolve(toolsDir, "rdl-emit.mjs");
+    const manifestTool = path.resolve(toolsDir, "units-manifest.mjs");
+    const emitTool = path.resolve(toolsDir, "units-emit.mjs");
     await runTool(manifestTool, [rootAbs, outAbs]);
     await runTool(emitTool, [rootAbs]);
   } catch (err) {
