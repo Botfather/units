@@ -19,6 +19,16 @@
     "body": ["#if (@${1:cond}) {", "  $0", "}"],
     "description": "Conditional block"
   },
+  "Units Elif": {
+    "prefix": "elif",
+    "body": ["#elif (@${1:cond}) {", "  $0", "}"],
+    "description": "Conditional block"
+  },
+  "Units Else": {
+    "prefix": "else",
+    "body": ["#else {", "  $0", "}"],
+    "description": "Conditional block"
+  },
   "Units For": {
     "prefix": "for",
     "body": ["#for (${1:item}, ${2:i} in @${3:list}) {", "  $0", "}"],

@@ -16,6 +16,16 @@ div (class:'app') {
       text 'No todos yet.'
     }
   }
+  #elif (@todos.length == 1) {
+    span (class:'count') {
+      @todos.length + ' todo'
+    }
+  }
+  #else {
+    p {
+      text 'Too many todos!'
+    }
+  }
   ul (class:'list') {
     #for (item, i in @todos) {
       li (class:'item') {
