@@ -26,7 +26,7 @@
       "patterns": [
         {
           "name": "keyword.control.directive.units",
-          "match": "#(if|for|slot|key)\\b"
+          "match": "#(if|elif|else|for|slot|key)\\b"
         }
       ]
     },
