@@ -5,6 +5,7 @@ import uiAst from "./chat.ui";
 
 export function App() {
   const [draft, setDraft] = React.useState("");
+  const [theme, setTheme] = React.useState("default");
   const [context] = React.useState({
     customer: "Aarav",
     orderId: "A-1042",
@@ -67,6 +68,10 @@ export function App() {
 
   const onDraft = (event) => setDraft(event.target?.value ?? "");
 
+  React.useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+
   const sendMessage = () => {
     const text = draft.trim();
     if (!text) return;
@@ -83,9 +88,12 @@ export function App() {
 
   const scope = {
     draft,
+    theme,
     messages,
     onDraft,
     sendMessage,
+    setThemeDefault: () => setTheme("default"),
+    setThemeSlate: () => setTheme("slate"),
   };
 
   return renderUnits(uiAst, scope, withShadcnComponents());

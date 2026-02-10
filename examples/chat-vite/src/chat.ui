@@ -22,6 +22,22 @@ div (className:'app') {
         div (className:'subtitle') {
           text 'Embeddable context in @{messages.length} messages'
         }
+        div (className:'header-actions') {
+          Button (
+            size:'sm',
+            variant=@(theme == 'default' ? 'secondary' : 'outline'),
+            onClick=@setThemeDefault
+          ) {
+            text 'Default'
+          }
+          Button (
+            size:'sm',
+            variant=@(theme == 'slate' ? 'secondary' : 'outline'),
+            onClick=@setThemeSlate
+          ) {
+            text 'Slate'
+          }
+        }
       }
     }
     div (className:'thread') {
