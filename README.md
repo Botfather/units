@@ -11,7 +11,9 @@ Lightweight DSL for building interactive UIs. This package includes:
 - `lib/incremental.js` (incremental parsing sketch)
 - `tools/` (CLI tools: format, lint, etc.)
 - `DOCS.md` (full documentation)
-- `examples/todo-vite/` (unified Vite demo)
+- `DOCS-LLM.md` (LLM/agent-optimized authoring profile)
+- `examples/todo-vite/` (todo list demo)
+- `examples/chat-vite/` (chat transcript demo)
 
 ## Quick Start
 
@@ -54,6 +56,7 @@ Tag { children }
 Tag ( props )                 // self-closing if no children
 
 text 'literal'
+text 'Hello @{name}'         // inline interpolation inside text
 @expr                         // inline expression
 
 #if (@cond) { ... }
