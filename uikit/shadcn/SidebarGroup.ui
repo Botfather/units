@@ -1,0 +1,3 @@
+div (className=@('mb-2' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

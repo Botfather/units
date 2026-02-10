@@ -1,0 +1,6 @@
+a (
+  className=@('transition-colors hover:text-foreground' + (props.className ? ' ' + props.className : '')),
+  href=@props.href
+) {
+  #slot (default)
+}

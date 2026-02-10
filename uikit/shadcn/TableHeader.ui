@@ -1,0 +1,3 @@
+thead (className=@('[&_tr]:border-b' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

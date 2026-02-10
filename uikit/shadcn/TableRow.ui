@@ -1,0 +1,3 @@
+tr (className=@('border-b transition-colors hover:bg-muted/50' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

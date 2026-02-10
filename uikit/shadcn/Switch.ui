@@ -1,0 +1,12 @@
+label (className=@('inline-flex items-center gap-2 text-sm' + (props.className ? ' ' + props.className : ''))) {
+  input (
+    type:'checkbox',
+    className:'peer sr-only',
+    checked?=@props.checked,
+    disabled?=@props.disabled,
+    !change { props.onCheckedChange && props.onCheckedChange(@event) }
+  )
+  span (className:'h-6 w-11 rounded-full bg-muted transition-colors peer-checked:bg-primary peer-focus-visible:ring-2 peer-focus-visible:ring-ring')
+  span (className:'-ml-11 block h-5 w-5 translate-x-0 rounded-full bg-background shadow transition-transform peer-checked:translate-x-5')
+  #slot (default)
+}

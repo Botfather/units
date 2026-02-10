@@ -11,7 +11,10 @@ Lightweight DSL for building interactive UIs. This package includes:
 - `lib/incremental.js` (incremental parsing sketch)
 - `tools/` (CLI tools: format, lint, etc.)
 - `DOCS.md` (full documentation)
-- `examples/todo-vite/` (unified Vite demo)
+- `DOCS-LLM.md` (LLM/agent-optimized authoring profile)
+- `examples/todo-vite/` (todo list demo)
+- `examples/chat-vite/` (chat transcript demo)
+- `examples/shadcn-gallery-vite/` (ShadCN gallery demo)
 
 ## Quick Start
 
@@ -54,6 +57,7 @@ Tag { children }
 Tag ( props )                 // self-closing if no children
 
 text 'literal'
+text 'Hello @{name}'         // inline interpolation inside text
 @expr                         // inline expression
 
 #if (@cond) { ... }
@@ -119,6 +123,24 @@ See `examples/todo-vite` for a unified Vite demo (todo list) implemented purely 
 
 For full docs, see `DOCS.md`.
 
+## ShadCN Units UI Kit
+The repo includes a ShadCN-style component library authored in Units DSL at `uikit/shadcn/`.
+
+Quick wiring (React runtime):
+```js
+import { renderUnits } from "./lib/units-runtime.js";
+import { withShadcnComponents } from "./uikit/shadcn/index.js";
+import uiAst from "./app.ui";
+
+const options = withShadcnComponents();
+renderUnits(uiAst, { /* scope */ }, options);
+```
+
+You can also generate a manifest for the `.ui` templates:
+```
+node tools/units-manifest.mjs uikit/shadcn uikit/shadcn-manifest.js
+```
+
 ## Vite Plugin
 Use `lib/vite-plugin-units.js` to load `.ui` files as AST at build time.
 
@@ -146,6 +168,7 @@ The `tools/` directory contains CLI utilities for managing Units files:
 - `node tools/format-ui.mjs`: Format `.ui` files (wrapper for `tools/units-format.mjs`).
 - `node tools/units-format.mjs`: Format all `.ui` files in a directory.
 - `node tools/units-lint.mjs`: Lint for syntax and formatting consistency.
+- `node tools/lint-ui.mjs`: Lint all `.ui` files in `examples/` and `uikit/` (or pass targets).
 - `node tools/units-watch.mjs`: Watch and emit AST changes.
 
 ## VS Code Extension

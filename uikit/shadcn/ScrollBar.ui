@@ -1,0 +1,3 @@
+div (className=@('flex touch-none select-none bg-transparent p-0.5' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

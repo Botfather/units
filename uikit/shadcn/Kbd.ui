@@ -1,0 +1,3 @@
+kbd (className=@('inline-flex h-5 items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-xs' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

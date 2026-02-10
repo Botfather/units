@@ -1,5 +1,6 @@
 import React from "react";
 import { renderUnits } from "../../../lib/units-runtime.js";
+import { withShadcnComponents } from "../../../uikit/shadcn/index.js";
 import uiAst from "./todo.ui";
 
 export function App() {
@@ -8,6 +9,11 @@ export function App() {
     { id: 1, text: "Ship Units demo", done: false },
     { id: 2, text: "Write docs", done: true },
   ]);
+  const [theme, setTheme] = React.useState("default");
+
+  React.useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   const onDraft = (event) => setDraft(event.target?.value ?? "");
 
@@ -29,11 +35,14 @@ export function App() {
   const scope = {
     draft,
     todos,
+    theme,
     onDraft,
     addTodo,
     toggleTodo,
     removeTodo,
+    setThemeDefault: () => setTheme("default"),
+    setThemeSlate: () => setTheme("slate"),
   };
 
-  return renderUnits(uiAst, scope);
+  return renderUnits(uiAst, scope, withShadcnComponents());
 }

@@ -1,0 +1,159 @@
+div (className:'gallery-page') {
+  div (className:'gallery-header') {
+    TypographyH1 {
+      text 'ShadCN Gallery'
+    }
+    TypographyMuted {
+      text 'Units-rendered components, arranged side-by-side.'
+    }
+  }
+  div (className:'gallery-grid') {
+    Card (className:'gallery-card') {
+      CardHeader (className:'gallery-card-header') {
+        CardTitle {
+          text 'Profile'
+        }
+        CardDescription {
+          text 'Compact identity and quick actions.'
+        }
+      }
+      CardContent (className:'gallery-card-content') {
+        div (className:'gallery-row') {
+          Avatar (className:'gallery-avatar') {
+            AvatarFallback {
+              @userInitial
+            }
+          }
+          div (className:'gallery-stack') {
+            TypographyLarge {
+              @user.name
+            }
+            TypographySmall {
+              @user.role
+            }
+          }
+        }
+        div (className:'gallery-chip-row') {
+          Badge (variant:'secondary') {
+            text 'Pro'
+          }
+          Badge (variant:'outline') {
+            text 'Remote'
+          }
+          Badge {
+            text 'Active'
+          }
+        }
+      }
+      CardFooter (className:'gallery-card-footer') {
+        Button (size:'sm') {
+          text 'Message'
+        }
+        Button (variant:'outline', size:'sm') {
+          text 'Follow'
+        }
+      }
+    }
+    Card (className:'gallery-card') {
+      CardHeader (className:'gallery-card-header') {
+        CardTitle {
+          text 'Controls'
+        }
+        CardDescription {
+          text 'Inputs, toggles, and progress.'
+        }
+      }
+      CardContent (className:'gallery-card-content') {
+        div (className:'gallery-stack') {
+          Label (className:'gallery-label') {
+            text 'Email'
+          }
+          Input (value=@email, placeholder:'you@acme.co')
+        }
+        div (className:'gallery-row space-between') {
+          Label (className:'gallery-label') {
+            text 'Notifications'
+          }
+          Switch (checked?=@notifications)
+        }
+        div (className:'gallery-stack') {
+          Label (className:'gallery-label') {
+            text 'Progress'
+          }
+          Progress (value=@progress)
+        }
+        div (className:'gallery-row') {
+          Label (className:'gallery-label') {
+            text 'View'
+          }
+          ToggleGroup {
+            ToggleGroupItem (data-state:'on') {
+              text 'Day'
+            }
+            ToggleGroupItem {
+              text 'Week'
+            }
+            ToggleGroupItem {
+              text 'Month'
+            }
+          }
+        }
+      }
+    }
+    Card (className:'gallery-card') {
+      CardHeader (className:'gallery-card-header') {
+        CardTitle {
+          text 'Stats'
+        }
+        CardDescription {
+          text 'Snapshot of key metrics.'
+        }
+      }
+      CardContent (className:'gallery-card-content') {
+        Tabs {
+          TabsList (className:'gallery-tabs') {
+            TabsTrigger (data-state:'active') {
+              text 'Overview'
+            }
+            TabsTrigger {
+              text 'Activity'
+            }
+          }
+        }
+        Table {
+          TableHeader {
+            TableRow {
+              TableHead {
+                text 'Metric'
+              }
+              TableHead {
+                text 'Value'
+              }
+              TableHead {
+                text 'Trend'
+              }
+            }
+          }
+          TableBody {
+            #for (stat in @stats) {
+              #key (@stat.label)
+              TableRow {
+                TableCell {
+                  @stat.label
+                }
+                TableCell {
+                  @stat.value
+                }
+                TableCell {
+                  Badge (variant:'secondary') {
+                    @stat.trend
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+div (
+  className=@('relative h-4 w-full overflow-hidden rounded-full bg-secondary' + (props.className ? ' ' + props.className : '')),
+  role:'progressbar',
+  aria-valuemin:0,
+  aria-valuemax:100,
+  aria-valuenow=@(props.value || 0)
+) {
+  div (
+    className:'h-full w-full flex-1 bg-primary transition-all',
+    style=@({ width: (props.value || 0) + '%' })
+  )
+}

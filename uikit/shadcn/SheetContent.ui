@@ -1,0 +1,3 @@
+div (className=@('fixed right-0 top-0 z-50 h-full w-3/4 max-w-sm border-l bg-background p-6 shadow-lg' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}
