@@ -1,5 +1,6 @@
 import React from "react";
 import { renderUnits } from "../../../lib/units-runtime.js";
+import { withShadcnComponents } from "../../../uikit/shadcn/index.js";
 import uiAst from "./chat.ui";
 
 export function App() {
@@ -87,5 +88,5 @@ export function App() {
     sendMessage,
   };
 
-  return renderUnits(uiAst, scope);
+  return renderUnits(uiAst, scope, withShadcnComponents());
 }

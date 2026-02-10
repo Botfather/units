@@ -122,6 +122,24 @@ See `examples/todo-vite` for a unified Vite demo (todo list) implemented purely 
 
 For full docs, see `DOCS.md`.
 
+## ShadCN Units UI Kit
+The repo includes a ShadCN-style component library authored in Units DSL at `uikit/shadcn/`.
+
+Quick wiring (React runtime):
+```js
+import { renderUnits } from "./lib/units-runtime.js";
+import { withShadcnComponents } from "./uikit/shadcn/index.js";
+import uiAst from "./app.ui";
+
+const options = withShadcnComponents();
+renderUnits(uiAst, { /* scope */ }, options);
+```
+
+You can also generate a manifest for the `.ui` templates:
+```
+node tools/units-manifest.mjs uikit/shadcn uikit/shadcn-manifest.js
+```
+
 ## Vite Plugin
 Use `lib/vite-plugin-units.js` to load `.ui` files as AST at build time.
 

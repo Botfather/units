@@ -14,3 +14,4 @@ npm run dev
 - WhatsApp-like chat transcript rendered from `src/chat.ui`
 - Embeddable dynamic context chips inside message text
 - Units runtime with reactive scope data
+- ShadCN Units components (Input, Button, Avatar, Badge)

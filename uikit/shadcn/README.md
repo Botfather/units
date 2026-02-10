@@ -10,3 +10,16 @@ Notes:
 Suggested usage:
 - Import a component AST via `units-manifest` and wrap it in a React component.
 - Pass `props` into scope when rendering, and provide slots via `options.slots`.
+
+Helper exports:
+- `uikit/shadcn/index.js` exposes `shadcnComponents` and `withShadcnComponents()` for quick wiring.
+
+Example (React renderer):
+```
+import { renderUnits } from "../lib/units-runtime.js";
+import uiAst from "./app.ui";
+import { withShadcnComponents } from "../uikit/shadcn/index.js";
+
+const options = withShadcnComponents();
+renderUnits(uiAst, { /* scope */ }, options);
+```

@@ -30,6 +30,11 @@ div (className:'app') {
           #key (@msg.id)
           div (className=@(msg.from == 'me' ? 'bubble me' : 'bubble')) {
             div (className:'meta') {
+              Avatar (className:'h-6 w-6 text-xs') {
+                AvatarFallback {
+                  @(msg.name && msg.name[0] ? msg.name[0] : '?')
+                }
+              }
               span (className:'name') {
                 @msg.name
               }
@@ -43,7 +48,7 @@ div (className:'app') {
                   @part.value
                 }
                 #if (@part.kind == 'ctx') {
-                  span (className:'ctx') {
+                  Badge (variant:'secondary', className:'ctx') {
                     @part.label
                     @part.value
                   }
@@ -55,13 +60,8 @@ div (className:'app') {
       }
     }
     div (className:'composer') {
-      input (
-        className:'input',
-        value=@draft,
-        placeholder:'Type a message',
-        !input { onDraft(@event) }
-      )
-      button (className:'send', disabled?=@draft.trim().length==0, !click { sendMessage() }) {
+      Input (className:'input', value=@draft, placeholder:'Type a message', onInput=@onDraft)
+      Button (className:'send', disabled?=@draft.trim().length==0, onClick=@sendMessage) {
         text 'Send'
       }
     }
