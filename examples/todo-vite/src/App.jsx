@@ -1,5 +1,6 @@
 import React from "react";
 import { renderUnits } from "../../../lib/units-runtime.js";
+import { withShadcnComponents } from "../../../uikit/shadcn/index.js";
 import uiAst from "./todo.ui";
 
 export function App() {
@@ -35,5 +36,5 @@ export function App() {
     removeTodo,
   };
 
-  return renderUnits(uiAst, scope);
+  return renderUnits(uiAst, scope, withShadcnComponents());
 }

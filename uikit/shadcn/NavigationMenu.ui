@@ -1,0 +1,3 @@
+nav (className=@('relative z-10 flex max-w-max items-center justify-center' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

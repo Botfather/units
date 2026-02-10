@@ -1,0 +1,3 @@
+div (className=@('max-h-[300px] overflow-y-auto overflow-x-hidden' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

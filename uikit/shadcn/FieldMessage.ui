@@ -1,0 +1,3 @@
+p (className=@('text-sm text-destructive' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

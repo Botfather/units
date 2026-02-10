@@ -1,0 +1,3 @@
+small (className=@('text-sm font-medium leading-none' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

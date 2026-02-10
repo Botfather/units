@@ -1,0 +1,3 @@
+div (className=@('fixed inset-0 z-50 flex flex-col items-end gap-2 p-4' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

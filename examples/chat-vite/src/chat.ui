@@ -1,0 +1,69 @@
+div (className:'app') {
+  div (className:'sidebar') {
+    div (className:'sidebar-header') {
+      text 'Channels'
+    }
+    div (className:'sidebar-item active') {
+      text '# support-hq'
+    }
+    div (className:'sidebar-item') {
+      text '# general'
+    }
+    div (className:'sidebar-item') {
+      text '# help-desk'
+    }
+  }
+  div (className:'main-container') {
+    div (className:'header') {
+      div (className:'header-content') {
+        div (className:'title') {
+          text 'Units Chat'
+        }
+        div (className:'subtitle') {
+          text 'Embeddable context in @{messages.length} messages'
+        }
+      }
+    }
+    div (className:'thread') {
+      div (className:'thread-content') {
+        #for (msg in @messages) {
+          #key (@msg.id)
+          div (className=@(msg.from == 'me' ? 'bubble me' : 'bubble')) {
+            div (className:'meta') {
+              Avatar (className:'h-6 w-6 text-xs') {
+                AvatarFallback {
+                  @(msg.name && msg.name[0] ? msg.name[0] : '?')
+                }
+              }
+              span (className:'name') {
+                @msg.name
+              }
+              span (className:'time') {
+                @msg.time
+              }
+            }
+            p (className:'text') {
+              #for (part in @msg.parts) {
+                #if (@part.kind == 'text') {
+                  @part.value
+                }
+                #if (@part.kind == 'ctx') {
+                  Badge (variant:'secondary', className:'ctx') {
+                    @part.label
+                    @part.value
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    div (className:'composer') {
+      Input (className:'input', value=@draft, placeholder:'Type a message', onInput=@onDraft)
+      Button (className:'send', disabled?=@draft.trim().length==0, onClick=@sendMessage) {
+        text 'Send'
+      }
+    }
+  }
+}

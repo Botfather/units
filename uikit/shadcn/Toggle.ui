@@ -1,0 +1,6 @@
+button (
+  className=@('inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground data-[state=on]:bg-accent' + (props.className ? ' ' + props.className : '')),
+  type:'button'
+) {
+  #slot (default)
+}

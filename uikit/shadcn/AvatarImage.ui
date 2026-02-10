@@ -1,0 +1,1 @@
+img (className=@('aspect-square h-full w-full' + (props.className ? ' ' + props.className : '')))

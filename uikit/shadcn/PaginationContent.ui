@@ -1,0 +1,3 @@
+ul (className=@('flex flex-row items-center gap-1' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

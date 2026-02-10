@@ -11,7 +11,9 @@ Lightweight DSL for building interactive UIs. This package includes:
 - `lib/incremental.js` (incremental parsing sketch)
 - `tools/` (CLI tools: format, lint, etc.)
 - `DOCS.md` (full documentation)
-- `examples/todo-vite/` (unified Vite demo)
+- `DOCS-LLM.md` (LLM/agent-optimized authoring profile)
+- `examples/todo-vite/` (todo list demo)
+- `examples/chat-vite/` (chat transcript demo)
 
 ## Quick Start
 
@@ -54,6 +56,7 @@ Tag { children }
 Tag ( props )                 // self-closing if no children
 
 text 'literal'
+text 'Hello @{name}'         // inline interpolation inside text
 @expr                         // inline expression
 
 #if (@cond) { ... }
@@ -118,6 +121,24 @@ node ./bench.js
 See `examples/todo-vite` for a unified Vite demo (todo list) implemented purely in `.ui` files.
 
 For full docs, see `DOCS.md`.
+
+## ShadCN Units UI Kit
+The repo includes a ShadCN-style component library authored in Units DSL at `uikit/shadcn/`.
+
+Quick wiring (React runtime):
+```js
+import { renderUnits } from "./lib/units-runtime.js";
+import { withShadcnComponents } from "./uikit/shadcn/index.js";
+import uiAst from "./app.ui";
+
+const options = withShadcnComponents();
+renderUnits(uiAst, { /* scope */ }, options);
+```
+
+You can also generate a manifest for the `.ui` templates:
+```
+node tools/units-manifest.mjs uikit/shadcn uikit/shadcn-manifest.js
+```
 
 ## Vite Plugin
 Use `lib/vite-plugin-units.js` to load `.ui` files as AST at build time.

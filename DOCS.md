@@ -59,6 +59,7 @@ Expr       := Raw JS until delimiter
 ```
 
 Expressions are not parsed by the DSL. They are kept as raw strings for the renderer to evaluate.
+Text literals may include inline interpolations using `@{...}`.
 
 ## 4) Syntax Details
 
@@ -72,8 +73,11 @@ Row (gap:8) { Col { text 'A' } Col { text 'B' } }
 ### 4.2 Text
 ```
 text 'Literal text'
+text 'Hello @{user.name}'
 @user.name
 ```
+
+Inline interpolation is supported inside `text` literals via `@{...}`. Each interpolation is evaluated against the current scope and stringified before rendering.
 
 ### 4.3 Props
 ```

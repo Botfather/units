@@ -1,0 +1,3 @@
+code (className=@('relative rounded bg-muted px-1.5 py-1 font-mono text-sm' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

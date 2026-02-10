@@ -6,8 +6,8 @@ div (class:'app') {
     text 'Built with Units'
   }
   div (class:'input-row') {
-    input (class:'input', value=@draft, placeholder:'Add a todo', !input { onDraft(@event) })
-    button (class:'btn', disabled?=@draft.trim().length==0, !click { addTodo() }) {
+    Input (value=@draft, placeholder:'Add a todo', onInput=@onDraft)
+    Button (disabled?=@draft.trim().length==0, onClick=@addTodo) {
       text 'Add'
     }
   }
@@ -19,11 +19,11 @@ div (class:'app') {
   ul (class:'list') {
     #for (item, i in @todos) {
       li (class:'item') {
-        input (type:'checkbox', checked?=@item.done, !click { toggleTodo(@item.id) })
+        Checkbox (checked?=@item.done, onCheckedChange=@(event => toggleTodo(@item.id)))
         span (class=@(item.done ? 'done' : '')) {
           @item.text
         }
-        button (class:'delete', !click { removeTodo(@item.id) }) {
+        Button (variant:'ghost', size:'sm', onClick=@(event => removeTodo(@item.id))) {
           text 'Delete'
         }
       }

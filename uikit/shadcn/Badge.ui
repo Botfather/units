@@ -1,0 +1,9 @@
+span (className=@('inline-flex items-center rounded-full border border-transparent px-2.5 py-0.5 text-xs font-semibold transition-colors' +
+    (props.variant == 'secondary' ? ' bg-secondary text-secondary-foreground' :
+    props.variant == 'destructive' ? ' bg-destructive text-destructive-foreground' :
+    props.variant == 'outline' ? ' border-border text-foreground' :
+    ' bg-primary text-primary-foreground') +
+    (props.className ? ' ' + props.className : '')
+  )) {
+  #slot (default)
+}
