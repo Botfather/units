@@ -22,6 +22,22 @@ div (className:'app') {
         div (className:'subtitle') {
           text 'Embeddable context in @{messages.length} messages'
         }
+        div (className:'header-actions') {
+          Button (
+            size:'sm',
+            variant=@(theme == 'default' ? 'secondary' : 'outline'),
+            onClick=@setThemeDefault
+          ) {
+            text 'Default'
+          }
+          Button (
+            size:'sm',
+            variant=@(theme == 'slate' ? 'secondary' : 'outline'),
+            onClick=@setThemeSlate
+          ) {
+            text 'Slate'
+          }
+        }
       }
     }
     div (className:'thread') {
@@ -42,15 +58,47 @@ div (className:'app') {
                 @msg.time
               }
             }
-            p (className:'text') {
-              #for (part in @msg.parts) {
-                #if (@part.kind == 'text') {
-                  @part.value
-                }
-                #if (@part.kind == 'ctx') {
-                  Badge (variant:'secondary', className:'ctx') {
-                    @part.label
+            div (className:'bubble-body') {
+              div (className:'text') {
+                #for (part in @msg.parts) {
+                  #if (@part.kind == 'text') {
                     @part.value
+                  }
+                  #if (@part.kind == 'ctx') {
+                    Badge (variant:'secondary', className:'ctx') {
+                      @part.label
+                      @part.value
+                    }
+                  }
+                }
+              }
+              #for (part in @msg.parts) {
+                #if (@part.kind == 'units') {
+                  div (className=@(part.interactive == false ? 'units-embed readonly' : 'units-embed')) {
+                    div (className:'units-content') {
+                      UnitsBubble (
+                        dsl=@part.value,
+                        fallback=@part.value,
+                        scope=@part.scope,
+                        actions=@part.actions,
+                        interactive?=@part.interactive
+                      )
+                    }
+                  }
+                }
+              }
+            }
+            #if (@msg.parts && msg.parts.some(p => p.kind == 'units')) {
+              div (className:'bubble-actions') {
+                #for (part in @msg.parts) {
+                  #if (@part.kind == 'units') {
+                    Button (
+                      size:'sm',
+                      variant:'outline',
+                      onClick=@(event => openUnitsModal(@part.value, @part.scope, @part.interactive))
+                    ) {
+                      text 'Open view'
+                    }
                   }
                 }
               }
@@ -60,9 +108,37 @@ div (className:'app') {
       }
     }
     div (className:'composer') {
-      Input (className:'input', value=@draft, placeholder:'Type a message', onInput=@onDraft)
+      Textarea (
+        className:'input',
+        value=@draft,
+        placeholder:'Type a message',
+        onInput=@onDraft,
+        onKeyDown=@onDraftKeydown
+      )
       Button (className:'send', disabled?=@draft.trim().length==0, onClick=@sendMessage) {
         text 'Send'
+      }
+    }
+  }
+  #if (@unitsModalOpen) {
+    div (className:'units-modal-backdrop', !click { closeUnitsModal() }) {
+      div (className:'units-modal', !click { @event.stopPropagation() }) {
+        div (className:'units-modal-header') {
+          TypographyH3 {
+            text 'Embedded preview'
+          }
+          Button (size:'sm', variant:'ghost', onClick=@closeUnitsModal) {
+            text 'Close'
+          }
+        }
+        div (className:'units-modal-body') {
+          UnitsBubble (
+            dsl=@unitsModalDsl,
+            fallback=@unitsModalDsl,
+            scope=@unitsModalScope,
+            interactive?=@unitsModalInteractive
+          )
+        }
       }
     }
   }

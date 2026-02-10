@@ -1,9 +1,29 @@
 div (class:'app') {
-  h1 {
-    text 'Todo'
-  }
-  p (class:'subtitle') {
-    text 'Built with Units'
+  div (class:'header-row') {
+    div (class:'title-stack') {
+      h1 {
+        text 'Todo'
+      }
+      p (class:'subtitle') {
+        text 'Built with Units'
+      }
+    }
+    div (class:'theme-switch') {
+      Button (
+        size:'sm',
+        variant=@(theme == 'default' ? 'secondary' : 'outline'),
+        onClick=@setThemeDefault
+      ) {
+        text 'Default'
+      }
+      Button (
+        size:'sm',
+        variant=@(theme == 'slate' ? 'secondary' : 'outline'),
+        onClick=@setThemeSlate
+      ) {
+        text 'Slate'
+      }
+    }
   }
   div (class:'input-row') {
     Input (value=@draft, placeholder:'Add a todo', onInput=@onDraft)

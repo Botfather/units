@@ -14,6 +14,7 @@ Lightweight DSL for building interactive UIs. This package includes:
 - `DOCS-LLM.md` (LLM/agent-optimized authoring profile)
 - `examples/todo-vite/` (todo list demo)
 - `examples/chat-vite/` (chat transcript demo)
+- `examples/shadcn-gallery-vite/` (ShadCN gallery demo)
 
 ## Quick Start
 
@@ -167,6 +168,7 @@ The `tools/` directory contains CLI utilities for managing Units files:
 - `node tools/format-ui.mjs`: Format `.ui` files (wrapper for `tools/units-format.mjs`).
 - `node tools/units-format.mjs`: Format all `.ui` files in a directory.
 - `node tools/units-lint.mjs`: Lint for syntax and formatting consistency.
+- `node tools/lint-ui.mjs`: Lint all `.ui` files in `examples/` and `uikit/` (or pass targets).
 - `node tools/units-watch.mjs`: Watch and emit AST changes.
 
 ## VS Code Extension
