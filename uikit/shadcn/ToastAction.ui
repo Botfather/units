@@ -1,0 +1,6 @@
+button (
+  className=@('inline-flex h-8 items-center justify-center rounded-md border border-input bg-background px-3 text-sm font-medium' + (props.className ? ' ' + props.className : '')),
+  type:'button'
+) {
+  #slot (default)
+}

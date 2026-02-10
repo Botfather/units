@@ -1,0 +1,3 @@
+h3 (className=@('text-2xl font-semibold leading-none tracking-tight' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

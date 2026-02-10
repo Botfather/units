@@ -1,0 +1,3 @@
+div (className=@(props.className || '')) {
+  #slot (default)
+}

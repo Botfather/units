@@ -1,0 +1,3 @@
+div (className=@('relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

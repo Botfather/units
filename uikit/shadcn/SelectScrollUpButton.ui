@@ -1,0 +1,6 @@
+button (
+  className=@('flex w-full items-center justify-center py-1' + (props.className ? ' ' + props.className : '')),
+  type:'button'
+) {
+  #slot (default)
+}

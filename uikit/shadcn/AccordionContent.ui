@@ -1,0 +1,5 @@
+div (className=@('overflow-hidden text-sm transition-all' + (props.className ? ' ' + props.className : ''))) {
+  div (className:'pb-4 pt-0') {
+    #slot (default)
+  }
+}

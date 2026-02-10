@@ -1,0 +1,3 @@
+label (className=@('text-sm font-medium' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

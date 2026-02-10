@@ -1,0 +1,6 @@
+nav (
+  className=@('flex w-full justify-center' + (props.className ? ' ' + props.className : '')),
+  aria-label:'pagination'
+) {
+  #slot (default)
+}

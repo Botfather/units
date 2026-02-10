@@ -1,0 +1,3 @@
+nav (className=@('flex' + (props.className ? ' ' + props.className : '')), aria-label:'breadcrumb') {
+  #slot (default)
+}

@@ -1,0 +1,6 @@
+button (
+  className=@('inline-flex w-full items-center justify-between' + (props.className ? ' ' + props.className : '')),
+  type:'button'
+) {
+  #slot (default)
+}

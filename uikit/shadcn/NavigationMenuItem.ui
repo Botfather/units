@@ -1,0 +1,3 @@
+li (className=@('relative' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

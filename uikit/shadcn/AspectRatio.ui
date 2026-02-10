@@ -1,0 +1,6 @@
+div (
+  className=@('relative w-full' + (props.className ? ' ' + props.className : '')),
+  style=@({ aspectRatio: props.ratio || '16 / 9' })
+) {
+  #slot (default)
+}

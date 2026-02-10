@@ -1,0 +1,3 @@
+td (className=@('p-4 align-middle' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

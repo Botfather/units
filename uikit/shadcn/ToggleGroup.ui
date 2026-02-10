@@ -1,0 +1,3 @@
+div (className=@('inline-flex items-center gap-1' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

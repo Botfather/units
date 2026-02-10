@@ -1,0 +1,3 @@
+ol (className=@('flex flex-wrap items-center gap-1.5' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

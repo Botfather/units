@@ -1,0 +1,3 @@
+div (className=@('animate-pulse rounded-md bg-muted' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

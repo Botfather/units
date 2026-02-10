@@ -1,0 +1,3 @@
+li (className=@(props.className || '')) {
+  #slot (default)
+}

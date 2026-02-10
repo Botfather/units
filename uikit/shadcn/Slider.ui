@@ -1,0 +1,12 @@
+div (className=@('relative w-full' + (props.className ? ' ' + props.className : ''))) {
+  input (
+    type:'range',
+    className:'w-full accent-primary',
+    min=@props.min,
+    max=@props.max,
+    step=@props.step,
+    value=@props.value,
+    disabled?=@props.disabled,
+    !input { props.onInput && props.onInput(@event) }
+  )
+}

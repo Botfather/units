@@ -1,0 +1,3 @@
+table (className=@('w-full caption-bottom text-sm' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}

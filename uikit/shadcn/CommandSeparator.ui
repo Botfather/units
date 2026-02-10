@@ -1,0 +1,3 @@
+div (className=@('-mx-1 h-px bg-border' + (props.className ? ' ' + props.className : ''))) {
+  #slot (default)
+}
