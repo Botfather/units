@@ -1,66 +1,64 @@
-div (className:'landing-page') {
+div {
   section (className:'hero') {
-    div (className:'hero-inner') {
-      div (className:'hero-badges') {
-        Badge (variant:'secondary') {
-          text 'Open Source'
-        }
-        Badge (variant:'outline') {
-          text 'MIT License'
-        }
+    div (style=@({display:'flex',gap:8})) {
+      Badge (variant:'secondary') {
+        text 'Open Source'
       }
-      h1 (className:'hero-title') {
-        text 'Units'
-      }
-      p (className:'hero-subtitle') {
-        text 'A Lightweight DSL for Interactive UIs'
-      }
-      p (className:'hero-desc') {
-        text 'Build declarative user interfaces with a minimal, parseable grammar. Single-pass O(n) parsing, zero dependencies, and first-class React support.'
+      Badge (variant:'outline') {
+        text 'MIT License'
       }
     }
+    h1 (className:'hero-title') {
+      text 'Units'
+    }
+    p (className:'hero-subtitle') {
+      text 'A Lightweight DSL for Interactive UIs'
+    }
+    p (className:'lead') {
+      text 'Build declarative user interfaces with a minimal, parseable grammar. Single-pass O(n) parsing, zero dependencies, and first-class React support.'
+    }
   }
-  section (className:'section') {
+  section {
     div (className:'section-header') {
       h2 (className:'section-title') {
         text 'What is Units?'
       }
-      p (className:'section-lead') {
+      p (className:'lead') {
         text 'A purpose-built DSL that compiles to interactive UI trees.'
       }
     }
-    div (className:'about-grid') {
+    div (className:'grid-3') {
       Card {
-        CardHeader (className:'card-hd') {
+        CardHeader {
           CardTitle {
             text 'Declarative UI Language'
           }
         }
-        CardContent (className:'card-ct') {
+        CardContent {
           p (className:'card-text') {
             text 'Units is a domain-specific language designed for describing user interfaces. It provides a clean, minimal syntax for components, props, events, conditionals, and loops, without the complexity of a general-purpose language.'
           }
         }
       }
       Card {
-        CardHeader (className:'card-hd') {
+        CardHeader {
           CardTitle {
             text 'Why Units Exists'
           }
         }
-        CardContent (className:'card-ct') {
+        CardContent {
           p (className:'card-text') {
             text 'Modern UI frameworks embed UI descriptions inside JavaScript. Units takes the opposite approach: a small, focused grammar that is easy to parse, easy to tool, and easy to learn. The result is a UI layer that is fast to compile and simple to reason about.'
           }
         }
       }
       Card {
-        CardHeader (className:'card-hd') {
+        CardHeader {
           CardTitle {
             text 'Design Philosophy'
           }
         }
-        CardContent (className:'card-ct') {
+        CardContent {
           p (className:'card-text') {
             text 'Small grammar. Single-pass O(n) parser. Zero dependencies. AST-first architecture. Every design decision optimizes for simplicity, speed, and extensibility. The parser never looks ahead and never backtracks.'
           }
@@ -69,25 +67,25 @@ div (className:'landing-page') {
     }
   }
   Separator (className:'section-sep')
-  section (className:'section') {
+  section {
     div (className:'section-header') {
       h2 (className:'section-title') {
         text 'Features'
       }
-      p (className:'section-lead') {
+      p (className:'lead') {
         text 'Everything you need to build production UIs with a declarative DSL.'
       }
     }
-    div (className:'features-grid') {
+    div (className:'grid-3') {
       #for (feature in @features) {
         #key (@feature.title)
         Card (className:'feature-card') {
-          CardHeader (className:'card-hd') {
+          CardHeader {
             CardTitle {
               @feature.title
             }
           }
-          CardContent (className:'card-ct') {
+          CardContent {
             p (className:'card-text') {
               @feature.desc
             }
@@ -97,25 +95,25 @@ div (className:'landing-page') {
     }
   }
   Separator (className:'section-sep')
-  section (className:'section') {
+  section {
     div (className:'section-header') {
       h2 (className:'section-title') {
         text 'Syntax'
       }
-      p (className:'section-lead') {
+      p (className:'lead') {
         text 'A small grammar with predictable rules. Learn it in minutes.'
       }
     }
-    div (className:'syntax-grid') {
+    div (className:'grid-2') {
       #for (example in @syntaxExamples) {
         #key (@example.title)
-        Card (className:'syntax-card') {
-          CardHeader (className:'syntax-hd') {
+        Card {
+          CardHeader {
             Badge (variant:'outline') {
               @example.title
             }
           }
-          CardContent (className:'syntax-ct') {
+          CardContent {
             pre (className:'code-block') {
               code (className:'code-text') {
                 @example.code
@@ -127,24 +125,24 @@ div (className:'landing-page') {
     }
   }
   Separator (className:'section-sep')
-  section (className:'section') {
+  section {
     div (className:'section-header') {
       h2 (className:'section-title') {
         text 'Architecture'
       }
-      p (className:'section-lead') {
+      p (className:'lead') {
         text 'From source to screen in three steps.'
       }
     }
-    div (className:'arch-pipeline') {
+    div (className:'grid-3', style=@({gap:24,marginBottom:40})) {
       #for (step in @archSteps) {
         #key (@step.title)
         div (className:'arch-step') {
           div (className:'arch-step-num') {
             @step.number
           }
-          div (className:'arch-step-body') {
-            h3 (className:'arch-step-title') {
+          div (style=@({display:'grid',gap:6})) {
+            h3 {
               @step.title
             }
             p (className:'card-text') {
@@ -154,38 +152,38 @@ div (className:'landing-page') {
         }
       }
     }
-    div (className:'arch-details') {
+    div (className:'grid-3') {
       Card {
-        CardHeader (className:'card-hd') {
+        CardHeader {
           CardTitle {
             text 'Expression Handling'
           }
         }
-        CardContent (className:'card-ct') {
+        CardContent {
           p (className:'card-text') {
             text 'Expressions are raw JavaScript strings sliced from the source. The parser never evaluates them, it only records their boundaries. At runtime, expressions are compiled to functions with cached evaluation for performance.'
           }
         }
       }
       Card {
-        CardHeader (className:'card-hd') {
+        CardHeader {
           CardTitle {
             text 'Slot System'
           }
         }
-        CardContent (className:'card-ct') {
+        CardContent {
           p (className:'card-text') {
             text 'Named slots allow components to accept projected content. The #slot directive defines insertion points, and the runtime resolves them from the options map. Default slot content is supported as a fallback.'
           }
         }
       }
       Card {
-        CardHeader (className:'card-hd') {
+        CardHeader {
           CardTitle {
             text 'Host Renderer API'
           }
         }
-        CardContent (className:'card-ct') {
+        CardContent {
           p (className:'card-text') {
             text 'The custom renderer requires just three hooks: element(), text(), and fragment(). Implement these to target any output, React, DOM, native, canvas, or static HTML.'
           }
@@ -194,23 +192,25 @@ div (className:'landing-page') {
     }
   }
   Separator (className:'section-sep')
-  section (className:'section') {
+  section {
     div (className:'section-header') {
       h2 (className:'section-title') {
         text 'Why Units?'
       }
-      p (className:'section-lead') {
+      p (className:'lead') {
         text 'Built for teams that value performance, clarity, and control.'
       }
     }
-    div (className:'benefits-grid') {
+    div (className:'grid-3') {
       #for (benefit in @benefits) {
         #key (@benefit.title)
-        Card (className:'benefit-card') {
-          CardContent (className:'benefit-ct') {
-            h3 (className:'benefit-title') {
+        Card {
+          CardHeader {
+            CardTitle {
               @benefit.title
             }
+          }
+          CardContent {
             p (className:'card-text') {
               @benefit.desc
             }
@@ -221,10 +221,10 @@ div (className:'landing-page') {
   }
   Separator (className:'section-sep')
   footer (className:'site-footer') {
-    p (className:'footer-text') {
+    p (className:'lead') {
       text 'Units is open source software released under the MIT License.'
     }
-    p (className:'footer-closing') {
+    p (className:'card-text') {
       text 'Build better UIs with less complexity.'
     }
   }
