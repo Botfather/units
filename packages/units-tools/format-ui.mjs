@@ -1,6 +1,7 @@
+#!/usr/bin/env node
 import fs from "node:fs/promises";
 import path from "node:path";
-import { formatUnits } from "./units-print.mjs";
+import { formatUnits } from "@botfather/units/print";
 
 async function collectUiFiles(entry, isRoot = false) {
   const base = path.basename(entry);

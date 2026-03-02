@@ -1,0 +1,34 @@
+{
+  "name": "@botfather/vite-plugin-units",
+  "version": "0.1.0",
+  "description": "Vite plugin for loading Units .ui files as AST.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Botfather/units.git",
+    "directory": "packages/vite-plugin-units"
+  },
+  "homepage": "https://github.com/Botfather/units/tree/main/packages/vite-plugin-units",
+  "bugs": {
+    "url": "https://github.com/Botfather/units/issues"
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts"
+  ],
+  "dependencies": {
+    "@botfather/units": "^0.1.0"
+  },
+  "peerDependencies": {
+    "vite": ">=4"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

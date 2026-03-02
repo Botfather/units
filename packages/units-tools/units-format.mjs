@@ -1,6 +1,7 @@
+#!/usr/bin/env node
 import fs from "node:fs/promises";
 import path from "node:path";
-import { formatUnits } from "../lib/units-print.js";
+import { formatUnits } from "@botfather/units/print";
 
 async function collectUiFiles(entry, isRoot = false) {
   const base = path.basename(entry);
@@ -23,30 +24,30 @@ async function collectUiFiles(entry, isRoot = false) {
   return out;
 }
 
-async function lintFile(file) {
+async function formatFile(file) {
   const src = await fs.readFile(file, "utf-8");
   const formatted = formatUnits(src);
   if (formatted !== src) {
-    console.error(`Not formatted: ${file}`);
-    return false;
+    await fs.writeFile(file, formatted, "utf-8");
+    return true;
   }
-  return true;
+  return false;
 }
 
 const targets = process.argv.slice(2);
 if (targets.length === 0) {
-  console.error("Usage: node units-lint.mjs <file-or-dir>...");
+  console.error("Usage: node units-format.mjs <file-or-dir>...");
   process.exit(1);
 }
 
-let ok = true;
+let changed = 0;
 for (const target of targets) {
   const abs = path.resolve(process.cwd(), target);
   const files = await collectUiFiles(abs, true);
   for (const file of files) {
-    const pass = await lintFile(file);
-    if (!pass) ok = false;
+    const didChange = await formatFile(file);
+    if (didChange) changed++;
   }
 }
 
-process.exit(ok ? 0 : 1);
+console.log(`Formatted ${changed} file(s).`);

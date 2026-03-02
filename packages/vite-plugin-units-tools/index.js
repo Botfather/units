@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { formatUnits } from "./units-print.js";
+import { formatUnits } from "@botfather/units/print";
 
 function tokenizeUnits(input) {
   const s = String(input ?? "");
@@ -98,6 +98,10 @@ export default function unitsTools(options = {}) {
   const exclude = options.exclude;
   const classPrefix = options.classPrefix || "";
 
+  function isRelOrAbs(id) {
+    return id.startsWith(".") || id.startsWith("/");
+  }
+
   function isAllowed(id) {
     if (!id.endsWith(".ui")) return false;
     if (include && !include.test(id)) return false;
@@ -108,11 +112,16 @@ export default function unitsTools(options = {}) {
   return {
     name: "units-tools",
     enforce: "pre",
-    resolveId(source, importer) {
+    async resolveId(source, importer) {
       if (source.endsWith(".ui?format") || source.endsWith(".ui?tokens") || source.endsWith(".ui?highlight")) {
         const base = source.replace(/\?.*$/, "");
-        const resolved = importer ? path.resolve(path.dirname(importer), base) : path.resolve(base);
-        return resolved + source.slice(base.length);
+        if (isRelOrAbs(base)) {
+          const resolved = importer ? path.resolve(path.dirname(importer), base) : path.resolve(base);
+          return resolved + source.slice(base.length);
+        }
+        const resolved = await this.resolve(base, importer, { skipSelf: true });
+        if (!resolved) return null;
+        return resolved.id + source.slice(base.length);
       }
       return null;
     },

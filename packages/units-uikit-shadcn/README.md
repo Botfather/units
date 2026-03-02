@@ -1,6 +1,6 @@
 # ShadCN Units Library (DSL)
 
-This folder contains Units `.ui` templates modeled after the shadcn/ui component set.
+This package contains Units `.ui` templates modeled after the shadcn/ui component set.
 
 Notes:
 - Each component expects a `props` object in scope (e.g. `{ className: '' }`).
@@ -12,13 +12,13 @@ Suggested usage:
 - Pass `props` into scope when rendering, and provide slots via `options.slots`.
 
 Helper exports:
-- `uikit/shadcn/index.js` exposes `shadcnComponents` and `withShadcnComponents()` for quick wiring.
+- `@botfather/units-uikit-shadcn` exposes `shadcnComponents` and `withShadcnComponents()` for quick wiring.
 
 Example (React renderer):
 ```
-import { renderUnits } from "../lib/units-runtime.js";
+import { renderUnits } from "@botfather/units/runtime";
 import uiAst from "./app.ui";
-import { withShadcnComponents } from "../uikit/shadcn/index.js";
+import { withShadcnComponents } from "@botfather/units-uikit-shadcn";
 
 const options = withShadcnComponents();
 renderUnits(uiAst, { /* scope */ }, options);

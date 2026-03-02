@@ -1,0 +1,22 @@
+App {
+  Header (title:'Tasks')
+  InputRow (
+    value=@draft,
+    placeholder:'Add a task',
+    !input { onDraft(@event) },
+    !submit { addTask() }
+  )
+  #if (@items.length == 0) {
+    text 'No todos yet.'
+  }
+  List {
+    #for (item in @items) {
+      #key (@item.id)
+      TaskRow (
+        item=@item,
+        !toggle { toggleTask(@item.id) },
+        !remove { removeTask(@item.id) }
+      )
+    }
+  }
+}

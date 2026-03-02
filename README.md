@@ -1,15 +1,12 @@
 # Units
 
-Lightweight DSL for building interactive UIs. This package includes:
-- `lib/units-parser.js` (O(n), dependency-free)
-- `lib/units-print.js` (AST printer & formatter)
-- `lib/units-runtime.js` (React renderer)
-- `lib/units-custom-renderer.js` (renderer skeleton)
-- `lib/vite-plugin-units.js` (Vite build plugin)
-- `lib/vite-plugin-units-tools.js` (Vite dev tools: format/tokens/highlight)
+Lightweight DSL for building interactive UIs. This monorepo publishes:
+- `@botfather/units` (parser, printer, runtime, custom renderer, incremental sketch)
+- `@botfather/vite-plugin-units` (Vite build plugin)
+- `@botfather/vite-plugin-units-tools` (Vite dev tools: format/tokens/highlight)
+- `@botfather/units-tools` (CLI tools: format, lint, etc.)
+- `@botfather/units-uikit-shadcn` (ShadCN-style Units UI kit)
 - `bench.js` (parse benchmark)
-- `lib/incremental.js` (incremental parsing sketch)
-- `tools/` (CLI tools: format, lint, etc.)
 - `DOCS.md` (full documentation)
 - `DOCS-LLM.md` (LLM/agent-optimized authoring profile)
 - `examples/todo-vite/` (todo list demo)
@@ -19,8 +16,7 @@ Lightweight DSL for building interactive UIs. This package includes:
 ## Quick Start
 
 ```js
-import { parseUnits } from "./lib/units-parser.js";
-import { renderUnits } from "./lib/units-runtime.js";
+import { parseUnits, renderUnits } from "@botfather/units";
 
 const dsl = `
 App {
@@ -96,7 +92,7 @@ set('selected', @item.id)
 - `options.set`: override for `set`.
 
 ## Custom Renderer
-Use `createRenderer(host)` with host hooks:
+Use `createUnitsRenderer(host)` with host hooks:
 ```
 const host = {
   element: (name, props, events, children) => ({ type: name, props, events, children }),
@@ -118,18 +114,31 @@ Feb 5, 2026: 2000 parses in 15.197ms (~0.0075ms/parse) on Node v22.22.0.
 node ./bench.js
 ```
 
+## LLM Benchmark (Token + Quality)
+Offline reference run (estimated tokens):
+```
+npm run bench:llm
+```
+
+Live model run (real usage tokens from API):
+```
+OPENAI_API_KEY=... npm run bench:llm:live
+```
+
+Config lives in `bench/llm-cases.json`, with case files under `bench/cases/`.
+
 ## Demo
 See `examples/todo-vite` for a unified Vite demo (todo list) implemented purely in `.ui` files.
 
 For full docs, see `DOCS.md`.
 
 ## ShadCN Units UI Kit
-The repo includes a ShadCN-style component library authored in Units DSL at `uikit/shadcn/`.
+The repo includes a ShadCN-style component library authored in Units DSL in `packages/units-uikit-shadcn/`.
 
 Quick wiring (React runtime):
 ```js
-import { renderUnits } from "./lib/units-runtime.js";
-import { withShadcnComponents } from "./uikit/shadcn/index.js";
+import { renderUnits } from "@botfather/units/runtime";
+import { withShadcnComponents } from "@botfather/units-uikit-shadcn";
 import uiAst from "./app.ui";
 
 const options = withShadcnComponents();
@@ -138,38 +147,37 @@ renderUnits(uiAst, { /* scope */ }, options);
 
 You can also generate a manifest for the `.ui` templates:
 ```
-node tools/units-manifest.mjs uikit/shadcn uikit/shadcn-manifest.js
+units-manifest packages/units-uikit-shadcn/shadcn packages/units-uikit-shadcn/shadcn-manifest.js
 ```
 
 ## Vite Plugin
-Use `lib/vite-plugin-units.js` to load `.ui` files as AST at build time.
+Use `@botfather/vite-plugin-units` to load `.ui` files as AST at build time.
 
 Example:
 ```js
-import units from "./lib/vite-plugin-units.js";
+import units from "@botfather/vite-plugin-units";
 export default { plugins: [units()] };
 ```
 
 TypeScript:
-- `lib/vite-plugin-units.d.ts` for plugin typing
-- `lib/ui.d.ts` for importing `.ui` files
+- `@botfather/vite-plugin-units` ships its own plugin types.
+- For `.ui` imports, add `/// <reference types="@botfather/units/ui" />` in a global `d.ts` file.
 
 ## Syntax Highlighting / Pretty Print
-Use `lib/vite-plugin-units-tools.js` to load:
+Use `@botfather/vite-plugin-units-tools` to load:
 - `.ui?format` for pretty-printed source
 - `.ui?tokens` for tokenized output suitable for syntax highlighting
 - `.ui?highlight` for prebuilt HTML spans
 
 TypeScript Support:
-- `lib/vite-plugin-units-tools.d.ts` for plugin typing
+- `@botfather/vite-plugin-units-tools` ships its own plugin types.
 
 ## CLI Tools
-The `tools/` directory contains CLI utilities for managing Units files:
-- `node tools/format-ui.mjs`: Format `.ui` files (wrapper for `tools/units-format.mjs`).
-- `node tools/units-format.mjs`: Format all `.ui` files in a directory.
-- `node tools/units-lint.mjs`: Lint for syntax and formatting consistency.
-- `node tools/lint-ui.mjs`: Lint all `.ui` files in `examples/` and `uikit/` (or pass targets).
-- `node tools/units-watch.mjs`: Watch and emit AST changes.
+The `@botfather/units-tools` package provides CLI utilities for managing Units files:
+- `units-format <file-or-dir>`: Format all `.ui` files in a directory.
+- `units-lint <file-or-dir>`: Lint for syntax and formatting consistency.
+- `lint-ui [targets...]`: Lint all `.ui` files in `examples/` and `packages/units-uikit-shadcn/` (or pass targets).
+- `units-watch <rootDir> <outFile>`: Watch and emit AST changes.
 
 ## VS Code Extension
 See `vscode/units-vscode` for a minimal VS Code extension that adds Units syntax highlighting, snippets, and formatting.

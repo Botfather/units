@@ -1,0 +1,29 @@
+[
+  {
+    "id": "todo_list",
+    "prompt": "Create a task list UI with an input row, empty state, and a loop that renders task rows with toggle/remove handlers.",
+    "expectedDslFile": "cases/todo_list.ui",
+    "requiredSnippets": ["#for", "#if", "!toggle", "!remove", "text 'No todos yet.'"],
+    "baselineFiles": {
+      "jsx": "cases/todo_list.jsx"
+    }
+  },
+  {
+    "id": "dashboard_cards",
+    "prompt": "Build an analytics dashboard with a top bar, a grid of stat cards from @cards, and an optional alerts section.",
+    "expectedDslFile": "cases/dashboard_cards.ui",
+    "requiredSnippets": ["#for", "#if", "StatCard", "AlertList"],
+    "baselineFiles": {
+      "jsx": "cases/dashboard_cards.jsx"
+    }
+  },
+  {
+    "id": "chat_thread",
+    "prompt": "Generate a chat screen with a message thread loop, keyed bubbles, and a composer with input and enter handlers.",
+    "expectedDslFile": "cases/chat_thread.ui",
+    "requiredSnippets": ["#for", "#key", "Bubble", "!enter"],
+    "baselineFiles": {
+      "jsx": "cases/chat_thread.jsx"
+    }
+  }
+]

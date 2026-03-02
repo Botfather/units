@@ -1,0 +1,34 @@
+{
+  "name": "@botfather/vite-plugin-units-tools",
+  "version": "0.1.0",
+  "description": "Vite dev tools for Units (.ui) formatting, tokens, and highlighting.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Botfather/units.git",
+    "directory": "packages/vite-plugin-units-tools"
+  },
+  "homepage": "https://github.com/Botfather/units/tree/main/packages/vite-plugin-units-tools",
+  "bugs": {
+    "url": "https://github.com/Botfather/units/issues"
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts"
+  ],
+  "dependencies": {
+    "@botfather/units": "^0.1.0"
+  },
+  "peerDependencies": {
+    "vite": ">=4"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

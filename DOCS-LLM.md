@@ -64,7 +64,7 @@ Prefer `!event { handler(@event) }` over inline logic.
 ## Canonical Formatting
 Run the formatter on every save or commit:
 ```
-node tools/units-format.mjs <file-or-dir>
+units-format <file-or-dir>
 ```
 This normalizes whitespace and prevents accidental drift.
 
@@ -132,10 +132,37 @@ App {
 
 ## Validation Workflow
 Recommended pipeline for agents:
-1) **Parse**: `node tools/units-emit.mjs <file>`
-2) **Format**: `node tools/units-format.mjs <file>`
-3) **Lint**: `node tools/units-lint.mjs <file>`
-4) **AST/manifest watch**: `node tools/units-watch.mjs <rootDir> <outFile>`
+1) **Parse**: `units-emit <file>`
+2) **Format**: `units-format <file>`
+3) **Lint**: `units-lint <file>`
+4) **AST/manifest watch**: `units-watch <rootDir> <outFile>`
+
+## LLM Benchmark Workflow
+Use the benchmark harness to measure token usage and output quality per model.
+
+Offline (estimated tokens from reference cases):
+```
+npm run bench:llm
+```
+
+Live (real model runs + provider usage tokens):
+```
+OPENAI_API_KEY=... npm run bench:llm:live
+```
+
+Inputs:
+- Cases file: `bench/llm-cases.json`
+- Reference DSL: `bench/cases/*.ui`
+- Optional baselines: `bench/cases/*.jsx` (for DSL vs baseline token ratio)
+
+Outputs:
+- JSON metrics: `bench/results/*.json`
+- Markdown report: `bench/results/*.md`
+
+Quality checks per run:
+- parse success (`parseUnits`)
+- required syntax snippets present
+- exact normalized match vs reference DSL (when available)
 
 ## LLM Prompt Template (Suggested)
 ```

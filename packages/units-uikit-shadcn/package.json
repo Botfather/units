@@ -1,0 +1,35 @@
+{
+  "name": "@botfather/units-uikit-shadcn",
+  "version": "0.1.0",
+  "description": "ShadCN-style component library authored in Units DSL.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Botfather/units.git",
+    "directory": "packages/units-uikit-shadcn"
+  },
+  "homepage": "https://github.com/Botfather/units/tree/main/packages/units-uikit-shadcn",
+  "bugs": {
+    "url": "https://github.com/Botfather/units/issues"
+  },
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./shadcn.css": "./shadcn.css",
+    "./shadcn-manifest.js": "./shadcn-manifest.js",
+    "./shadcn/*": "./shadcn/*"
+  },
+  "files": [
+    "index.js",
+    "shadcn-manifest.js",
+    "shadcn.css",
+    "shadcn"
+  ],
+  "dependencies": {
+    "@botfather/units": "^0.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

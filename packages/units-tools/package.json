@@ -1,0 +1,34 @@
+{
+  "name": "@botfather/units-tools",
+  "version": "0.1.0",
+  "description": "CLI tools for Units (.ui) formatting, linting, manifests, and watch.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Botfather/units.git",
+    "directory": "packages/units-tools"
+  },
+  "homepage": "https://github.com/Botfather/units/tree/main/packages/units-tools",
+  "bugs": {
+    "url": "https://github.com/Botfather/units/issues"
+  },
+  "bin": {
+    "units-format": "./units-format.mjs",
+    "units-lint": "./units-lint.mjs",
+    "units-emit": "./units-emit.mjs",
+    "units-manifest": "./units-manifest.mjs",
+    "units-watch": "./units-watch.mjs",
+    "format-ui": "./format-ui.mjs",
+    "lint-ui": "./lint-ui.mjs"
+  },
+  "files": [
+    "*.mjs"
+  ],
+  "dependencies": {
+    "@botfather/units": "^0.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

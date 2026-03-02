@@ -13,10 +13,11 @@ Thanks for your interest in contributing to Units.
 - No dependencies required for the core parser
 
 ## Repo layout
-- `lib/units-parser.js`: core parser
-- `lib/units-runtime.js`: React renderer
-- `lib/units-custom-renderer.js`: custom renderer skeleton
-- `tools/`: formatter, linter, manifest/emit tools
+- `packages/units/`: core parser, printer, runtime, custom renderer, incremental sketch
+- `packages/vite-plugin-units/`: Vite plugin
+- `packages/vite-plugin-units-tools/`: Vite dev tools (format/tokens/highlight)
+- `packages/units-tools/`: formatter, linter, manifest/emit tools
+- `packages/units-uikit-shadcn/`: Units ShadCN-style UI kit
 - `examples/`: demos and sample apps
 
 ## Code style
@@ -28,6 +29,13 @@ Thanks for your interest in contributing to Units.
 - Describe the problem and the fix
 - Include tests or repro steps where possible
 - Ensure `npm run lint:ui` passes for the demo app
+
+## Releases
+- Use Changesets for all package version bumps.
+- Run `npm run changeset` and commit the generated file under `.changeset/`.
+- On merge to `main`, GitHub Actions opens/updates a release PR with version updates.
+- Merging that release PR publishes to npm using `NPM_TOKEN`.
+- Required repo secret for CI publish: `NPM_TOKEN` (npm automation token for `@botfather` scope).
 
 ## Reporting issues
 Open a GitHub issue with:

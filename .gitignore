@@ -5,3 +5,4 @@ dist/
 build/
 *.log
 *.ui.ast.json
+bench/results/
