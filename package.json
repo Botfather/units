@@ -2,6 +2,7 @@
   "name": "units-monorepo",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.17.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Botfather/units.git"
@@ -22,8 +23,8 @@
     "changeset:version": "changeset version",
     "changeset:status": "changeset status --verbose",
     "release": "changeset publish",
-    "publish:dry": "npm publish --workspaces --dry-run",
-    "publish:ci": "npm publish --workspaces"
+    "publish:dry": "pnpm -r --filter \"./packages/**\" publish --dry-run --access public --no-git-checks",
+    "publish:ci": "pnpm -r --filter \"./packages/**\" publish --access public --no-git-checks"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.7"
