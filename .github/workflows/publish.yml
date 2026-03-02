@@ -21,17 +21,22 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
           registry-url: https://registry.npmjs.org
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+          run_install: false
+
       - name: Install
-        run: npm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Version or Publish
         uses: changesets/action@v1
         with:
-          version: npm run changeset:version
-          publish: npm run release
+          version: pnpm changeset:version
+          publish: pnpm release
           commit: "ci: version packages"
           title: "ci: version packages"
         env:

@@ -5,17 +5,17 @@ Use Changesets to manage release notes and version bumps for workspace packages.
 ## Create a changeset
 
 ```bash
-npm run changeset
+pnpm changeset
 ```
 
 ## Apply versions locally
 
 ```bash
-npm run changeset:version
+pnpm changeset:version
 ```
 
 ## Publish (usually done in CI)
 
 ```bash
-npm run release
+pnpm release
 ```
