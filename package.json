@@ -18,7 +18,14 @@
     "bench:parser": "node ./bench.js",
     "bench:llm": "node ./tools/llm-bench.mjs --mode offline --cases ./bench/llm-cases.json --out ./bench/results/llm-bench.json --report ./bench/results/llm-bench.md",
     "bench:llm:live": "node ./tools/llm-bench.mjs --mode live --cases ./bench/llm-cases.json --models gpt-4.1-mini,gpt-4o-mini --runs 1 --out ./bench/results/llm-bench-live.json --report ./bench/results/llm-bench-live.md",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:status": "changeset status --verbose",
+    "release": "changeset publish",
     "publish:dry": "npm publish --workspaces --dry-run",
     "publish:ci": "npm publish --workspaces"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.7"
   }
 }

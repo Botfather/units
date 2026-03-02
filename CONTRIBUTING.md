@@ -30,6 +30,13 @@ Thanks for your interest in contributing to Units.
 - Include tests or repro steps where possible
 - Ensure `npm run lint:ui` passes for the demo app
 
+## Releases
+- Use Changesets for all package version bumps.
+- Run `npm run changeset` and commit the generated file under `.changeset/`.
+- On merge to `main`, GitHub Actions opens/updates a release PR with version updates.
+- Merging that release PR publishes to npm using `NPM_TOKEN`.
+- Required repo secret for CI publish: `NPM_TOKEN` (npm automation token for `@botfather` scope).
+
 ## Reporting issues
 Open a GitHub issue with:
 - Steps to reproduce
