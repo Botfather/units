@@ -168,6 +168,38 @@ export function parseUnits(input) {
     return s.slice(start, i).trim();
   }
 
+  function readDirectiveArgsCompact() {
+    // Compact directive args terminate at top-level block/newline boundaries:
+    // #if @cond { ... }
+    // #for item in @items { ... }
+    // #slot content
+    let depthParen = 0;
+    let depthBrack = 0;
+    const start = i;
+    while (i < len) {
+      const ch = s[i];
+      if (ch === "'") {
+        i++;
+        while (i < len && s[i] !== "'") {
+          if (s[i] === "\\" && i + 1 < len) i += 2;
+          else i++;
+        }
+        if (s[i] === "'") i++;
+        continue;
+      }
+      if (ch === "(") depthParen++;
+      else if (ch === ")") depthParen = Math.max(0, depthParen - 1);
+      else if (ch === "[") depthBrack++;
+      else if (ch === "]") depthBrack = Math.max(0, depthBrack - 1);
+
+      if (depthParen === 0 && depthBrack === 0 && (ch === "{" || ch === "}" || ch === "\n" || ch === "\r")) {
+        break;
+      }
+      i++;
+    }
+    return s.slice(start, i).trim();
+  }
+
   function readBracedRaw() {
     if (s[i] !== "{") error("Expected '{' block");
     i++; // skip '{'
@@ -316,6 +348,12 @@ export function parseUnits(input) {
       }
       args = s.slice(start, i).trim();
       if (s[i] === ")") i++;
+    } else {
+      // Compact directive args without parentheses:
+      // #slot content
+      // #if @cond
+      // #for item, i in @items
+      args = readDirectiveArgsCompact();
     }
     skipWS();
     let children = [];
@@ -328,6 +366,12 @@ export function parseUnits(input) {
     const ident = readIdent();
     if (ident !== "text") error("Unknown keyword");
     skipWS();
+    const value = readString();
+    return { type: "text", value, start, end: i };
+  }
+
+  function parseBareStringNode() {
+    const start = i;
     const value = readString();
     return { type: "text", value, start, end: i };
   }
@@ -363,6 +407,7 @@ export function parseUnits(input) {
     const ch = s[i];
     if (ch === "#") return parseDirective();
     if (ch === "@") return parseExprNode();
+    if (ch === "'") return parseBareStringNode();
     if (isIdentStart(ch)) {
       // 'text' keyword or tag
       const save = i;

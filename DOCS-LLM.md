@@ -61,6 +61,17 @@ Prefer `!event { handler(@event) }` over inline logic.
 11) **Never embed @ inside raw text**
 `@` is reserved for expressions. If you need a literal `@`, use `text '@'`.
 
+### Compact Syntax (Optional, Token-First)
+The language also supports compact forms for stricter token budgets:
+```
+'Literal text'                 // shorthand for text 'Literal text'
+#slot content                  // shorthand for #slot (content)
+#if @cond { ... }              // shorthand for #if (@cond) { ... }
+#for item in @items { ... }    // shorthand for #for (item in @items) { ... }
+```
+
+Use compact syntax only when token savings matter more than readability/diff stability.
+
 ## Canonical Formatting
 Run the formatter on every save or commit:
 ```
@@ -189,6 +200,11 @@ OPENAI_API_KEY=... npm run bench:react-vs-dsl:provider
 To include both provider and approximation metrics in one report:
 ```
 OPENAI_API_KEY=... npm run bench:react-vs-dsl:provider:both
+```
+
+To run the compact optimized DSL pair set:
+```
+OPENAI_API_KEY=... npm run bench:react-vs-dsl:provider:optimized
 ```
 
 ## LLM Prompt Template (Suggested)

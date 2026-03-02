@@ -15,11 +15,6 @@
     "reactFile": "cases/chat_thread.jsx"
   },
   {
-    "id": "slot_layout",
-    "dslFile": "cases/slot_layout.ui",
-    "reactFile": "cases/slot_layout.jsx"
-  },
-  {
     "id": "slot_layout_compact",
     "dslFile": "cases/slot_layout_compact.ui",
     "reactFile": "cases/slot_layout.jsx"
@@ -35,19 +30,9 @@
     "reactFile": "cases/nested_table.jsx"
   },
   {
-    "id": "expression_heavy",
-    "dslFile": "cases/expression_heavy.ui",
-    "reactFile": "cases/expression_heavy.jsx"
-  },
-  {
     "id": "expression_heavy_compact",
     "dslFile": "cases/expression_heavy_compact.ui",
     "reactFile": "cases/expression_heavy.jsx"
-  },
-  {
-    "id": "static_marketing",
-    "dslFile": "cases/static_marketing.ui",
-    "reactFile": "cases/static_marketing.jsx"
   },
   {
     "id": "static_marketing_compact",

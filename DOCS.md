@@ -50,9 +50,9 @@ Props      := "(" Prop (","? Prop)* ")"
 Prop       := Ident (":" Value | "=" Expr | "?=" Expr) | Event
 Event      := "!" Ident "{" Expr "}" | Ident ":" "{" Expr "}"
 Children   := "{" Node* "}"
-TextNode   := "text" String
+TextNode   := "text" String | String
 ExprNode   := "@" Expr
-Directive  := "#" Ident ("(" Args ")")? Children?
+Directive  := "#" Ident (("(" Args ")") | Args)? Children?
 Value      := String | Number | true | false | null
 Expr       := Raw JS until delimiter
 ```
@@ -73,6 +73,8 @@ Row (gap:8) { Col { text 'A' } Col { text 'B' } }
 ```
 text 'Literal text'
 text 'Hello @{user.name}'
+'Literal text'
+'Hello @{user.name}'
 @user.name
 ```
 
@@ -103,8 +105,11 @@ on:input={ set(text:=event.target.value) }
 ### 4.5 Directives
 ```
 #if (@user.loggedIn) { ... }
+#if @user.loggedIn { ... }      // compact args form
 #for (item, i in @items) { ... }
+#for item, i in @items { ... }  // compact args form
 #slot (footer) { ... }
+#slot footer { ... }            // compact args form
 #key (@item.id)
 ```
 

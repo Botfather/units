@@ -477,8 +477,9 @@ async function fetchProviderInputTokens({
       },
       body: JSON.stringify({
         model,
-        temperature: 0,
-        max_output_tokens: 1,
+        // Some models (e.g., o1) do not accept temperature; omit when not allowed.
+        ...(model && model.startsWith("o1") ? {} : { temperature: 0 }),
+        max_output_tokens: 16,
         input: [
           {
             role: "system",

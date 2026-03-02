@@ -54,11 +54,15 @@ Tag ( props )                 // self-closing if no children
 
 text 'literal'
 text 'Hello @{name}'         // inline interpolation inside text
+'literal'                    // compact text shorthand
 @expr                         // inline expression
 
 #if (@cond) { ... }
+#if @cond { ... }             // compact directive args
 #for (item, i in @items) { ... }
+#for item, i in @items { ... } // compact directive args
 #slot (name) { ... }
+#slot name                    // compact directive args
 #key (@expr)
 ```
 
@@ -155,6 +159,11 @@ OPENAI_API_KEY=... pnpm bench:react-vs-dsl:provider
 Provider + approx side-by-side on curated cases:
 ```
 OPENAI_API_KEY=... pnpm bench:react-vs-dsl:provider:both
+```
+
+Provider + approx with compact optimized DSL pair set:
+```
+OPENAI_API_KEY=... pnpm bench:react-vs-dsl:provider:optimized
 ```
 
 ## Demo

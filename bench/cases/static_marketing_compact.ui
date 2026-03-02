@@ -1,0 +1,1 @@
+Landing{Hero{Heading{@'Ship faster with Units'}Subheading{@'Describe UI in compact DSL and render with React.'}Actions{Button(variant:'primary'){@'Get started'}Button(variant:'outline'){@'Read docs'}}}Features{Feature{@'Fast parser'}Feature{@'Small diffs'}Feature{@'Composable runtime'}}}
