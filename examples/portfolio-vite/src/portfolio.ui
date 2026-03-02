@@ -1,0 +1,29 @@
+div (className:'portfolio') {
+  header (className:'topbar') {
+    div (className:'brand') {
+      Avatar (className:'brand-avatar') {
+        AvatarFallback {
+          @profile.initials
+        }
+      }
+      div (className:'brand-text') {
+        h1 {
+          @profile.name
+        }
+        p (className:'muted') {
+          @profile.role
+          text ' | '
+          @profile.location
+        }
+      }
+    }
+    div (className:'hero-actions') {
+      Button (size:'sm') {
+        text 'Download CV'
+      }
+      Button (size:'sm', variant:'outline') {
+        text 'Say hello'
+      }
+    }
+  }
+}
