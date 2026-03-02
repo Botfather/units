@@ -38,6 +38,7 @@ jobs:
         with:
           version: pnpm changeset:version
           publish: pnpm release
+          createGithubReleases: true
           commit: "ci: version packages"
           title: "ci: version packages"
         env:

@@ -27,6 +27,7 @@
     "publish:ci": "pnpm -r --filter \"./packages/**\" publish --access public --no-git-checks"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.5.1",
     "@changesets/cli": "^2.29.7"
   }
 }
