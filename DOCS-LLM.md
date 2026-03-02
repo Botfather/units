@@ -164,6 +164,33 @@ Quality checks per run:
 - required syntax snippets present
 - exact normalized match vs reference DSL (when available)
 
+## React vs DSL Hypothesis Test
+To validate whether Units DSL uses fewer tokens than direct React code:
+```
+npm run bench:react-vs-dsl
+```
+
+This benchmark runs:
+- Curated React vs DSL equivalent pairs from `bench/cases/`
+- Exhaustive synthetic matrix (depth, props, events, loops, conditions, text/interpolation, expression complexity)
+
+Outputs:
+- `bench/results/react-vs-dsl.json`
+- `bench/results/react-vs-dsl.md`
+
+Primary decision metric in report:
+- lexical token approximation (`lexical`) with explicit hypothesis verdict
+
+For exact provider tokenization (`usage.input_tokens`), run:
+```
+OPENAI_API_KEY=... npm run bench:react-vs-dsl:provider
+```
+
+To include both provider and approximation metrics in one report:
+```
+OPENAI_API_KEY=... npm run bench:react-vs-dsl:provider:both
+```
+
 ## LLM Prompt Template (Suggested)
 ```
 You are editing a Units .ui file.

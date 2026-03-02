@@ -1,0 +1,29 @@
+Landing {
+  Hero {
+    Heading {
+      text 'Ship faster with Units'
+    }
+    Subheading {
+      text 'Describe UI in compact DSL and render with React.'
+    }
+    Actions {
+      Button (variant:'primary') {
+        text 'Get started'
+      }
+      Button (variant:'outline') {
+        text 'Read docs'
+      }
+    }
+  }
+  Features {
+    Feature {
+      text 'Fast parser'
+    }
+    Feature {
+      text 'Small diffs'
+    }
+    Feature {
+      text 'Composable runtime'
+    }
+  }
+}
