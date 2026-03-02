@@ -1,6 +1,6 @@
 {
   "name": "@botfather/units",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Lightweight DSL for building interactive UIs.",
   "license": "MIT",
   "type": "module",
