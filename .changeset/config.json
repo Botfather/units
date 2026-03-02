@@ -12,5 +12,14 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": []
+  "ignore": [
+    "portfolio-vite",
+    "units-chat-demo",
+    "units-todo-demo",
+    "units-shadcn-gallery"
+  ],
+  "privatePackages": {
+    "version": false,
+    "tag": false
+  }
 }
