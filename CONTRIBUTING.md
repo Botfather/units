@@ -13,10 +13,11 @@ Thanks for your interest in contributing to Units.
 - No dependencies required for the core parser
 
 ## Repo layout
-- `lib/units-parser.js`: core parser
-- `lib/units-runtime.js`: React renderer
-- `lib/units-custom-renderer.js`: custom renderer skeleton
-- `tools/`: formatter, linter, manifest/emit tools
+- `packages/units/`: core parser, printer, runtime, custom renderer, incremental sketch
+- `packages/vite-plugin-units/`: Vite plugin
+- `packages/vite-plugin-units-tools/`: Vite dev tools (format/tokens/highlight)
+- `packages/units-tools/`: formatter, linter, manifest/emit tools
+- `packages/units-uikit-shadcn/`: Units ShadCN-style UI kit
 - `examples/`: demos and sample apps
 
 ## Code style

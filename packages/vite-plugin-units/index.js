@@ -1,9 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
-import { parseUnits } from "./units-parser.js";
+import { parseUnits } from "@botfather/units/parser";
 
 function endsWithUi(id) {
   return id.endsWith(".ui");
+}
+
+function isRelOrAbs(id) {
+  return id.startsWith(".") || id.startsWith("/");
 }
 
 export default function unitsPlugin(options = {}) {
@@ -23,9 +27,13 @@ export default function unitsPlugin(options = {}) {
   return {
     name: "units",
     enforce: "pre",
-    resolveId(source, importer) {
+    async resolveId(source, importer) {
       if (endsWithUi(source)) {
-        return importer ? path.resolve(path.dirname(importer), source) : path.resolve(source);
+        if (isRelOrAbs(source)) {
+          return importer ? path.resolve(path.dirname(importer), source) : path.resolve(source);
+        }
+        const resolved = await this.resolve(source, importer, { skipSelf: true });
+        return resolved ? resolved.id : null;
       }
       return null;
     },

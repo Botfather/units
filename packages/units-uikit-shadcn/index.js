@@ -1,5 +1,5 @@
-import { renderUnits } from "../../lib/units-runtime.js";
-import { uiManifest } from "../shadcn-manifest.js";
+import { renderUnits } from "@botfather/units/runtime";
+import { uiManifest } from "./shadcn-manifest.js";
 
 function normalizeScope(scope) {
   return scope && typeof scope === "object" ? scope : {};

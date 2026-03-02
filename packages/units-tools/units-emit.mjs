@@ -1,6 +1,7 @@
+#!/usr/bin/env node
 import fs from "node:fs/promises";
 import path from "node:path";
-import { formatUnits } from "../lib/units-print.js";
+import { parseUnits } from "@botfather/units/parser";
 
 async function collectUiFiles(entry, isRoot = false) {
   const base = path.basename(entry);
@@ -23,30 +24,28 @@ async function collectUiFiles(entry, isRoot = false) {
   return out;
 }
 
-async function formatFile(file) {
+async function emitAst(file) {
   const src = await fs.readFile(file, "utf-8");
-  const formatted = formatUnits(src);
-  if (formatted !== src) {
-    await fs.writeFile(file, formatted, "utf-8");
-    return true;
-  }
-  return false;
+  const ast = parseUnits(src);
+  const outFile = `${file}.ast.json`;
+  await fs.writeFile(outFile, JSON.stringify(ast), "utf-8");
+  return outFile;
 }
 
 const targets = process.argv.slice(2);
 if (targets.length === 0) {
-  console.error("Usage: node units-format.mjs <file-or-dir>...");
+  console.error("Usage: node units-emit.mjs <file-or-dir>...");
   process.exit(1);
 }
 
-let changed = 0;
+let count = 0;
 for (const target of targets) {
   const abs = path.resolve(process.cwd(), target);
-  const files = await collectUiFiles(abs, true);
+const files = await collectUiFiles(abs, true);
   for (const file of files) {
-    const didChange = await formatFile(file);
-    if (didChange) changed++;
+    await emitAst(file);
+    count++;
   }
 }
 
-console.log(`Formatted ${changed} file(s).`);
+console.log(`Emitted AST for ${count} file(s).`);

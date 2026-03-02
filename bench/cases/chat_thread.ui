@@ -1,0 +1,17 @@
+ChatScreen {
+  Thread {
+    #for (msg in @messages) {
+      #key (@msg.id)
+      Bubble (role=@msg.role) {
+        text '@{msg.author}: '
+        @msg.text
+      }
+    }
+  }
+  Composer (
+    value=@draft,
+    placeholder:'Type a message',
+    !input { onDraft(@event) },
+    !enter { sendMessage() }
+  )
+}

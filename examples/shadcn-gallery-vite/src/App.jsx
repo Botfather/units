@@ -1,6 +1,6 @@
 import React from "react";
-import { renderUnits } from "../../../lib/units-runtime.js";
-import { withShadcnComponents } from "../../../uikit/shadcn/index.js";
+import { renderUnits } from "@botfather/units";
+import { withShadcnComponents } from "@botfather/units-uikit-shadcn";
 import uiAst from "./gallery.ui";
 
 export function App() {

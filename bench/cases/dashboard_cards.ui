@@ -1,0 +1,23 @@
+Dashboard {
+  TopBar (title:'Revenue')
+  Grid {
+    #for (card in @cards) {
+      #key (@card.id)
+      StatCard (
+        title=@card.title,
+        value=@card.value,
+        trend=@card.trend
+      )
+    }
+  }
+  #if (@alerts.length > 0) {
+    AlertList {
+      #for (alert in @alerts) {
+        #key (@alert.id)
+        Alert (tone:@alert.tone) {
+          @alert.message
+        }
+      }
+    }
+  }
+}

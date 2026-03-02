@@ -1,0 +1,40 @@
+{
+  "name": "@botfather/units",
+  "version": "0.1.0",
+  "description": "Lightweight DSL for building interactive UIs.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Botfather/units.git",
+    "directory": "packages/units"
+  },
+  "homepage": "https://github.com/Botfather/units/tree/main/packages/units",
+  "bugs": {
+    "url": "https://github.com/Botfather/units/issues"
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": "./index.js",
+    "./parser": "./units-parser.js",
+    "./print": "./units-print.js",
+    "./runtime": "./units-runtime.js",
+    "./custom-renderer": "./units-custom-renderer.js",
+    "./incremental": "./incremental.js",
+    "./ui": {
+      "types": "./ui.d.ts",
+      "default": "./ui.js"
+    }
+  },
+  "files": [
+    "*.js",
+    "*.d.ts"
+  ],
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

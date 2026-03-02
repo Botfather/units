@@ -1,5 +1,5 @@
 // Tiny benchmark for parser performance.
-import { parseUnits } from "./lib/units-parser.js";
+import { parseUnits } from "@botfather/units/parser";
 
 const sample = `
 App {

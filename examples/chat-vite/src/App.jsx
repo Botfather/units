@@ -1,7 +1,6 @@
 import React from "react";
-import { createUnitsEvaluator, renderUnits } from "../../../lib/units-runtime.js";
-import { parseUnits } from "../../../lib/units-parser.js";
-import { shadcnComponents, withShadcnComponents } from "../../../uikit/shadcn/index.js";
+import { createUnitsEvaluator, parseUnits, renderUnits } from "@botfather/units";
+import { shadcnComponents, withShadcnComponents } from "@botfather/units-uikit-shadcn";
 import uiAst from "./chat.ui";
 
 const BASIC_TAGS = new Set([

@@ -1,4 +1,4 @@
-@import "../../../uikit/shadcn/shadcn.css";
+@import "@botfather/units-uikit-shadcn/shadcn.css";
 
 :root {
   font-family: "Space Grotesk", system-ui, sans-serif;

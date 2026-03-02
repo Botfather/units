@@ -5,8 +5,7 @@ Units is a minimal DSL for rendering interactive UI trees with React or a custom
 ## 1) Quick Start
 
 ```js
-import { parseUnits } from "./lib/units-parser.js";
-import { renderUnits } from "./lib/units-runtime.js";
+import { parseUnits, renderUnits } from "@botfather/units";
 
 const dsl = `
 App {
@@ -122,7 +121,7 @@ on:input={ set(text:=event.target.value) }
 The React renderer evaluates expressions with a cached `Function` and uses `with(scope)` for simplicity.
 
 ### 5.2 Custom Renderer
-Use `createRenderer(host)` in `custom-renderer.js`. The host must provide:
+Use `createUnitsRenderer(host)` from `@botfather/units/custom-renderer`. The host must provide:
 
 ```
 const host = {
