@@ -23,7 +23,7 @@
     "index.d.ts"
   ],
   "dependencies": {
-    "@botfather/units": "^0.1.0"
+    "@botfather/units": "workspace:*"
   },
   "peerDependencies": {
     "vite": ">=4"
