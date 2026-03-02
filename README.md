@@ -117,12 +117,12 @@ node ./bench.js
 ## LLM Benchmark (Token + Quality)
 Offline reference run (estimated tokens):
 ```
-npm run bench:llm
+pnpm bench:llm
 ```
 
 Live model run (real usage tokens from API):
 ```
-OPENAI_API_KEY=... npm run bench:llm:live
+OPENAI_API_KEY=... pnpm bench:llm:live
 ```
 
 Config lives in `bench/llm-cases.json`, with case files under `bench/cases/`.
