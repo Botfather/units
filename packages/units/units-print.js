@@ -30,10 +30,10 @@ const PRINT_WIDTH = Number(process.env.UNITS_PRINT_WIDTH || process.env.RDL_PRIN
 
 function printNode(node, indent) {
   const pad = "  ".repeat(indent);
-  if (node.type === "text") return `${pad}text '${escapeString(node.value)}'`;
+  if (node.type === "text") return `${pad}'${escapeString(node.value)}'`;
   if (node.type === "expr") return `${pad}@${node.value.raw}`;
   if (node.type === "directive") {
-    const args = node.args ? ` (${node.args})` : "";
+    const args = node.args ? ` ${node.args}` : "";
     if (!node.children || node.children.length === 0) return `${pad}#${node.name}${args}`;
     const inner = node.children.map((n) => printNode(n, indent + 1)).join("\n");
     return `${pad}#${node.name}${args} {\n${inner}\n${pad}}`;

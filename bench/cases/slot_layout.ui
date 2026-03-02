@@ -1,0 +1,11 @@
+Shell {
+  Header {
+    text 'Dashboard'
+  }
+  Main {
+    #slot (content)
+  }
+  Footer {
+    text 'Last updated @{updatedAt}'
+  }
+}

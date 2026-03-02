@@ -1,0 +1,42 @@
+[
+  {
+    "id": "todo_list",
+    "dslFile": "cases/todo_list.ui",
+    "reactFile": "cases/todo_list.jsx"
+  },
+  {
+    "id": "dashboard_cards",
+    "dslFile": "cases/dashboard_cards.ui",
+    "reactFile": "cases/dashboard_cards.jsx"
+  },
+  {
+    "id": "chat_thread",
+    "dslFile": "cases/chat_thread.ui",
+    "reactFile": "cases/chat_thread.jsx"
+  },
+  {
+    "id": "slot_layout_compact",
+    "dslFile": "cases/slot_layout_compact.ui",
+    "reactFile": "cases/slot_layout.jsx"
+  },
+  {
+    "id": "form_controls",
+    "dslFile": "cases/form_controls.ui",
+    "reactFile": "cases/form_controls.jsx"
+  },
+  {
+    "id": "nested_table",
+    "dslFile": "cases/nested_table.ui",
+    "reactFile": "cases/nested_table.jsx"
+  },
+  {
+    "id": "expression_heavy_compact",
+    "dslFile": "cases/expression_heavy_compact.ui",
+    "reactFile": "cases/expression_heavy.jsx"
+  },
+  {
+    "id": "static_marketing_compact",
+    "dslFile": "cases/static_marketing_compact.ui",
+    "reactFile": "cases/static_marketing.jsx"
+  }
+]

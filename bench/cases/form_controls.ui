@@ -1,0 +1,11 @@
+Form {
+  Input (
+    value=@email,
+    placeholder:'you@acme.co',
+    on:input={ onEmail(@event.target.value) }
+  )
+  Switch (checked?=@notifications, !checkedChange { onNotifications(@event) })
+  Button (disabled?=@email.trim().length == 0, !click { submit() }) {
+    text 'Save settings'
+  }
+}

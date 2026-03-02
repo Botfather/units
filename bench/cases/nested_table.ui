@@ -1,0 +1,34 @@
+Table {
+  TableHeader {
+    TableRow {
+      TableHead {
+        text 'Team'
+      }
+      TableHead {
+        text 'Member'
+      }
+      TableHead {
+        text 'Role'
+      }
+    }
+  }
+  TableBody {
+    #for (team in @teams) {
+      #key (@team.id)
+      #for (member in @team.members) {
+        #key (@member.id)
+        TableRow {
+          TableCell {
+            @team.name
+          }
+          TableCell {
+            @member.name
+          }
+          TableCell {
+            @member.role
+          }
+        }
+      }
+    }
+  }
+}

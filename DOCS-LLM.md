@@ -61,6 +61,17 @@ Prefer `!event { handler(@event) }` over inline logic.
 11) **Never embed @ inside raw text**
 `@` is reserved for expressions. If you need a literal `@`, use `text '@'`.
 
+### Compact Syntax (Optional, Token-First)
+The language also supports compact forms for stricter token budgets:
+```
+'Literal text'                 // shorthand for text 'Literal text'
+#slot content                  // shorthand for #slot (content)
+#if @cond { ... }              // shorthand for #if (@cond) { ... }
+#for item in @items { ... }    // shorthand for #for (item in @items) { ... }
+```
+
+Use compact syntax only when token savings matter more than readability/diff stability.
+
 ## Canonical Formatting
 Run the formatter on every save or commit:
 ```
@@ -163,6 +174,38 @@ Quality checks per run:
 - parse success (`parseUnits`)
 - required syntax snippets present
 - exact normalized match vs reference DSL (when available)
+
+## React vs DSL Hypothesis Test
+To validate whether Units DSL uses fewer tokens than direct React code:
+```
+npm run bench:react-vs-dsl
+```
+
+This benchmark runs:
+- Curated React vs DSL equivalent pairs from `bench/cases/`
+- Exhaustive synthetic matrix (depth, props, events, loops, conditions, text/interpolation, expression complexity)
+
+Outputs:
+- `bench/results/react-vs-dsl.json`
+- `bench/results/react-vs-dsl.md`
+
+Primary decision metric in report:
+- lexical token approximation (`lexical`) with explicit hypothesis verdict
+
+For exact provider tokenization (`usage.input_tokens`), run:
+```
+OPENAI_API_KEY=... npm run bench:react-vs-dsl:provider
+```
+
+To include both provider and approximation metrics in one report:
+```
+OPENAI_API_KEY=... npm run bench:react-vs-dsl:provider:both
+```
+
+To run the compact optimized DSL pair set:
+```
+OPENAI_API_KEY=... npm run bench:react-vs-dsl:provider:optimized
+```
 
 ## LLM Prompt Template (Suggested)
 ```
