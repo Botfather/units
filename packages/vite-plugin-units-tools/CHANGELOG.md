@@ -1,5 +1,16 @@
 # @botfather/vite-plugin-units-tools
 
+## 2.0.0
+
+### Major Changes
+
+- [#16](https://github.com/Botfather/units/pull/16) [`630ce02`](https://github.com/Botfather/units/commit/630ce02877ea1c8557dfc9fca59903f16062ae0d) Thanks [@Botfather](https://github.com/Botfather)! - sharpens parsing logic to be more token efficient
+
+### Patch Changes
+
+- Updated dependencies [[`630ce02`](https://github.com/Botfather/units/commit/630ce02877ea1c8557dfc9fca59903f16062ae0d)]:
+  - @botfather/units@2.0.0
+
 ## 1.0.0
 
 ### Major Changes
