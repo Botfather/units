@@ -29,6 +29,11 @@ body {
   line-height: 1.6;
 }
 
+.page {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 /* ---- Topbar ---- */
 .topbar {
   display: flex;
@@ -70,6 +75,7 @@ body {
   max-width: 960px;
   margin: 0 auto;
   padding: 1.5rem 1.25rem 3rem;
+  width: 100%;
 }
 
 .page {
@@ -83,6 +89,7 @@ body {
   border-radius: var(--radius);
   padding: 1.5rem;
   margin-bottom: 1.25rem;
+  min-width: 0;
 }
 
 .hero {
@@ -159,6 +166,7 @@ pre {
   border-radius: 0;
   padding: 0.75rem 1rem;
   overflow-x: auto;
+  max-width: 100%;
   font-size: 0.85rem;
   line-height: 1.5;
   margin-bottom: 0.5rem;
@@ -166,6 +174,8 @@ pre {
 
 code {
   font-family: "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 /* ---- Grammar Grid ---- */
@@ -204,9 +214,13 @@ code {
 
 .side-by-side {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
   margin-top: 0.5rem;
+}
+
+.column {
+  min-width: 0;
 }
 
 .column pre {
@@ -499,6 +513,7 @@ code {
   margin-left: auto;
   display: flex;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 /* ---- Responsive ---- */
