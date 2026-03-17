@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Units</title>
+    <meta name="description" content="Units: lightweight DSL for interactive UI" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <nav class="nav">
+        <span class="brand">Units</span>
+        <a href="./index.html">Home</a>
+        <a href="./docs.html">Documentation</a>
+        <a href="./examples.html">Examples</a>
+        <a href="https://github.com/Botfather/units">GitHub</a>
+      </nav>
+
+      <section class="card">
+        <h1>Minimal DSL for interactive UI</h1>
+        <p>
+          Units is a lightweight UI DSL with fast parsing, small syntax, and both React + custom renderer support.
+        </p>
+        <p>
+          <a class="btn" href="./docs.html">Read docs</a>
+          <a class="btn secondary" href="./examples.html">See examples</a>
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Quick Start</h2>
+        <pre><code>import { parseUnits, renderUnits } from "@botfather/units";
+
+const ast = parseUnits("Card { text 'Hello Units' }");
+const node = renderUnits(ast, { user: { name: "Ada" } });</code></pre>
+      </section>
+
+      <section class="card">
+        <h2>Open Source Essentials</h2>
+        <p class="meta">Core project policies and contribution docs.</p>
+        <ul>
+          <li><a href="https://github.com/Botfather/units/blob/main/README.md">README</a></li>
+          <li><a href="https://github.com/Botfather/units/blob/main/LICENSE">License (MIT)</a></li>
+          <li><a href="https://github.com/Botfather/units/blob/main/CONTRIBUTING.md">Contributing Guide</a></li>
+          <li><a href="https://github.com/Botfather/units/blob/main/CODE_OF_CONDUCT.md">Code of Conduct</a></li>
+          <li><a href="https://github.com/Botfather/units/blob/main/SECURITY.md">Security Policy</a></li>
+          <li><a href="https://github.com/Botfather/units/blob/main/SUPPORT.md">Support Policy</a></li>
+          <li><a href="https://github.com/Botfather/units/releases">Releases / Changelog</a></li>
+        </ul>
+      </section>
+
+      <section class="card grid">
+        <article>
+          <h3>Packages</h3>
+          <ul>
+            <li>@botfather/units</li>
+            <li>@botfather/vite-plugin-units</li>
+            <li>@botfather/vite-plugin-units-tools</li>
+            <li>@botfather/units-tools</li>
+            <li>@botfather/units-uikit-shadcn</li>
+          </ul>
+        </article>
+        <article>
+          <h3>Benchmarks</h3>
+          <ul>
+            <li><code>pnpm bench:parser</code></li>
+            <li><code>pnpm bench:llm</code></li>
+            <li><code>pnpm bench:react-vs-dsl</code></li>
+          </ul>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
