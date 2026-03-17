@@ -1,5 +1,7 @@
 # Units
 
+[![Website](https://img.shields.io/badge/website-live-0f6b5f?style=flat-square)](https://botfather.github.io/units/)
+
 Lightweight DSL for building interactive UIs. This monorepo publishes:
 - `@botfather/units` (parser, printer, runtime, custom renderer, incremental sketch)
 - `@botfather/vite-plugin-units` (Vite build plugin)
@@ -9,9 +11,15 @@ Lightweight DSL for building interactive UIs. This monorepo publishes:
 - `bench.js` (parse benchmark)
 - `DOCS.md` (full documentation)
 - `DOCS-LLM.md` (LLM/agent-optimized authoring profile)
+- `examples/learn-vite/` (learn / reference site — powers the [website](https://botfather.github.io/units/))
 - `examples/todo-vite/` (todo list demo)
 - `examples/chat-vite/` (chat transcript demo)
 - `examples/shadcn-gallery-vite/` (ShadCN gallery demo)
+
+## Website
+
+- Home: https://botfather.github.io/units/
+- Benchmarks: https://botfather.github.io/units/#benchmarks
 
 ## Quick Start
 
@@ -112,6 +120,8 @@ const host = {
 
 ## Latest Benchmark (local)
 Feb 5, 2026: 2000 parses in 15.197ms (~0.0075ms/parse) on Node v22.22.0.
+
+See the [live benchmarks table](https://botfather.github.io/units/#benchmarks) for React vs DSL token comparisons.
 
 ## Benchmark
 ```

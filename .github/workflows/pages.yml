@@ -37,13 +37,16 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      - name: Build todo demo for Pages base path
+      - name: Build learn site for Pages
+        run: pnpm --filter units-learn-demo exec vite build
+
+      - name: Build todo demo for Pages
         run: pnpm --filter units-todo-demo exec vite build --base /units/examples/todo/
 
       - name: Assemble Pages artifact
         run: |
           mkdir -p dist-pages/examples/todo
-          cp -R site/. dist-pages/
+          cp -R examples/learn-vite/dist/. dist-pages/
           cp -R examples/todo-vite/dist/. dist-pages/examples/todo/
           touch dist-pages/.nojekyll
 

@@ -1,0 +1,24 @@
+{
+  "name": "units-learn-demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint:ui": "units-lint src"
+  },
+  "dependencies": {
+    "@botfather/units": "workspace:*",
+    "@botfather/units-uikit-shadcn": "workspace:*",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.2.0",
+    "@botfather/vite-plugin-units": "workspace:*",
+    "@botfather/vite-plugin-units-tools": "workspace:*",
+    "@botfather/units-tools": "workspace:*"
+  }
+}
