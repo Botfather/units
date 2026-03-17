@@ -1,0 +1,639 @@
+div (class:'page') {
+  nav (class:'topbar') {
+    span (class:'brand') {
+      text 'Units'
+    }
+    span (class:'brand-sub') {
+      text 'Learn the DSL'
+    }
+    div (class:'nav-links') {
+      a (href:'#benchmarks', class:'nav-link') {
+        text 'Benchmarks'
+      }
+      a (href:'#setup', class:'nav-link') {
+        text 'Setup'
+      }
+      a (href:'https://github.com/Botfather/units', target:'_blank', class:'nav-link') {
+        text 'GitHub'
+      }
+    }
+  }
+
+  div (class:'container') {
+
+    section (class:'hero card') {
+      h1 {
+        text 'Units DSL'
+      }
+      p (class:'lead') {
+        text 'A minimal, fast DSL for building interactive UIs — renders with React under the hood.'
+      }
+      p (class:'lead muted') {
+        text 'This entire page is rendered from a .ui file using the Units DSL itself.'
+      }
+      div (class:'badge-row') {
+        span (class:'badge') {
+          text 'O(n) parsing'
+        }
+        span (class:'badge') {
+          text 'Zero dependencies'
+        }
+        span (class:'badge') {
+          text 'React compatible'
+        }
+      }
+    }
+
+    section (class:'card') {
+      h2 {
+        text 'Grammar at a Glance'
+      }
+      p (class:'muted') {
+        text 'The entire syntax fits in a few rules. Every .ui file is a list of nodes.'
+      }
+
+      div (class:'grammar-grid') {
+        div (class:'grammar-item') {
+          h3 {
+            text 'Tags'
+          }
+          pre {
+            code {
+              text 'Button (label:\'Save\')\nCard (class:\'panel\') {\n  text \'Hello\'\n}'
+            }
+          }
+          p {
+            text 'Any identifier becomes an HTML element or a custom component. Props go in parentheses; children go in braces.'
+          }
+        }
+
+        div (class:'grammar-item') {
+          h3 {
+            text 'Text & Interpolation'
+          }
+          pre {
+            code {
+              text 'text \'Hello world\'\ntext \'Welcome, @{user.name}!\'\n\'Shorthand text\'\n@user.email'
+            }
+          }
+          p {
+            text 'Use text for literals. @{...} interpolates expressions inline. Bare @expr emits a value directly.'
+          }
+        }
+
+        div (class:'grammar-item') {
+          h3 {
+            text 'Props'
+          }
+          pre {
+            code {
+              text 'key:\'string\'      // literal\ncount:123          // number\nenabled:true       // boolean\nvalue=@expr        // expression\nvisible?=@expr     // conditional'
+            }
+          }
+          p {
+            text 'Literals are colon-separated. Expressions use = with @. The ? suffix makes the prop conditional.'
+          }
+        }
+
+        div (class:'grammar-item') {
+          h3 {
+            text 'Events'
+          }
+          pre {
+            code {
+              text '!click { doSomething() }\non:input={ onType(@event) }\n!submit { handleSubmit() }'
+            }
+          }
+          p {
+            text '!event is shorthand for on:event. The handler body is a JS expression evaluated at runtime.'
+          }
+        }
+
+        div (class:'grammar-item') {
+          h3 {
+            text 'Directives'
+          }
+          pre {
+            code {
+              text '#if (@loggedIn) { ... }\n#for (item in @list) { ... }\n#slot (name)\n#key (@item.id)'
+            }
+          }
+          p {
+            text '#if / #elif / #else for conditionals. #for for loops. #slot for named content injection. #key for stable identity.'
+          }
+        }
+
+        div (class:'grammar-item') {
+          h3 {
+            text 'Expressions'
+          }
+          pre {
+            code {
+              text '@user.name\n@items.length\n@(price * qty)\n@(isActive ? \'on\' : \'off\')'
+            }
+          }
+          p {
+            text 'Expressions are raw JS — the parser never parses them, just slices them. Wrap complex exprs in @(...).'
+          }
+        }
+      }
+    }
+
+    section (class:'card') {
+      h2 {
+        text 'React ↔ Units: Side by Side'
+      }
+      p (class:'muted') {
+        text 'Common JSX patterns and their Units DSL equivalents.'
+      }
+
+      div (class:'comparison') {
+        h3 {
+          text '1. Conditional Rendering'
+        }
+        div (class:'side-by-side') {
+          div (class:'column') {
+            h4 {
+              text 'React JSX'
+            }
+            pre {
+              code {
+                text '{isLoggedIn ? (\n  <Dashboard user={user} />\n) : (\n  <LoginForm />\n)}'
+              }
+            }
+          }
+          div (class:'column') {
+            h4 {
+              text 'Units DSL'
+            }
+            pre {
+              code {
+                text '#if (@isLoggedIn) {\n  Dashboard (user=@user)\n}\n#else {\n  LoginForm\n}'
+              }
+            }
+          }
+        }
+      }
+
+      div (class:'comparison') {
+        h3 {
+          text '2. List Rendering'
+        }
+        div (class:'side-by-side') {
+          div (class:'column') {
+            h4 {
+              text 'React JSX'
+            }
+            pre {
+              code {
+                text '{items.map((item, i) => (\n  <li key={item.id}>\n    {item.name}\n  </li>\n))}'
+              }
+            }
+          }
+          div (class:'column') {
+            h4 {
+              text 'Units DSL'
+            }
+            pre {
+              code {
+                text '#for (item, i in @items) {\n  #key (@item.id)\n  li {\n    @item.name\n  }\n}'
+              }
+            }
+          }
+        }
+      }
+
+      div (class:'comparison') {
+        h3 {
+          text '3. Event Handling'
+        }
+        div (class:'side-by-side') {
+          div (class:'column') {
+            h4 {
+              text 'React JSX'
+            }
+            pre {
+              code {
+                text '<button onClick={() => setCount(count + 1)}>\n  Clicked {count} times\n</button>'
+              }
+            }
+          }
+          div (class:'column') {
+            h4 {
+              text 'Units DSL'
+            }
+            pre {
+              code {
+                text 'button (!click { increment() }) {\n  text \'Clicked @{count} times\'\n}'
+              }
+            }
+          }
+        }
+      }
+
+      div (class:'comparison') {
+        h3 {
+          text '4. Form Input Binding'
+        }
+        div (class:'side-by-side') {
+          div (class:'column') {
+            h4 {
+              text 'React JSX'
+            }
+            pre {
+              code {
+                text '<input\n  value={draft}\n  onChange={e => setDraft(e.target.value)}\n  placeholder="Type here"\n/>'
+              }
+            }
+          }
+          div (class:'column') {
+            h4 {
+              text 'Units DSL'
+            }
+            pre {
+              code {
+                text 'input (\n  value=@draft,\n  !input { onDraft(@event) },\n  placeholder:\'Type here\'\n)'
+              }
+            }
+          }
+        }
+      }
+
+      div (class:'comparison') {
+        h3 {
+          text '5. Component Composition'
+        }
+        div (class:'side-by-side') {
+          div (class:'column') {
+            h4 {
+              text 'React JSX'
+            }
+            pre {
+              code {
+                text '<Card>\n  <CardHeader>\n    <h2>Title</h2>\n  </CardHeader>\n  <CardBody>\n    <p>Content here</p>\n  </CardBody>\n</Card>'
+              }
+            }
+          }
+          div (class:'column') {
+            h4 {
+              text 'Units DSL'
+            }
+            pre {
+              code {
+                text 'Card {\n  CardHeader {\n    h2 {\n      text \'Title\'\n    }\n  }\n  CardBody {\n    p {\n      text \'Content here\'\n    }\n  }\n}'
+              }
+            }
+          }
+        }
+      }
+
+      div (class:'comparison') {
+        h3 {
+          text '6. Slots (Children / Render Props)'
+        }
+        div (class:'side-by-side') {
+          div (class:'column') {
+            h4 {
+              text 'React JSX'
+            }
+            pre {
+              code {
+                text '<Layout\n  header={<NavBar />}\n  footer={<Footer />}\n>\n  <MainContent />\n</Layout>'
+              }
+            }
+          }
+          div (class:'column') {
+            h4 {
+              text 'Units DSL'
+            }
+            pre {
+              code {
+                text 'Layout {\n  #slot (header) {\n    NavBar\n  }\n  #slot (footer) {\n    Footer\n  }\n  MainContent\n}'
+              }
+            }
+          }
+        }
+      }
+
+      div (class:'comparison') {
+        h3 {
+          text '7. Conditional CSS Classes'
+        }
+        div (class:'side-by-side') {
+          div (class:'column') {
+            h4 {
+              text 'React JSX'
+            }
+            pre {
+              code {
+                text '<div className={`tab ${active ? \'active\' : \'\'}`}>\n  {label}\n</div>'
+              }
+            }
+          }
+          div (class:'column') {
+            h4 {
+              text 'Units DSL'
+            }
+            pre {
+              code {
+                text 'div (class=@(active ? \'tab active\' : \'tab\')) {\n  @label\n}'
+              }
+            }
+          }
+        }
+      }
+    }
+
+    section (class:'card') {
+      h2 {
+        text 'Live: Interactive Counter'
+      }
+      p (class:'muted') {
+        text 'This counter is powered by the Units DSL with React state underneath.'
+      }
+      div (class:'demo-box') {
+        div (class:'counter-display') {
+          span (class:'counter-value') {
+            @count
+          }
+        }
+        div (class:'counter-controls') {
+          button (class:'btn', !click { decrement() }) {
+            text '−'
+          }
+          button (class:'btn primary', !click { increment() }) {
+            text '+'
+          }
+          button (class:'btn secondary', !click { reset() }) {
+            text 'Reset'
+          }
+        }
+      }
+    }
+
+    section (class:'card') {
+      h2 {
+        text 'Live: Todo List'
+      }
+      p (class:'muted') {
+        text 'A minimal todo powered entirely by .ui — state lives in React, UI in the DSL.'
+      }
+      div (class:'demo-box') {
+        div (class:'todo-input-row') {
+          input (
+            class:'todo-input',
+            value=@draft,
+            placeholder:'Add a task...',
+            !input { onDraft(@event) }
+          )
+          button (class:'btn primary', disabled?=@(draft.trim().length === 0), !click { addTodo() }) {
+            text 'Add'
+          }
+        }
+        #if (@todos.length === 0) {
+          p (class:'empty') {
+            text 'No tasks yet — add one above.'
+          }
+        }
+        ul (class:'todo-list') {
+          #for (todo in @todos) {
+            #key (@todo.id)
+            li (class=@(todo.done ? 'todo-item done' : 'todo-item')) {
+              input (type:'checkbox', checked?=@todo.done, !change { toggleTodo(@todo.id) })
+              span (class:'todo-text') {
+                @todo.text
+              }
+              button (class:'btn-ghost', !click { removeTodo(@todo.id) }) {
+                text '✕'
+              }
+            }
+          }
+        }
+      }
+    }
+
+    section (class:'card', id:'benchmarks') {
+      h2 {
+        text 'Benchmarks'
+      }
+      p (class:'muted') {
+        text 'Real benchmark data — Units DSL vs React JSX token usage (lexical tokenizer).'
+      }
+
+      div (class:'bench-summary') {
+        div (class:'bench-stat') {
+          span (class:'bench-num accent') {
+            text '~21.5%'
+          }
+          span (class:'bench-label') {
+            text 'avg token savings'
+          }
+        }
+        div (class:'bench-stat') {
+          span (class:'bench-num accent') {
+            text '100%'
+          }
+          span (class:'bench-label') {
+            text 'cases DSL is smaller'
+          }
+        }
+        div (class:'bench-stat') {
+          span (class:'bench-num') {
+            text '~0.008ms'
+          }
+          span (class:'bench-label') {
+            text 'avg parse time'
+          }
+        }
+        div (class:'bench-stat') {
+          span (class:'bench-num') {
+            text '659'
+          }
+          span (class:'bench-label') {
+            text 'total test cases'
+          }
+        }
+      }
+
+      h3 {
+        text 'React vs Units — Curated Cases (Lexical Tokens)'
+      }
+      div (class:'bench-table-wrap') {
+        table (class:'bench-table') {
+          thead {
+            tr {
+              th { text 'Case' }
+              th { text 'React' }
+              th { text 'Units' }
+              th { text 'Saved' }
+            }
+          }
+          tbody {
+            tr {
+              td { text 'todo_list' }
+              td { text '138' }
+              td { text '115' }
+              td (class:'savings') { text '16.7%' }
+            }
+            tr {
+              td { text 'dashboard_cards' }
+              td { text '126' }
+              td { text '103' }
+              td (class:'savings') { text '18.3%' }
+            }
+            tr {
+              td { text 'chat_thread' }
+              td { text '104' }
+              td { text '82' }
+              td (class:'savings') { text '21.2%' }
+            }
+            tr {
+              td { text 'slot_layout' }
+              td { text '44' }
+              td { text '30' }
+              td (class:'savings') { text '31.8%' }
+            }
+            tr {
+              td { text 'form_controls' }
+              td { text '95' }
+              td { text '85' }
+              td (class:'savings') { text '10.5%' }
+            }
+            tr {
+              td { text 'nested_table' }
+              td { text '148' }
+              td { text '95' }
+              td (class:'savings best') { text '35.8%' }
+            }
+            tr {
+              td { text 'expression_heavy' }
+              td { text '185' }
+              td { text '182' }
+              td (class:'savings') { text '1.6%' }
+            }
+            tr {
+              td { text 'static_marketing' }
+              td { text '111' }
+              td { text '92' }
+              td (class:'savings') { text '17.1%' }
+            }
+          }
+        }
+      }
+
+      h3 {
+        text 'Aggregate (659 cases incl. synthetic)'
+      }
+      div (class:'bench-table-wrap') {
+        table (class:'bench-table') {
+          thead {
+            tr {
+              th { text 'Metric' }
+              th { text 'Value' }
+            }
+          }
+          tbody {
+            tr {
+              td { text 'Avg savings (lexical)' }
+              td { text '21.5%' }
+            }
+            tr {
+              td { text 'Median savings (lexical)' }
+              td { text '20.8%' }
+            }
+            tr {
+              td { text 'Max savings' }
+              td { text '54.9%' }
+            }
+            tr {
+              td { text 'Min savings' }
+              td { text '1.6%' }
+            }
+            tr {
+              td { text 'Parse success rate' }
+              td { text '100%' }
+            }
+          }
+        }
+      }
+
+      p (class:'muted bench-note') {
+        text 'Benchmarks run on Node v22. Lexical tokenizer approximates real LLM tokenization. Run locally: pnpm bench:react-vs-dsl'
+      }
+    }
+
+    section (class:'card', id:'setup') {
+      h2 {
+        text 'Quick Setup'
+      }
+      div (class:'setup-steps') {
+        div (class:'step') {
+          span (class:'step-num') {
+            text '1'
+          }
+          div {
+            h4 {
+              text 'Install'
+            }
+            pre {
+              code {
+                text 'npm install @botfather/units\nnpm install -D @botfather/vite-plugin-units'
+              }
+            }
+          }
+        }
+        div (class:'step') {
+          span (class:'step-num') {
+            text '2'
+          }
+          div {
+            h4 {
+              text 'Configure Vite'
+            }
+            pre {
+              code {
+                text 'import units from "@botfather/vite-plugin-units";\nimport react from "@vitejs/plugin-react";\n\nexport default { plugins: [units(), react()] };'
+              }
+            }
+          }
+        }
+        div (class:'step') {
+          span (class:'step-num') {
+            text '3'
+          }
+          div {
+            h4 {
+              text 'Create a .ui file'
+            }
+            pre {
+              code {
+                text 'App {\n  h1 {\n    text \'Hello Units!\'\n  }\n  p {\n    text \'Rendering from a .ui file.\'\n  }\n}'
+              }
+            }
+          }
+        }
+        div (class:'step') {
+          span (class:'step-num') {
+            text '4'
+          }
+          div {
+            h4 {
+              text 'Render in React'
+            }
+            pre {
+              code {
+                text 'import { renderUnits } from "@botfather/units";\nimport uiAst from "./app.ui";\n\nfunction App() {\n  return renderUnits(uiAst, { /* scope */ });\n}'
+              }
+            }
+          }
+        }
+      }
+    }
+
+    footer (class:'footer') {
+      p {
+        text 'Units — Open Source · MIT License'
+      }
+    }
+  }
+}
