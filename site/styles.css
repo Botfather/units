@@ -1,10 +1,10 @@
 :root {
-  --bg: #f6f7f9;
+  --bg: #ffffff;
   --panel: #ffffff;
-  --ink: #17212b;
-  --muted: #556270;
-  --line: #d5dbe3;
-  --accent: #0f6b5f;
+  --ink: #000000;
+  --muted: #4a4a4a;
+  --line: #cfcfcf;
+  --accent: #000000;
   --accent-ink: #ffffff;
 }
 
@@ -18,10 +18,7 @@ body {
   padding: 0;
   font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
   color: var(--ink);
-  background:
-    radial-gradient(circle at 10% 0%, #e8f6f1 0%, transparent 35%),
-    radial-gradient(circle at 100% 0%, #ecf3ff 0%, transparent 30%),
-    var(--bg);
+  background: var(--bg);
 }
 
 a {
@@ -54,7 +51,7 @@ a:hover {
 .card {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 0;
   padding: 1rem;
   margin-bottom: 1rem;
 }
@@ -67,7 +64,7 @@ a:hover {
 
 .btn {
   display: inline-block;
-  border-radius: 8px;
+  border-radius: 0;
   padding: 0.55rem 0.8rem;
   border: 1px solid var(--accent);
   background: var(--accent);
@@ -97,9 +94,9 @@ pre {
 }
 
 pre {
-  background: #0f1723;
-  color: #d3e2ff;
-  border-radius: 10px;
+  background: #000000;
+  color: #ffffff;
+  border-radius: 0;
   overflow-x: auto;
   padding: 0.75rem;
 }
