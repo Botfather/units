@@ -26,15 +26,12 @@ div (class:'page') {
         text 'Units DSL'
       }
       p (class:'lead') {
-        text 'A minimal, fast DSL for building interactive UIs — renders with React under the hood.'
+        text 'A minimal, fast DSL for building interactive UIs: renders with React under the hood.'
       }
       p (class:'lead muted') {
         text 'This entire page is rendered from a .ui file using the Units DSL itself.'
       }
       div (class:'badge-row') {
-        span (class:'badge') {
-          text 'O(n) parsing'
-        }
         span (class:'badge') {
           text 'Zero dependencies'
         }
@@ -642,7 +639,7 @@ div (class:'page') {
 
     footer (class:'footer') {
       p {
-        text 'Units — Open Source · MIT License'
+        text 'Units · Open Source under MIT License'
       }
     }
   }
