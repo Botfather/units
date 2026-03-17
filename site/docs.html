@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Units Docs</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <nav class="nav">
+        <span class="brand">Units</span>
+        <a href="./index.html">Home</a>
+        <a href="./docs.html">Documentation</a>
+        <a href="./examples.html">Examples</a>
+      </nav>
+
+      <section class="card">
+        <h1>Documentation</h1>
+        <p>
+          Full technical docs are maintained in the repository and remain the source of truth.
+        </p>
+        <p>
+          <a class="btn" href="https://github.com/Botfather/units/blob/main/DOCS.md">Open full DOCS.md</a>
+          <a class="btn secondary" href="https://github.com/Botfather/units/blob/main/DOCS-LLM.md">Open DOCS-LLM.md</a>
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Syntax Snapshot</h2>
+        <pre><code>Tag ( props ) { children }
+text 'literal'
+@expr
+
+#if (@cond) { ... }
+#for (item, i in @items) { ... }
+#slot (name)</code></pre>
+      </section>
+
+      <section class="card grid">
+        <article>
+          <h3>Runtime</h3>
+          <ul>
+            <li>React renderer with scoped evaluation</li>
+            <li>Custom host renderer API</li>
+            <li>Inline event and expression support</li>
+          </ul>
+        </article>
+        <article>
+          <h3>Tooling</h3>
+          <ul>
+            <li>Vite plugin for .ui imports</li>
+            <li>Format/lint/token/highlight tools</li>
+            <li>CLI utilities for .ui workflows</li>
+          </ul>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
