@@ -73,11 +73,19 @@ div (class:'page') {
           }
           pre {
             code {
-              text 'text \'Hello world\'\ntext \'Welcome, @{user.name}!\'\n\'Shorthand text\'\n@user.email'
+              text 'text \'Hello world\'\ntext \'Welcome, '
+              text '@'
+              text '{name}!\'\n\'Shorthand text\'\n'
+              text '@'
+              text 'email'
             }
           }
           p {
-            text 'Use text for literals. @{...} interpolates expressions inline. Bare @expr emits a value directly.'
+            text 'Use text for literals. '
+            text '@'
+            text '{...} interpolates expressions inline. Bare '
+            text '@'
+            text 'expr emits a value directly.'
           }
         }
 
@@ -224,7 +232,9 @@ div (class:'page') {
             }
             pre {
               code {
-                text 'button (!click { increment() }) {\n  text \'Clicked @{count} times\'\n}'
+                text 'button (!click { increment() }) {\n  text \'Clicked '
+                text '@'
+                text '{count} times\'\n}'
               }
             }
           }
