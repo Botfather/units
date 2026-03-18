@@ -1,0 +1,380 @@
+{
+  "schemaVersion": 1,
+  "name": "system-standard-v1",
+  "description": "Machine benchmark plan built around standard CLI tools used in infrastructure and performance engineering workflows.",
+  "defaults": {
+    "timeoutMs": 900000,
+    "resultsDir": "bench/results/system",
+    "scratchDir": ".bench/scratch",
+    "diskBenchmarkFile": ".bench/scratch/fio-benchmark.dat",
+    "cpuMaxPrime": 20000,
+    "memoryBlockSize": "1M",
+    "memoryTotalSize": "16G",
+    "diskFileSize": "4G",
+    "diskRuntimeSeconds": 30,
+    "diskQueueDepth": 32,
+    "diskNumJobs": 1,
+    "networkPort": 5201,
+    "networkDurationSeconds": 20
+  },
+  "suites": [
+    {
+      "id": "cpu_sysbench_single",
+      "title": "CPU Prime Single Thread",
+      "category": "cpu",
+      "standard": "sysbench",
+      "tool": "sysbench",
+      "parser": "sysbench_cpu",
+      "description": "Single-thread integer prime search to establish per-core latency and IPC-friendly throughput.",
+      "expectedMetrics": [
+        "events_per_second",
+        "total_time_seconds",
+        "latency_ms_avg",
+        "latency_ms_95"
+      ],
+      "command": [
+        "sysbench",
+        "cpu",
+        "--threads=1",
+        "--cpu-max-prime={{defaults.cpuMaxPrime}}",
+        "run"
+      ]
+    },
+    {
+      "id": "cpu_sysbench_multi",
+      "title": "CPU Prime All Cores",
+      "category": "cpu",
+      "standard": "sysbench",
+      "tool": "sysbench",
+      "parser": "sysbench_cpu",
+      "description": "All-core prime search for sustained CPU throughput under full host utilization.",
+      "expectedMetrics": [
+        "events_per_second",
+        "total_time_seconds",
+        "latency_ms_avg",
+        "latency_ms_95"
+      ],
+      "command": [
+        "sysbench",
+        "cpu",
+        "--threads={{machine.cpu.logicalCores}}",
+        "--cpu-max-prime={{defaults.cpuMaxPrime}}",
+        "run"
+      ]
+    },
+    {
+      "id": "memory_sysbench_read",
+      "title": "Memory Read Throughput",
+      "category": "memory",
+      "standard": "sysbench",
+      "tool": "sysbench",
+      "parser": "sysbench_memory",
+      "description": "Sequential memory read benchmark for bandwidth-oriented workloads.",
+      "expectedMetrics": [
+        "throughput_mib_per_second",
+        "operations_per_second",
+        "latency_ms_avg",
+        "latency_ms_95"
+      ],
+      "command": [
+        "sysbench",
+        "memory",
+        "--memory-oper=read",
+        "--memory-block-size={{defaults.memoryBlockSize}}",
+        "--memory-total-size={{defaults.memoryTotalSize}}",
+        "--threads={{machine.cpu.logicalCores}}",
+        "run"
+      ]
+    },
+    {
+      "id": "memory_sysbench_write",
+      "title": "Memory Write Throughput",
+      "category": "memory",
+      "standard": "sysbench",
+      "tool": "sysbench",
+      "parser": "sysbench_memory",
+      "description": "Sequential memory write benchmark for write-heavy pipelines and allocator pressure.",
+      "expectedMetrics": [
+        "throughput_mib_per_second",
+        "operations_per_second",
+        "latency_ms_avg",
+        "latency_ms_95"
+      ],
+      "command": [
+        "sysbench",
+        "memory",
+        "--memory-oper=write",
+        "--memory-block-size={{defaults.memoryBlockSize}}",
+        "--memory-total-size={{defaults.memoryTotalSize}}",
+        "--threads={{machine.cpu.logicalCores}}",
+        "run"
+      ]
+    },
+    {
+      "id": "disk_fio_seq_read",
+      "title": "Disk Sequential Read",
+      "category": "disk",
+      "standard": "fio",
+      "tool": "fio",
+      "parser": "fio_json",
+      "description": "High-bandwidth sequential read pass against the local benchmark file.",
+      "expectedMetrics": [
+        "read_bw_bytes_per_second",
+        "read_iops",
+        "read_clat_ns_mean"
+      ],
+      "command": [
+        "fio",
+        "--name=seq_read",
+        "--filename={{paths.diskBenchmarkFile}}",
+        "--rw=read",
+        "--bs=1M",
+        "--size={{defaults.diskFileSize}}",
+        "--runtime={{defaults.diskRuntimeSeconds}}",
+        "--time_based=1",
+        "--direct=1",
+        "--ioengine=sync",
+        "--iodepth={{defaults.diskQueueDepth}}",
+        "--numjobs={{defaults.diskNumJobs}}",
+        "--group_reporting=1",
+        "--output-format=json"
+      ],
+      "preflight": {
+        "description": "Populate the fio target file before read-heavy disk tests.",
+        "command": [
+          "fio",
+          "--name=precondition_seq",
+          "--filename={{paths.diskBenchmarkFile}}",
+          "--rw=write",
+          "--bs=1M",
+          "--size={{defaults.diskFileSize}}",
+          "--runtime=1",
+          "--time_based=0",
+          "--direct=1",
+          "--ioengine=sync",
+          "--iodepth=1",
+          "--numjobs=1",
+          "--group_reporting=1",
+          "--output-format=json"
+        ]
+      }
+    },
+    {
+      "id": "disk_fio_seq_write",
+      "title": "Disk Sequential Write",
+      "category": "disk",
+      "standard": "fio",
+      "tool": "fio",
+      "parser": "fio_json",
+      "description": "High-bandwidth sequential write pass for storage throughput baselines.",
+      "expectedMetrics": [
+        "write_bw_bytes_per_second",
+        "write_iops",
+        "write_clat_ns_mean"
+      ],
+      "command": [
+        "fio",
+        "--name=seq_write",
+        "--filename={{paths.diskBenchmarkFile}}",
+        "--rw=write",
+        "--bs=1M",
+        "--size={{defaults.diskFileSize}}",
+        "--runtime={{defaults.diskRuntimeSeconds}}",
+        "--time_based=1",
+        "--direct=1",
+        "--ioengine=sync",
+        "--iodepth={{defaults.diskQueueDepth}}",
+        "--numjobs={{defaults.diskNumJobs}}",
+        "--group_reporting=1",
+        "--output-format=json"
+      ]
+    },
+    {
+      "id": "disk_fio_rand_read",
+      "title": "Disk Random Read 4K",
+      "category": "disk",
+      "standard": "fio",
+      "tool": "fio",
+      "parser": "fio_json",
+      "description": "4K random read profile to capture latency-sensitive read behavior.",
+      "expectedMetrics": [
+        "read_bw_bytes_per_second",
+        "read_iops",
+        "read_clat_ns_mean"
+      ],
+      "command": [
+        "fio",
+        "--name=rand_read",
+        "--filename={{paths.diskBenchmarkFile}}",
+        "--rw=randread",
+        "--bs=4k",
+        "--size={{defaults.diskFileSize}}",
+        "--runtime={{defaults.diskRuntimeSeconds}}",
+        "--time_based=1",
+        "--direct=1",
+        "--ioengine=sync",
+        "--iodepth={{defaults.diskQueueDepth}}",
+        "--numjobs={{defaults.diskNumJobs}}",
+        "--group_reporting=1",
+        "--output-format=json"
+      ],
+      "preflight": {
+        "description": "Populate the fio target file before random read tests.",
+        "command": [
+          "fio",
+          "--name=precondition_rand_read",
+          "--filename={{paths.diskBenchmarkFile}}",
+          "--rw=write",
+          "--bs=1M",
+          "--size={{defaults.diskFileSize}}",
+          "--runtime=1",
+          "--time_based=0",
+          "--direct=1",
+          "--ioengine=sync",
+          "--iodepth=1",
+          "--numjobs=1",
+          "--group_reporting=1",
+          "--output-format=json"
+        ]
+      }
+    },
+    {
+      "id": "disk_fio_rand_write",
+      "title": "Disk Random Write 4K",
+      "category": "disk",
+      "standard": "fio",
+      "tool": "fio",
+      "parser": "fio_json",
+      "description": "4K random write profile for queue depth and write-latency analysis.",
+      "expectedMetrics": [
+        "write_bw_bytes_per_second",
+        "write_iops",
+        "write_clat_ns_mean"
+      ],
+      "command": [
+        "fio",
+        "--name=rand_write",
+        "--filename={{paths.diskBenchmarkFile}}",
+        "--rw=randwrite",
+        "--bs=4k",
+        "--size={{defaults.diskFileSize}}",
+        "--runtime={{defaults.diskRuntimeSeconds}}",
+        "--time_based=1",
+        "--direct=1",
+        "--ioengine=sync",
+        "--iodepth={{defaults.diskQueueDepth}}",
+        "--numjobs={{defaults.diskNumJobs}}",
+        "--group_reporting=1",
+        "--output-format=json"
+      ]
+    },
+    {
+      "id": "disk_fio_rand_mixed",
+      "title": "Disk Mixed Random 70/30",
+      "category": "disk",
+      "standard": "fio",
+      "tool": "fio",
+      "parser": "fio_json",
+      "description": "Mixed random 70/30 read/write workload that approximates common OLTP and cache-heavy patterns.",
+      "expectedMetrics": [
+        "read_bw_bytes_per_second",
+        "write_bw_bytes_per_second",
+        "read_iops",
+        "write_iops"
+      ],
+      "command": [
+        "fio",
+        "--name=rand_mixed",
+        "--filename={{paths.diskBenchmarkFile}}",
+        "--rw=randrw",
+        "--rwmixread=70",
+        "--bs=4k",
+        "--size={{defaults.diskFileSize}}",
+        "--runtime={{defaults.diskRuntimeSeconds}}",
+        "--time_based=1",
+        "--direct=1",
+        "--ioengine=sync",
+        "--iodepth={{defaults.diskQueueDepth}}",
+        "--numjobs={{defaults.diskNumJobs}}",
+        "--group_reporting=1",
+        "--output-format=json"
+      ],
+      "preflight": {
+        "description": "Populate the fio target file before mixed random tests.",
+        "command": [
+          "fio",
+          "--name=precondition_rand_mixed",
+          "--filename={{paths.diskBenchmarkFile}}",
+          "--rw=write",
+          "--bs=1M",
+          "--size={{defaults.diskFileSize}}",
+          "--runtime=1",
+          "--time_based=0",
+          "--direct=1",
+          "--ioengine=sync",
+          "--iodepth=1",
+          "--numjobs=1",
+          "--group_reporting=1",
+          "--output-format=json"
+        ]
+      }
+    },
+    {
+      "id": "network_iperf3_downlink",
+      "title": "Network Throughput Downlink",
+      "category": "network",
+      "standard": "iperf3",
+      "tool": "iperf3",
+      "parser": "iperf3_json",
+      "optional": true,
+      "description": "TCP receive test from a dedicated iperf3 server. Provide IPERF3_HOST to enable it.",
+      "requiresEnv": [
+        "IPERF3_HOST"
+      ],
+      "expectedMetrics": [
+        "received_bits_per_second",
+        "sent_bits_per_second",
+        "retransmits"
+      ],
+      "command": [
+        "iperf3",
+        "--json",
+        "--client",
+        "{{env.IPERF3_HOST}}",
+        "--port",
+        "{{defaults.networkPort}}",
+        "--time",
+        "{{defaults.networkDurationSeconds}}"
+      ]
+    },
+    {
+      "id": "network_iperf3_uplink",
+      "title": "Network Throughput Uplink",
+      "category": "network",
+      "standard": "iperf3",
+      "tool": "iperf3",
+      "parser": "iperf3_json",
+      "optional": true,
+      "description": "Reverse TCP test to capture outbound path quality using the same iperf3 server.",
+      "requiresEnv": [
+        "IPERF3_HOST"
+      ],
+      "expectedMetrics": [
+        "received_bits_per_second",
+        "sent_bits_per_second",
+        "retransmits"
+      ],
+      "command": [
+        "iperf3",
+        "--json",
+        "--client",
+        "{{env.IPERF3_HOST}}",
+        "--port",
+        "{{defaults.networkPort}}",
+        "--time",
+        "{{defaults.networkDurationSeconds}}",
+        "--reverse"
+      ]
+    }
+  ]
+}
