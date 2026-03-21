@@ -8,6 +8,7 @@ Lightweight DSL for building interactive UIs. This monorepo publishes:
 - `@botfather/vite-plugin-units-tools` (Vite dev tools: format/tokens/highlight)
 - `@botfather/units-tools` (CLI tools: format, lint, etc.)
 - `@botfather/units-agent-middleware` (agent-agnostic UI tree rewrite middleware)
+- `@botfather/units-agent-plugin` (agent-facing `compressUiForAgent` API returning DSL + AST)
 - `@botfather/units-dom-snapshot` (arbitrary DOM snapshot extraction for agent pipelines)
 - `@botfather/units-compiler` (UiNode/IR -> Units AST+DSL compiler with loop heuristics)
 - `@botfather/units-uikit-shadcn` (ShadCN-style Units UI kit)
