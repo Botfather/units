@@ -1,6 +1,6 @@
 {
-  "name": "ui-ps-fixtures-v1",
-  "description": "Host-tree fixtures used for baseline completeness + efficiency scoring and program selection.",
+  "name": "ui-ps-fixtures-v2",
+  "description": "Expanded host-tree fixtures with tricky structures and semantic-loss probes for UI compression quality.",
   "gates": {
     "action_recall": 1.0,
     "name_recall": 0.98,
@@ -11,6 +11,7 @@
       "id": "dom_checkout_flow",
       "title": "Checkout form with hidden helper copy",
       "sourceType": "dom",
+      "tags": ["baseline", "form"],
       "tree": {
         "tagName": "main",
         "id": "checkout-root",
@@ -41,13 +42,14 @@
       "expectations": {
         "expectedActions": ["input", "click"],
         "expectedNames": ["Email address", "Pay now"],
-        "expectedText": "Checkout Email address Pay now"
+        "expectedText": "Checkout Pay now"
       }
     },
     {
       "id": "dom_primary_nav",
       "title": "Navigation menu with hidden decoration",
       "sourceType": "dom",
+      "tags": ["baseline", "navigation"],
       "tree": {
         "tagName": "nav",
         "id": "primary-nav",
@@ -59,7 +61,6 @@
           },
           {
             "tagName": "a",
-            "href": "/orders",
             "attributes": {
               "href": "/orders",
               "aria-label": "Orders"
@@ -68,7 +69,6 @@
           },
           {
             "tagName": "a",
-            "href": "/billing",
             "attributes": {
               "href": "/billing",
               "aria-label": "Billing"
@@ -92,6 +92,7 @@
       "id": "a11y_preferences_dialog",
       "title": "Accessibility tree for preferences dialog",
       "sourceType": "a11y",
+      "tags": ["baseline", "modal"],
       "tree": {
         "id": "prefs-dialog",
         "role": "dialog",
@@ -101,11 +102,6 @@
             "id": "title",
             "role": "text",
             "text": "Preferences"
-          },
-          {
-            "id": "spacer",
-            "role": "text",
-            "text": "   "
           },
           {
             "id": "alerts",
@@ -125,13 +121,14 @@
       "expectations": {
         "expectedActions": ["toggle", "click"],
         "expectedNames": ["Preferences", "Email alerts", "Save preferences"],
-        "expectedText": "Preferences Email alerts Save preferences"
+        "expectedText": "Preferences"
       }
     },
     {
       "id": "ir_settings_panel",
       "title": "IR settings panel with hidden debug text",
       "sourceType": "ir",
+      "tags": ["baseline", "ir"],
       "tree": {
         "id": "settings-root",
         "role": "container",
@@ -203,6 +200,434 @@
         "expectedActions": ["input", "click"],
         "expectedNames": ["Settings", "Search settings", "Save"],
         "expectedText": "Workspace settings Save"
+      }
+    },
+    {
+      "id": "dom_modal_delete_confirm",
+      "title": "Modal confirmation with destructive action",
+      "sourceType": "dom",
+      "tags": ["modal", "destructive"],
+      "tree": {
+        "tagName": "div",
+        "id": "page-root",
+        "children": [
+          {
+            "tagName": "section",
+            "attributes": { "aria-hidden": "true" },
+            "children": [
+              { "type": "text", "text": "Background content" }
+            ]
+          },
+          {
+            "tagName": "div",
+            "attributes": { "role": "dialog", "aria-label": "Delete project" },
+            "children": [
+              { "type": "text", "text": "Delete project" },
+              { "type": "text", "text": "Are you sure" },
+              { "tagName": "button", "attributes": { "aria-label": "Cancel" }, "textContent": "Cancel" },
+              { "tagName": "button", "attributes": { "aria-label": "Delete project" }, "textContent": "Delete" }
+            ]
+          }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["click"],
+        "expectedNames": ["Cancel", "Delete project"],
+        "expectedText": "Delete project Are you sure Cancel Delete"
+      }
+    },
+    {
+      "id": "dom_orders_table",
+      "title": "Table with headers, rows, and row actions",
+      "sourceType": "dom",
+      "tags": ["table", "data-grid"],
+      "tree": {
+        "tagName": "table",
+        "id": "orders-table",
+        "children": [
+          {
+            "tagName": "tr",
+            "children": [
+              { "tagName": "th", "textContent": "Order" },
+              { "tagName": "th", "textContent": "Amount" },
+              { "tagName": "th", "textContent": "Action" }
+            ]
+          },
+          {
+            "tagName": "tr",
+            "children": [
+              { "tagName": "td", "textContent": "#1001" },
+              { "tagName": "td", "textContent": "$42" },
+              { "tagName": "a", "attributes": { "href": "/orders/1001", "aria-label": "View order 1001" }, "textContent": "View" }
+            ]
+          },
+          {
+            "tagName": "tr",
+            "children": [
+              { "tagName": "td", "textContent": "#1002" },
+              { "tagName": "td", "textContent": "$63" },
+              { "tagName": "a", "attributes": { "href": "/orders/1002", "aria-label": "View order 1002" }, "textContent": "View" }
+            ]
+          }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["click"],
+        "expectedNames": ["View order 1001", "View order 1002"],
+        "expectedText": "Order Amount Action 1001 42 View 1002 63 View"
+      }
+    },
+    {
+      "id": "dom_nested_shipping_form",
+      "title": "Nested shipping form sections",
+      "sourceType": "dom",
+      "tags": ["nested-form", "form"],
+      "tree": {
+        "tagName": "form",
+        "id": "shipping-form",
+        "children": [
+          { "type": "text", "text": "Shipping address" },
+          {
+            "tagName": "fieldset",
+            "children": [
+              { "tagName": "input", "attributes": { "aria-label": "Full name", "placeholder": "Jane Doe" } },
+              {
+                "tagName": "section",
+                "children": [
+                  { "tagName": "input", "attributes": { "aria-label": "Street", "placeholder": "Street" } },
+                  { "tagName": "input", "attributes": { "aria-label": "City", "placeholder": "City" } },
+                  { "tagName": "input", "attributes": { "aria-label": "Postal code", "placeholder": "Postal code" } }
+                ]
+              }
+            ]
+          },
+          { "tagName": "button", "attributes": { "aria-label": "Save shipping" }, "textContent": "Save shipping" }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["input", "click"],
+        "expectedNames": ["Full name", "Street", "City", "Postal code", "Save shipping"],
+        "expectedText": "Shipping address Save shipping"
+      }
+    },
+    {
+      "id": "dom_repeated_product_cards",
+      "title": "Repeated product cards with actions",
+      "sourceType": "dom",
+      "tags": ["repeated-cards", "catalog"],
+      "tree": {
+        "tagName": "section",
+        "id": "catalog",
+        "children": [
+          {
+            "tagName": "article",
+            "children": [
+              { "type": "text", "text": "Notebook" },
+              { "tagName": "button", "attributes": { "aria-label": "Add Notebook" }, "textContent": "Add to cart" }
+            ]
+          },
+          {
+            "tagName": "article",
+            "children": [
+              { "type": "text", "text": "Headphones" },
+              { "tagName": "button", "attributes": { "aria-label": "Add Headphones" }, "textContent": "Add to cart" }
+            ]
+          },
+          {
+            "tagName": "article",
+            "children": [
+              { "type": "text", "text": "Monitor" },
+              { "tagName": "button", "attributes": { "aria-label": "Add Monitor" }, "textContent": "Add to cart" }
+            ]
+          }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["click"],
+        "expectedNames": ["Add Notebook", "Add Headphones", "Add Monitor"],
+        "expectedText": "Notebook Add to cart Headphones Add to cart Monitor Add to cart"
+      }
+    },
+    {
+      "id": "dom_noisy_search_toolbar",
+      "title": "Toolbar with noisy text and search action",
+      "sourceType": "dom",
+      "tags": ["noisy-text", "toolbar"],
+      "tree": {
+        "tagName": "header",
+        "id": "toolbar",
+        "children": [
+          { "type": "text", "text": "~~~ Limited !!! Offer ###" },
+          { "type": "text", "text": "   \n   " },
+          { "tagName": "input", "attributes": { "aria-label": "Search catalog", "placeholder": "Search" } },
+          { "tagName": "button", "attributes": { "aria-label": "Apply filter" }, "textContent": "Apply filter" }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["input", "click"],
+        "expectedNames": ["Search catalog", "Apply filter"],
+        "expectedText": "Limited Offer Apply filter"
+      }
+    },
+    {
+      "id": "dom_semantic_loss_dual_cta",
+      "title": "Semantic-loss probe: two similar destructive CTAs",
+      "sourceType": "dom",
+      "tags": ["semantic-loss", "cta"],
+      "tree": {
+        "tagName": "section",
+        "id": "danger-zone",
+        "children": [
+          { "type": "text", "text": "Danger zone" },
+          { "tagName": "button", "attributes": { "aria-label": "Delete draft" }, "textContent": "Delete" },
+          { "tagName": "button", "attributes": { "aria-label": "Delete project" }, "textContent": "Delete" },
+          { "tagName": "button", "attributes": { "aria-label": "Archive project" }, "textContent": "Archive" }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["click"],
+        "expectedNames": ["Delete draft", "Delete project", "Archive project"],
+        "expectedText": "Danger zone Delete Delete Archive"
+      }
+    },
+    {
+      "id": "dom_semantic_loss_pagination",
+      "title": "Semantic-loss probe: pagination controls",
+      "sourceType": "dom",
+      "tags": ["semantic-loss", "navigation"],
+      "tree": {
+        "tagName": "nav",
+        "id": "pager",
+        "children": [
+          { "type": "text", "text": "Page 1 of 8" },
+          { "tagName": "button", "disabled": true, "attributes": { "aria-label": "Previous page" }, "textContent": "Previous" },
+          { "tagName": "button", "attributes": { "aria-label": "Next page" }, "textContent": "Next" },
+          { "tagName": "a", "attributes": { "href": "/page/8", "aria-label": "Last page" }, "textContent": "Last" }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["click"],
+        "expectedNames": ["Previous page", "Next page", "Last page"],
+        "expectedText": "Page 1 of 8 Previous Next Last"
+      }
+    },
+    {
+      "id": "a11y_invoice_table",
+      "title": "Accessibility table-like structure for invoices",
+      "sourceType": "a11y",
+      "tags": ["table", "a11y"],
+      "tree": {
+        "id": "invoice-table",
+        "role": "table",
+        "name": "Invoices",
+        "children": [
+          {
+            "id": "row-header",
+            "role": "row",
+            "children": [
+              { "id": "h1", "role": "cell", "text": "Invoice" },
+              { "id": "h2", "role": "cell", "text": "Status" },
+              { "id": "h3", "role": "cell", "text": "Action" }
+            ]
+          },
+          {
+            "id": "row-1",
+            "role": "row",
+            "children": [
+              { "id": "i1", "role": "cell", "text": "INV-001" },
+              { "id": "s1", "role": "cell", "text": "Paid" },
+              { "id": "a1", "role": "link", "name": "Open INV-001", "actions": ["click"] }
+            ]
+          },
+          {
+            "id": "row-2",
+            "role": "row",
+            "children": [
+              { "id": "i2", "role": "cell", "text": "INV-002" },
+              { "id": "s2", "role": "cell", "text": "Overdue" },
+              { "id": "a2", "role": "link", "name": "Open INV-002", "actions": ["click"] }
+            ]
+          }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["click"],
+        "expectedNames": ["Invoices", "Open INV-001", "Open INV-002"],
+        "expectedText": "Invoice Status Action INV-001 Paid INV-002 Overdue"
+      }
+    },
+    {
+      "id": "a11y_semantic_loss_toggle_pair",
+      "title": "Semantic-loss probe: adjacent toggles with different names",
+      "sourceType": "a11y",
+      "tags": ["semantic-loss", "a11y", "toggle"],
+      "tree": {
+        "id": "notif-dialog",
+        "role": "dialog",
+        "name": "Notifications",
+        "children": [
+          { "id": "title", "role": "text", "text": "Notifications" },
+          { "id": "wifi", "role": "switch", "name": "Wi-Fi alerts", "actions": ["toggle"], "state": { "checked": true } },
+          { "id": "mobile", "role": "switch", "name": "Mobile alerts", "actions": ["toggle"], "state": { "checked": false } },
+          { "id": "save", "role": "button", "name": "Save notification settings", "actions": ["click"] }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["toggle", "click"],
+        "expectedNames": ["Notifications", "Wi-Fi alerts", "Mobile alerts", "Save notification settings"],
+        "expectedText": "Notifications"
+      }
+    },
+    {
+      "id": "a11y_nested_checkout_form",
+      "title": "Nested checkout controls in accessibility tree",
+      "sourceType": "a11y",
+      "tags": ["nested-form", "a11y"],
+      "tree": {
+        "id": "checkout-form",
+        "role": "form",
+        "name": "Checkout form",
+        "children": [
+          { "id": "email", "role": "textbox", "name": "Email", "actions": ["input"] },
+          {
+            "id": "address-group",
+            "role": "group",
+            "name": "Address",
+            "children": [
+              { "id": "street", "role": "textbox", "name": "Street", "actions": ["input"] },
+              { "id": "city", "role": "textbox", "name": "City", "actions": ["input"] }
+            ]
+          },
+          { "id": "submit", "role": "button", "name": "Complete purchase", "actions": ["click"] }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["input", "click"],
+        "expectedNames": ["Checkout form", "Email", "Street", "City", "Complete purchase"],
+        "expectedText": ""
+      }
+    },
+    {
+      "id": "ir_wizard_nested_form",
+      "title": "IR wizard with nested conditional sections",
+      "sourceType": "ir",
+      "tags": ["ir", "nested-form", "wizard"],
+      "tree": {
+        "id": "wizard-root",
+        "role": "container",
+        "name": "Onboarding wizard",
+        "text": "",
+        "props": {},
+        "state": {},
+        "actions": [],
+        "meta": {},
+        "children": [
+          { "id": "step-title", "role": "text", "name": "", "text": "Step 2", "props": {}, "state": {}, "actions": [], "meta": {}, "children": [] },
+          {
+            "id": "profile-group",
+            "role": "container",
+            "name": "Profile",
+            "text": "",
+            "props": {},
+            "state": {},
+            "actions": [],
+            "meta": {},
+            "children": [
+              { "id": "first-name", "role": "input", "name": "First name", "text": "", "props": { "placeholder": "First name" }, "state": {}, "actions": ["input"], "meta": {}, "children": [] },
+              { "id": "last-name", "role": "input", "name": "Last name", "text": "", "props": { "placeholder": "Last name" }, "state": {}, "actions": ["input"], "meta": {}, "children": [] }
+            ]
+          },
+          { "id": "back", "role": "button", "name": "Back", "text": "Back", "props": {}, "state": {}, "actions": ["click"], "meta": {}, "children": [] },
+          { "id": "next", "role": "button", "name": "Continue", "text": "Continue", "props": {}, "state": {}, "actions": ["click"], "meta": {}, "children": [] }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["input", "click"],
+        "expectedNames": ["Onboarding wizard", "First name", "Last name", "Back", "Continue"],
+        "expectedText": "Step 2 Back Continue"
+      }
+    },
+    {
+      "id": "ir_repeated_cards_actions",
+      "title": "IR repeated cards with per-card actions",
+      "sourceType": "ir",
+      "tags": ["ir", "repeated-cards"],
+      "tree": {
+        "id": "feed-root",
+        "role": "container",
+        "name": "Activity feed",
+        "text": "",
+        "props": {},
+        "state": {},
+        "actions": [],
+        "meta": {},
+        "children": [
+          { "id": "c1t", "role": "text", "name": "", "text": "Build #101", "props": {}, "state": {}, "actions": [], "meta": {}, "children": [] },
+          { "id": "c1b", "role": "button", "name": "Open build 101", "text": "Open", "props": {}, "state": {}, "actions": ["click"], "meta": {}, "children": [] },
+          { "id": "c2t", "role": "text", "name": "", "text": "Build #102", "props": {}, "state": {}, "actions": [], "meta": {}, "children": [] },
+          { "id": "c2b", "role": "button", "name": "Open build 102", "text": "Open", "props": {}, "state": {}, "actions": ["click"], "meta": {}, "children": [] },
+          { "id": "c3t", "role": "text", "name": "", "text": "Build #103", "props": {}, "state": {}, "actions": [], "meta": {}, "children": [] },
+          { "id": "c3b", "role": "button", "name": "Open build 103", "text": "Open", "props": {}, "state": {}, "actions": ["click"], "meta": {}, "children": [] }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["click"],
+        "expectedNames": ["Activity feed", "Open build 101", "Open build 102", "Open build 103"],
+        "expectedText": "Build 101 Open Build 102 Open Build 103 Open"
+      }
+    },
+    {
+      "id": "ir_semantic_loss_header_controls",
+      "title": "Semantic-loss probe: independent header controls",
+      "sourceType": "ir",
+      "tags": ["semantic-loss", "ir", "controls"],
+      "tree": {
+        "id": "report-header",
+        "role": "container",
+        "name": "Reports",
+        "text": "",
+        "props": {},
+        "state": {},
+        "actions": [],
+        "meta": {},
+        "children": [
+          { "id": "h1", "role": "text", "name": "", "text": "Revenue report", "props": {}, "state": {}, "actions": [], "meta": {}, "children": [] },
+          { "id": "sort-date", "role": "button", "name": "Sort by date", "text": "Sort", "props": {}, "state": {}, "actions": ["click"], "meta": {}, "children": [] },
+          { "id": "sort-amount", "role": "button", "name": "Sort by amount", "text": "Sort", "props": {}, "state": {}, "actions": ["click"], "meta": {}, "children": [] },
+          { "id": "export", "role": "button", "name": "Export CSV", "text": "Export", "props": {}, "state": {}, "actions": ["click"], "meta": {}, "children": [] }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["click"],
+        "expectedNames": ["Reports", "Sort by date", "Sort by amount", "Export CSV"],
+        "expectedText": "Revenue report Sort Sort Export"
+      }
+    },
+    {
+      "id": "ir_noisy_activity_feed",
+      "title": "IR noisy feed text with actionable rows",
+      "sourceType": "ir",
+      "tags": ["ir", "noisy-text"],
+      "tree": {
+        "id": "activity-root",
+        "role": "container",
+        "name": "Activity",
+        "text": "",
+        "props": {},
+        "state": {},
+        "actions": [],
+        "meta": {},
+        "children": [
+          { "id": "n1", "role": "text", "name": "", "text": "*** build succeeded !!!", "props": {}, "state": {}, "actions": [], "meta": {}, "children": [] },
+          { "id": "n2", "role": "text", "name": "", "text": "   ", "props": {}, "state": {}, "actions": [], "meta": {}, "children": [] },
+          { "id": "open-log", "role": "button", "name": "Open logs", "text": "Open logs", "props": {}, "state": {}, "actions": ["click"], "meta": {}, "children": [] },
+          { "id": "rerun", "role": "button", "name": "Re-run job", "text": "Re-run", "props": {}, "state": {}, "actions": ["click"], "meta": {}, "children": [] }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["click"],
+        "expectedNames": ["Activity", "Open logs", "Re-run job"],
+        "expectedText": "build succeeded Open logs Re run"
       }
     }
   ]

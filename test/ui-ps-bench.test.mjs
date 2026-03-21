@@ -33,8 +33,8 @@ test("ui-ps bench parseArgs supports fixture/library overrides", () => {
 
 test("ui-ps fixtures loader resolves bundled fixture corpus", async () => {
   const fixtures = await loadFixtures("bench/ui-ps-fixtures.json");
-  assert.equal(fixtures.name, "ui-ps-fixtures-v1");
-  assert.ok(fixtures.cases.length >= 4);
+  assert.equal(fixtures.name, "ui-ps-fixtures-v2");
+  assert.ok(fixtures.cases.length >= 18);
   assert.equal(fixtures.gates.action_recall, 1);
 });
 
@@ -44,7 +44,9 @@ test("ui-ps bench run computes selection + reward summary", async () => {
     library: "bench/ui-ps-library",
   });
 
-  assert.ok(result.summary.case_count >= 4);
+  assert.ok(result.summary.case_count >= 18);
+  assert.ok(result.summary.semantic_loss_case_count >= 4);
+  assert.ok(result.summary.semantic_loss_gate_pass_count >= 4);
   assert.ok(result.summary.avg_action_recall >= 0.9);
   assert.ok(result.library.program_count >= 4);
   assert.ok(result.cases.every((one) => Array.isArray(one.candidates)));
@@ -72,7 +74,7 @@ test("ui-ps bench CLI writes JSON payload and markdown report", async () => {
   const payload = JSON.parse(await fs.readFile(outPath, "utf-8"));
   const report = await fs.readFile(reportPath, "utf-8");
 
-  assert.ok(payload.summary.case_count >= 4);
+  assert.ok(payload.summary.case_count >= 18);
   assert.ok(Array.isArray(payload.selected_programs));
   assert.match(report, /Selected Program Summary/);
 });

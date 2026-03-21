@@ -226,6 +226,41 @@ Outputs:
 - JSON metrics + per-case candidate scoring: `bench/results/ui-ps-bench.json`
 - Markdown report: `bench/results/ui-ps-bench.md`
 - Gate thresholds: `bench/ui-ps-gates.json`
+- Fixture corpus: `bench/ui-ps-fixtures.json` (expanded tricky patterns + explicit `semantic-loss` probes)
+
+## UI-PS Tricky-Pattern Roadmap
+Goal: keep compression wins honest by expanding tricky fixture coverage while preserving action/name/text semantics.
+
+### Phase A: Near-term fixture expansion
+- Add 10-20 new fixtures across:
+  - Stacked modals and nested dialogs (`dialog` in `dialog`, focus-trap metadata).
+  - Dense tables/data-grids (sortable headers, row actions, inline pagination).
+  - Nested and multi-step forms (fieldset nesting, dependent inputs, required states).
+  - Repeated cards/feeds (mixed-action cards, optional badges/tags, lazy placeholders).
+  - Noisy text regions (alerts, banners, decorative separators, duplicated copy).
+- Add explicit semantic-loss probes for each category where compression can drop distinct actions (for example: dual CTAs, adjacent toggles, split pagination controls).
+
+### Phase B: Adapters and IR edge cases
+- Add parity fixtures for DOM vs accessibility vs IR inputs representing the same workflow.
+- Include edge cases:
+  - Hidden-but-relevant state (`aria-expanded`, `checked`, `selected`, `disabled`).
+  - Virtualized list snapshots (partial children + "load more" controls).
+  - Mixed navigation semantics (`button` vs `link` with similar names).
+
+### Phase C: Gate and scoring hardening
+- Keep strict semantic gates:
+  - `action_recall = 1.0`
+  - `name_recall >= 0.98`
+  - `text_f1 >= 0.95`
+- Add per-tag visibility in reports so regressions are easy to locate (`modal`, `table`, `semantic-loss`, etc.).
+- Raise `bench/ui-ps-gates.json` thresholds as corpus grows (case count, semantic-loss pass count, transformed count) and enforce through CI.
+
+### Definition of done for each expansion batch
+- Every new tricky category includes at least:
+  - 2 normal fixtures
+  - 1 semantic-loss probe
+- `pnpm bench:ui-ps` and `pnpm bench:ui-ps:gate` pass locally and in CI.
+- The markdown benchmark report shows no semantic-loss gate failures for the new tags.
 
 ## System Benchmarking
 Install the standard benchmark CLI tools:

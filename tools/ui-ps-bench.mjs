@@ -117,6 +117,7 @@ export async function loadFixtures(fixturesPath) {
       id: String(item?.id || `case_${cases.length + 1}`),
       title: item?.title ? String(item.title) : null,
       sourceType: String(item?.sourceType || item?.source_type || "dom").toLowerCase(),
+      tags: Array.isArray(item?.tags) ? item.tags.map((one) => String(one)).filter(Boolean) : [],
       tree,
       expectations: item?.expectations && typeof item.expectations === "object" ? item.expectations : {},
       taskContext: item?.taskContext && typeof item.taskContext === "object" ? item.taskContext : {},
@@ -191,8 +192,10 @@ export function markdownReport(payload) {
   lines.push("## Summary");
   lines.push("");
   lines.push(`- Cases: \`${payload.summary.case_count}\``);
+  lines.push(`- Semantic-loss probes: \`${payload.summary.semantic_loss_case_count}\``);
   lines.push(`- Transformed: \`${payload.summary.transformed_count}\``);
   lines.push(`- Gate pass: \`${payload.summary.gate_pass_count}\``);
+  lines.push(`- Semantic-loss gate pass: \`${payload.summary.semantic_loss_gate_pass_count}\``);
   lines.push(`- Avg action recall: \`${compactNumber(payload.summary.avg_action_recall)}\``);
   lines.push(`- Avg token reduction: \`${compactNumber(payload.summary.avg_token_reduction)}\``);
   lines.push(`- Avg total score: \`${compactNumber(payload.summary.avg_total_score)}\``);
@@ -201,10 +204,11 @@ export function markdownReport(payload) {
 
   lines.push("## Per-case");
   lines.push("");
-  lines.push("| Case | Source | Selected Program | Transformed | Action Recall | Token Reduction | Total | Delta vs Baseline | Gate Pass |");
-  lines.push("|---|---|---|---:|---:|---:|---:|---:|---:|");
+  lines.push("| Case | Tags | Source | Selected Program | Transformed | Action Recall | Token Reduction | Total | Delta vs Baseline | Gate Pass |");
+  lines.push("|---|---|---|---|---:|---:|---:|---:|---:|---:|");
   for (const one of payload.cases) {
-    lines.push(`| ${one.id} | ${one.source_type} | ${one.selected_program_id || "-"} | ${one.transformed ? "yes" : "no"} | ${compactNumber(one.score.metrics.action_recall)} | ${compactNumber(one.score.metrics.token_reduction)} | ${compactNumber(one.score.total)} | ${compactNumber(one.delta_from_baseline)} | ${one.verification.passed ? "yes" : "no"} |`);
+    const tags = one.tags && one.tags.length > 0 ? one.tags.join(", ") : "-";
+    lines.push(`| ${one.id} | ${tags} | ${one.source_type} | ${one.selected_program_id || "-"} | ${one.transformed ? "yes" : "no"} | ${compactNumber(one.score.metrics.action_recall)} | ${compactNumber(one.score.metrics.token_reduction)} | ${compactNumber(one.score.total)} | ${compactNumber(one.delta_from_baseline)} | ${one.verification.passed ? "yes" : "no"} |`);
   }
   lines.push("");
 
@@ -306,6 +310,7 @@ export async function runBench(options = {}) {
     cases.push({
       id: oneCase.id,
       title: oneCase.title,
+      tags: Array.isArray(oneCase.tags) ? oneCase.tags : [],
       source_type: rewrite.source_type || oneCase.sourceType,
       transformed: rewrite.transformed === true,
       selected_program_id: rewrite.selected_program?.program_id || null,
@@ -340,8 +345,10 @@ export async function runBench(options = {}) {
 
   const summary = {
     case_count: cases.length,
+    semantic_loss_case_count: cases.filter((one) => one.tags.includes("semantic-loss")).length,
     transformed_count: cases.filter((one) => one.transformed).length,
     gate_pass_count: cases.filter((one) => one.verification.passed).length,
+    semantic_loss_gate_pass_count: cases.filter((one) => one.tags.includes("semantic-loss") && one.verification.passed).length,
     avg_action_recall: round(average(cases.map((one) => one.score.metrics.action_recall))),
     avg_token_reduction: round(average(cases.map((one) => one.score.metrics.token_reduction))),
     avg_total_score: round(average(cases.map((one) => one.score.total))),

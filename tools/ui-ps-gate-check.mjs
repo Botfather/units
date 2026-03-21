@@ -69,10 +69,22 @@ function buildChecks(payload, gates) {
       min: toFinite(gates.min_transformed_count),
     },
     {
+      key: "min_semantic_loss_case_count",
+      label: "Semantic-loss case count",
+      actual: toFinite(summary.semantic_loss_case_count),
+      min: toFinite(gates.min_semantic_loss_case_count),
+    },
+    {
       key: "min_gate_pass_count",
       label: "Gate pass count",
       actual: toFinite(summary.gate_pass_count),
       min: toFinite(gates.min_gate_pass_count),
+    },
+    {
+      key: "min_semantic_loss_gate_pass_count",
+      label: "Semantic-loss gate pass count",
+      actual: toFinite(summary.semantic_loss_gate_pass_count),
+      min: toFinite(gates.min_semantic_loss_gate_pass_count),
     },
     {
       key: "min_avg_action_recall",
