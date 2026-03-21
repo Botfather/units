@@ -13,7 +13,8 @@
   },
   "workspaces": [
     "packages/*",
-    "examples/*"
+    "examples/*",
+    "vscode/*"
   ],
   "scripts": {
     "bench:parser": "node ./bench.js",
