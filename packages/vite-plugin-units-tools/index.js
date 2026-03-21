@@ -124,6 +124,7 @@ export default function unitsTools(options = {}) {
   const include = options.include;
   const exclude = options.exclude;
   const classPrefix = options.classPrefix || "";
+  const loadCache = new Map();
 
   function isRelOrAbs(id) {
     return id.startsWith(".") || id.startsWith("/");
@@ -134,6 +135,21 @@ export default function unitsTools(options = {}) {
     if (include && !include.test(id)) return false;
     if (exclude && exclude.test(id)) return false;
     return true;
+  }
+
+  function getFileEntry(file) {
+    const stat = fs.statSync(file);
+    const cached = loadCache.get(file);
+    if (cached && cached.mtimeMs === stat.mtimeMs) return cached;
+    const fresh = {
+      mtimeMs: stat.mtimeMs,
+      code: fs.readFileSync(file, "utf-8"),
+      formatted: null,
+      tokens: null,
+      highlighted: null,
+    };
+    loadCache.set(file, fresh);
+    return fresh;
   }
 
   return {
@@ -160,23 +176,25 @@ export default function unitsTools(options = {}) {
       const params = parsed.params;
       if (!isAllowed(file)) return null;
 
-      const code = fs.readFileSync(file, "utf-8");
+      const entry = getFileEntry(file);
+      const code = entry.code;
 
       if (kind === "format") {
-        const formatted = formatUnits(code);
-        return `export default ${JSON.stringify(formatted)};\n`;
+        if (entry.formatted == null) entry.formatted = formatUnits(code);
+        return `export default ${JSON.stringify(entry.formatted)};\n`;
       }
       if (kind === "tokens") {
-        const tokens = tokenizeUnits(code);
-        return `export default ${JSON.stringify(tokens)};\n`;
+        if (!entry.tokens) entry.tokens = tokenizeUnits(code);
+        return `export default ${JSON.stringify(entry.tokens)};\n`;
       }
       if (kind === "highlight") {
-        const tokens = tokenizeUnits(code);
-        const html = highlightTokens(tokens, classPrefix);
-        return `export default ${JSON.stringify(html)};\n`;
+        if (!entry.tokens) entry.tokens = tokenizeUnits(code);
+        if (entry.highlighted == null) entry.highlighted = highlightTokens(entry.tokens, classPrefix);
+        return `export default ${JSON.stringify(entry.highlighted)};\n`;
       }
       if (kind === "agent") {
-        const dsl = formatUnits(code);
+        if (entry.formatted == null) entry.formatted = formatUnits(code);
+        const dsl = entry.formatted;
         const target = String(params.get("target") || options.agentTarget || "chat").toLowerCase();
         const sourceTokenEstimate = estimatePromptTokens(code);
         const tokenEstimate = estimatePromptTokens(dsl);

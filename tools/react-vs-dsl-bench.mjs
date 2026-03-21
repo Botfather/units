@@ -30,6 +30,7 @@ function parseArgs(argv) {
     providerCache: DEFAULT_PROVIDER_CACHE,
     providerMaxCases: null,
     providerConcurrency: 4,
+    providerMinPositivePct: null,
   };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -60,6 +61,9 @@ function parseArgs(argv) {
     } else if (arg === "--provider-concurrency") {
       const n = Number(argv[++i]);
       out.providerConcurrency = Number.isFinite(n) && n > 0 ? Math.floor(n) : out.providerConcurrency;
+    } else if (arg === "--provider-min-positive-pct") {
+      const n = Number(argv[++i]);
+      out.providerMinPositivePct = Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : out.providerMinPositivePct;
     } else if (arg === "--help" || arg === "-h") {
       out.help = true;
     }
@@ -79,6 +83,7 @@ Usage:
                                     [--tokenizer-mode approx|provider|both]
                                     [--provider-model gpt-4.1-mini]
                                     [--provider-max-cases 50]
+                                    [--provider-min-positive-pct 80]
 
 Provider mode requires:
   OPENAI_API_KEY=...
@@ -716,7 +721,7 @@ function topCases(cases, tokenizerId, count, direction) {
   return sorted.slice(0, count);
 }
 
-function markdownReport({ config, summary, cases, tokenizerDefs }) {
+function markdownReport({ config, summary, cases, tokenizerDefs, providerGate }) {
   const lines = [];
   lines.push("# React vs DSL Token Benchmark");
   lines.push("");
@@ -729,6 +734,10 @@ function markdownReport({ config, summary, cases, tokenizerDefs }) {
   if (config.providerCoverage) {
     lines.push(`- Provider coverage: \`${config.providerCoverage.coveredCases}/${config.providerCoverage.totalCases}\` cases`);
     lines.push(`- Provider model: \`${config.providerCoverage.model}\``);
+  }
+  if (providerGate?.enabled) {
+    lines.push(`- Provider gate min positive %: \`${fmt(providerGate.thresholdPct)}\``);
+    lines.push(`- Provider gate status: \`${providerGate.passed ? "pass" : "fail"}\``);
   }
   lines.push("");
   lines.push("## Hypothesis");
@@ -865,6 +874,16 @@ async function main() {
 
   const primaryTokenizerId = useProvider ? PROVIDER_TOKENIZER_ID : "lexical";
   const summary = summarizeCases(cases, args.windows, tokenizerDefs, primaryTokenizerId);
+  const providerSummary = summary.tokenizers[PROVIDER_TOKENIZER_ID];
+  const providerGateEnabled = useProvider && typeof args.providerMinPositivePct === "number";
+  const providerGate = {
+    enabled: providerGateEnabled,
+    thresholdPct: providerGateEnabled ? args.providerMinPositivePct : null,
+    actualPct: providerSummary?.positivePct ?? null,
+    passed: !providerGateEnabled || (
+      typeof providerSummary?.positivePct === "number" && providerSummary.positivePct >= args.providerMinPositivePct
+    ),
+  };
   const generatedAt = new Date().toISOString();
   const payload = {
     generatedAt,
@@ -878,6 +897,7 @@ async function main() {
       providerBaseUrl: args.providerBaseUrl,
       providerMaxCases: args.providerMaxCases,
       providerConcurrency: args.providerConcurrency,
+      providerMinPositivePct: args.providerMinPositivePct,
       providerCache: args.providerCache,
       providerCoverage,
       tokenizers: tokenizerDefs,
@@ -885,6 +905,7 @@ async function main() {
     curatedCount: curated.length,
     syntheticCount: synthetic.length,
     summary,
+    providerGate,
     cases,
   };
 
@@ -900,11 +921,18 @@ async function main() {
     summary,
     cases,
     tokenizerDefs,
+    providerGate,
   });
 
   const outPath = await writeFileSafe(args.out, `${JSON.stringify(payload, null, 2)}\n`);
   const reportPath = await writeFileSafe(args.report, report);
   process.stdout.write(`Wrote ${outPath}\nWrote ${reportPath}\n`);
+  if (providerGateEnabled && !providerGate.passed) {
+    process.stderr.write(
+      `Provider gate failed: positive=${fmt(providerGate.actualPct)}% < min=${fmt(providerGate.thresholdPct)}%.\n`,
+    );
+    process.exitCode = 1;
+  }
 }
 
 main().catch((err) => {

@@ -326,6 +326,96 @@ test("executeBenchmarkPlan counts parse warnings separately from clean passes", 
   assert.match(suite.execution.parseError, /Unexpected token|not valid JSON/);
 });
 
+test("executeBenchmarkPlan skips fio suites when shm is blocked by environment", async () => {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "system-bench-fio-skip-"));
+  const plan = {
+    generatedAt: "2026-03-17T00:00:00.000Z",
+    mode: "plan",
+    config: { path: path.join(tempDir, "bench.json"), name: "mock" },
+    machine: {
+      id: "cc9584c0-05f6-425f-8973-2849b0e1a6aa",
+      identityFile: path.join(tempDir, ".bench", "machine-id.json"),
+      profile: makeProfile(tempDir),
+    },
+    paths: {
+      resultsDir: path.join(tempDir, "results"),
+      scratchDir: path.join(tempDir, ".bench", "scratch"),
+      diskBenchmarkFile: path.join(tempDir, ".bench", "scratch", "fio.dat"),
+      cwd: tempDir,
+    },
+    tooling: {
+      fio: { available: true, version: "fio-3.41", probeCommand: ["fio", "--version"] },
+      node: { available: true, version: process.version, probeCommand: ["node", "--version"] },
+    },
+    summary: { total: 2, ready: 2, optional: 0, disabled: 0, missingDependency: 0, requiresConfiguration: 0 },
+    suites: [
+      {
+        id: "fio_preflight_blocked",
+        title: "Fio Preflight Blocked",
+        category: "disk",
+        standard: "fio",
+        tool: "fio",
+        parser: "fio_json",
+        description: null,
+        notes: null,
+        optional: false,
+        expectedMetrics: ["read_iops"],
+        timeoutMs: 5000,
+        status: "ready",
+        reason: null,
+        requiredEnv: [],
+        missingContext: [],
+        command: ["node", "-e", "process.stdout.write('{}')"],
+        commandString: "node fio-main",
+        preflight: {
+          description: "preflight",
+          tool: "node",
+          timeoutMs: 5000,
+          command: [
+            "node",
+            "-e",
+            "process.stderr.write('shmat: Operation not permitted\\nerror: failed to setup shm segment\\n'); process.exit(1)",
+          ],
+          commandString: "node fio-preflight",
+        },
+      },
+      {
+        id: "fio_run_blocked",
+        title: "Fio Run Blocked",
+        category: "disk",
+        standard: "fio",
+        tool: "fio",
+        parser: "fio_json",
+        description: null,
+        notes: null,
+        optional: false,
+        expectedMetrics: ["read_iops"],
+        timeoutMs: 5000,
+        status: "ready",
+        reason: null,
+        requiredEnv: [],
+        missingContext: [],
+        command: [
+          "node",
+          "-e",
+          "process.stderr.write('error: failed to setup shm segment\\n'); process.exit(1)",
+        ],
+        commandString: "node fio-main",
+        preflight: null,
+      },
+    ],
+  };
+
+  const executed = await executeBenchmarkPlan(plan);
+
+  assert.equal(executed.summary.executed, 0);
+  assert.equal(executed.summary.failed, 0);
+  assert.equal(executed.summary.skipped, 2);
+  assert.equal(executed.suites[0].execution.status, "skipped");
+  assert.equal(executed.suites[1].execution.status, "skipped");
+  assert.match(executed.suites[0].execution.reason, /shared-memory setup/i);
+});
+
 test("markdownReport includes machine UUID and suite status details", () => {
   const report = markdownReport({
     generatedAt: "2026-03-17T00:00:00.000Z",

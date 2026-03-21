@@ -2,13 +2,23 @@
 // Provide host callbacks to build your own UI tree.
 
 export function createUnitsRenderer(host) {
-  const evalExpr = host.evalExpr || ((raw, scope, locals) => {
-    let normalized = raw.replace(/@\(/g, "(");
+  const compiledExprCache = new Map();
+  const interpolationCache = new Map();
+
+  function normalizeExpression(raw) {
+    let normalized = String(raw || "").replace(/@\(/g, "(");
     normalized = normalized.replace(/@([A-Za-z_$][\w.$]*)/g, "$1");
     normalized = normalized.replace(
       /set\s*\(\s*([A-Za-z_$][\w.$]*)\s*:=/g,
       "set('$1',",
     );
+    return normalized;
+  }
+
+  function compileExpression(raw) {
+    const key = String(raw || "");
+    if (compiledExprCache.has(key)) return compiledExprCache.get(key);
+    const normalized = normalizeExpression(key);
     const fn = new Function(
       "scope",
       "locals",
@@ -16,13 +26,24 @@ export function createUnitsRenderer(host) {
       "set",
       `with(scope){with(locals||{}){return (${normalized});}}`,
     );
+    compiledExprCache.set(key, fn);
+    return fn;
+  }
+
+  const evalExpr = host.evalExpr || ((raw, scope, locals) => {
+    const fn = compileExpression(raw);
     return fn(scope, locals || {}, locals?.event, locals?.set || scope?.set);
   });
 
   function splitInterpolations(value) {
     const text = String(value ?? "");
+    if (interpolationCache.has(text)) return interpolationCache.get(text);
     const parts = [];
-    if (!text.includes("@{")) return [{ type: "text", value: text }];
+    if (!text.includes("@{")) {
+      const out = [{ type: "text", value: text }];
+      interpolationCache.set(text, out);
+      return out;
+    }
     let i = 0;
     while (i < text.length) {
       const idx = text.indexOf("@{", i);
@@ -65,6 +86,7 @@ export function createUnitsRenderer(host) {
       parts.push({ type: "expr", value: expr });
       i = j + 1;
     }
+    interpolationCache.set(text, parts);
     return parts;
   }
 
@@ -114,7 +136,9 @@ export function createUnitsRenderer(host) {
         const list = evalExpr(listExpr, scope, locals) || [];
         const out = [];
         for (let idx = 0; idx < list.length; idx++) {
-          const childLocals = { ...locals, [itemName]: list[idx], [idxName]: idx };
+          const childLocals = Object.create(locals || null);
+          childLocals[itemName] = list[idx];
+          childLocals[idxName] = idx;
           out.push(renderChildren(node.children, childLocals));
         }
         return out;
