@@ -1,24 +1,16 @@
 // Custom renderer skeleton for Units AST.
 // Provide host callbacks to build your own UI tree.
 
+import { normalizeUnitsExpression } from "./expression-normalize.js";
+
 export function createUnitsRenderer(host) {
   const compiledExprCache = new Map();
   const interpolationCache = new Map();
 
-  function normalizeExpression(raw) {
-    let normalized = String(raw || "").replace(/@\(/g, "(");
-    normalized = normalized.replace(/@([A-Za-z_$][\w.$]*)/g, "$1");
-    normalized = normalized.replace(
-      /set\s*\(\s*([A-Za-z_$][\w.$]*)\s*:=/g,
-      "set('$1',",
-    );
-    return normalized;
-  }
-
   function compileExpression(raw) {
     const key = String(raw || "");
     if (compiledExprCache.has(key)) return compiledExprCache.get(key);
-    const normalized = normalizeExpression(key);
+    const normalized = normalizeUnitsExpression(key, { transformSetAssignment: true });
     const fn = new Function(
       "scope",
       "locals",
@@ -122,11 +114,6 @@ export function createUnitsRenderer(host) {
     function renderDirective(node, locals) {
       const name = node.name;
       const args = node.args || "";
-      if (name === "if") {
-        const cond = evalExpr(args, scope, locals);
-        if (!cond) return null;
-        return renderChildren(node.children, locals);
-      }
       if (name === "for") {
         const m = args.match(/^\s*([A-Za-z_$][\w$]*)\s*(?:,\s*([A-Za-z_$][\w$]*))?\s+in\s+(.+)$/);
         if (!m) return null;
@@ -148,6 +135,9 @@ export function createUnitsRenderer(host) {
         const slot = slots[slotName];
         if (slot == null) return null;
         return typeof slot === "function" ? slot(locals) : slot;
+      }
+      if (name === "key" || name === "elif" || name === "else") {
+        return null;
       }
       return renderChildren(node.children, locals);
     }
@@ -178,6 +168,58 @@ export function createUnitsRenderer(host) {
       const out = [];
       for (let idx = 0; idx < (children || []).length; idx++) {
         const child = children[idx];
+        if (child.type === "directive" && child.name === "key") {
+          const next = children[idx + 1];
+          if (next && next.type === "tag") {
+            const key = evalExpr(child.args || "", scope, locals);
+            const rendered = renderNode(
+              {
+                ...next,
+                props: [
+                  ...(next.props || []),
+                  { kind: "value", key: "key", value: key },
+                ],
+              },
+              locals,
+            );
+            out.push(rendered);
+            idx++;
+            continue;
+          }
+        }
+        if (child.type === "directive" && child.name === "if") {
+          let matched = false;
+          if (evalExpr(child.args || "", scope, locals)) {
+            pushChild(out, renderChildren(child.children, locals));
+            matched = true;
+          }
+
+          let next = idx + 1;
+          while (next < children.length && children[next].type === "directive") {
+            if (children[next].name === "elif") {
+              if (!matched && evalExpr(children[next].args || "", scope, locals)) {
+                pushChild(out, renderChildren(children[next].children, locals));
+                matched = true;
+              }
+              next++;
+              continue;
+            }
+            if (children[next].name === "else") {
+              if (!matched) {
+                pushChild(out, renderChildren(children[next].children, locals));
+                matched = true;
+              }
+              next++;
+              break;
+            }
+            break;
+          }
+          if (!matched) {
+            out.push(null);
+          }
+          idx = next - 1;
+          continue;
+        }
         pushChild(out, renderNode(child, locals));
       }
       return host.fragment(out);

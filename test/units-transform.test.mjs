@@ -8,6 +8,8 @@ import test from "node:test";
 import {
   parseUnits,
   formatUnits,
+  createUnitsEvaluator,
+  createUnitsRenderer,
   renderUnits,
   compileTransformProgram,
   runTransformProgram,
@@ -54,6 +56,76 @@ App {
   assert.match(formatted, /App \{/);
   assert.ok(Array.isArray(rendered));
   assert.equal(rendered[0].type, "App");
+});
+
+test("expression normalization preserves literal @ characters and set(x:=...) behavior", () => {
+  const evalExpr = createUnitsEvaluator();
+  const setCalls = [];
+  const scope = {
+    item: {
+      id: 7,
+    },
+    set: (path, value) => setCalls.push([path, value]),
+  };
+
+  assert.equal(evalExpr("'foo@bar.com'", scope), "foo@bar.com");
+  assert.equal(evalExpr("'@a'", scope), "@a");
+  evalExpr("set(selected:=@item.id)", scope);
+  assert.deepEqual(setCalls, [["selected", 7]]);
+});
+
+test("custom renderer matches runtime control-flow semantics for #key and if/elif/else", () => {
+  const ast = parseUnits(`
+List {
+  #for (item in @items) {
+    #key (@item.id)
+    Row {
+      @item.label
+    }
+  }
+  #if (@showA) {
+    text 'A'
+  }
+  #elif (@showB) {
+    text 'B'
+  }
+  #else {
+    text 'C'
+  }
+}
+`);
+
+  const renderer = createUnitsRenderer({
+    element: (name, props, events, children) => ({ type: name, props, events, children }),
+    text: (value) => value,
+    fragment: (children) => children,
+  });
+
+  const rendered = renderer.render(ast, {
+    items: [
+      { id: "r1", label: "One" },
+      { id: "r2", label: "Two" },
+    ],
+    showA: false,
+    showB: true,
+  });
+
+  assert.ok(Array.isArray(rendered));
+  assert.equal(rendered.length, 1);
+
+  const listNode = rendered[0];
+  assert.equal(listNode.type, "List");
+
+  const flattenedChildren = Array.isArray(listNode.children)
+    ? listNode.children.flat(Infinity)
+    : [];
+
+  const rows = flattenedChildren.filter((node) => node && typeof node === "object" && node.type === "Row");
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].props.key, "r1");
+  assert.equal(rows[1].props.key, "r2");
+  assert.ok(flattenedChildren.includes("B"));
+  assert.ok(!flattenedChildren.includes("C"));
 });
 
 test("transform runtime applies first-match rules, deterministic op order, and implicit pass", () => {
@@ -142,6 +214,28 @@ test("DOM and A11y adapters normalize equivalent semantics", () => {
   assert.equal(domIr.children[0].name, a11yIr.children[0].name);
   assert.ok(domIr.children[0].actions.includes("click"));
   assert.ok(a11yIr.children[0].actions.includes("click"));
+});
+
+test("core DOM normalizer preserves table/row/cell role semantics", () => {
+  const domInput = {
+    tagName: "table",
+    children: [
+      {
+        tagName: "tr",
+        children: [
+          {
+            tagName: "td",
+            textContent: "R1C1",
+          },
+        ],
+      },
+    ],
+  };
+
+  const normalized = normalizeDomTree(domInput);
+  assert.equal(normalized.role, "table");
+  assert.equal(normalized.children[0].role, "row");
+  assert.equal(normalized.children[0].children[0].role, "cell");
 });
 
 test("reward verifier rejects semantic-loss outputs even when compressed", () => {
@@ -363,4 +457,31 @@ Program (kind:'transform', source:'ir') {
 
   assert.ok(run.tree.children.length > 0);
   assert.ok(elapsed < 2000, `expected transform to complete in <2000ms, got ${elapsed}ms`);
+});
+
+test("transform expressions preserve @ in string literals", () => {
+  const program = compileTransformProgram(`
+Program (kind:'transform', source:'ir') {
+  Rule (id:'text_exact_match', match=@node.role == 'text') {
+    Filter (when=@node.text == 'foo@bar.com')
+    Pass
+  }
+}
+`);
+
+  const inputTree = {
+    id: "t1",
+    role: "text",
+    name: "",
+    text: "foo@bar.com",
+    props: {},
+    state: {},
+    actions: [],
+    meta: {},
+    children: [],
+  };
+
+  const run = runTransformProgram(program, inputTree);
+  assert.ok(run.tree);
+  assert.equal(run.tree.text, "foo@bar.com");
 });

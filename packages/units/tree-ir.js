@@ -33,6 +33,9 @@ function inferDomRole(node) {
   if (tag === "label") return "label";
   if (tag === "li") return "listitem";
   if (tag === "ul" || tag === "ol") return "list";
+  if (tag === "table") return "table";
+  if (tag === "tr") return "row";
+  if (tag === "td" || tag === "th") return "cell";
   return "container";
 }
 

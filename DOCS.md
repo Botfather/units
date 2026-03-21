@@ -123,7 +123,7 @@ on:input={ set(text:=event.target.value) }
 - `options.slots`: named slot values or functions.
 - `options.set`: override `set`.
 
-The React renderer evaluates expressions with a cached `Function` and uses `with(scope)` for simplicity.
+The React renderer evaluates expressions with a cached `Function` and uses `with(scope)` for simplicity. Scope-prefix normalization (`@name -> name`) is applied only outside quoted strings, so literal `@` characters in string literals are preserved.
 
 ### 5.2 Custom Renderer
 Use `createUnitsRenderer(host)` from `@botfather/units/custom-renderer`. The host must provide:
@@ -136,6 +136,8 @@ const host = {
 };
 ```
 
+The custom renderer matches runtime control-flow semantics for `#if/#elif/#else` chains and `#for/#key`.
+
 ## 6) Data Binding
 
 Units uses one-way bindings by default for performance. For interactivity, use event handlers:
@@ -144,7 +146,7 @@ Units uses one-way bindings by default for performance. For interactivity, use e
 !click { set(selected:=@item.id) }
 ```
 
-The React runtime transforms `set(x:=expr)` into `set('x', expr)`.
+The React runtime transforms `set(x:=expr)` into `set('x', expr)`. This rewrite is expression-aware and does not mutate quoted string literals.
 
 ## 7) Extending the DSL
 
