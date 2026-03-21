@@ -164,6 +164,88 @@ function applyStrictPostGenerationFixes(value) {
     (_m, list, item) => `#for (${item} in @${list})`,
   );
 
+  // Standalone event handlers in child position are invalid Units nodes:
+  //   Tag {
+  //     !submit { onSubmit(@event) }
+  //     ...
+  //   }
+  // Try to attach to the nearest parent tag opening line when unambiguous.
+  // If no safe parent shape is found, wrap as parser-safe benchmark-only node.
+  {
+    const lines = src.split("\n");
+    const depthBefore = [];
+    const tagOpenByLine = new Map();
+    const tagOpenLineRe = /^([ \t]*)([A-Za-z_][\w:.-]*)(\s*\(([^()]*)\))?\s*\{\s*$/;
+    const standaloneEventLineRe = /^([ \t]*)!([A-Za-z_$][\w:-]*)\s*\{([^{}]*)\}\s*$/;
+
+    let depth = 0;
+    for (let idx = 0; idx < lines.length; idx++) {
+      const line = lines[idx];
+      depthBefore[idx] = depth;
+      const tagMatch = line.match(tagOpenLineRe);
+      if (tagMatch) tagOpenByLine.set(idx, tagMatch);
+      const withoutSingleQuoted = line.replace(/'([^'\\]|\\.)*'/g, "");
+      const openCount = (withoutSingleQuoted.match(/\{/g) || []).length;
+      const closeCount = (withoutSingleQuoted.match(/\}/g) || []).length;
+      depth = Math.max(0, depth + openCount - closeCount);
+    }
+
+    let attachedCount = 0;
+    let wrappedCount = 0;
+    let droppedDuplicateCount = 0;
+
+    for (let idx = 0; idx < lines.length; idx++) {
+      const eventMatch = lines[idx].match(standaloneEventLineRe);
+      if (!eventMatch) continue;
+
+      const [, indent, eventName, bodyRaw] = eventMatch;
+      const body = String(bodyRaw || "").trim();
+      const childDepth = depthBefore[idx];
+      let parentIdx = -1;
+      let parentMatch = null;
+
+      if (childDepth > 0) {
+        for (let k = idx - 1; k >= 0; k--) {
+          if (depthBefore[k] !== childDepth - 1) continue;
+          const maybeTag = tagOpenByLine.get(k);
+          if (maybeTag) {
+            parentIdx = k;
+            parentMatch = maybeTag;
+            break;
+          }
+        }
+      }
+
+      if (parentIdx >= 0 && parentMatch) {
+        const [, parentIndent, tagName, parenGroup, propsRaw] = parentMatch;
+        if (lines[parentIdx].includes(`!${eventName}`)) {
+          lines[idx] = "";
+          droppedDuplicateCount++;
+          continue;
+        }
+        const eventProp = `!${eventName} { ${body} }`;
+        if (parenGroup) {
+          const props = String(propsRaw || "").trim();
+          const nextProps = props ? `${props}, ${eventProp}` : eventProp;
+          lines[parentIdx] = `${parentIndent}${tagName} (${nextProps}) {`;
+        } else {
+          lines[parentIdx] = `${parentIndent}${tagName} (${eventProp}) {`;
+        }
+        lines[idx] = "";
+        attachedCount++;
+        continue;
+      }
+
+      lines[idx] = `${indent}__EventHook (!${eventName} { ${body} })`;
+      wrappedCount++;
+    }
+
+    if (attachedCount > 0) fixes.push({ name: "event_child_attached_to_parent", count: attachedCount });
+    if (wrappedCount > 0) fixes.push({ name: "event_child_wrapped", count: wrappedCount });
+    if (droppedDuplicateCount > 0) fixes.push({ name: "event_child_duplicate_dropped", count: droppedDuplicateCount });
+    src = lines.join("\n");
+  }
+
   // Property assignment normalization inside prop lists: key='x' => key:'x', key=@x => key:@x, key=x => key:@x
   replaceCounted(
     "prop_equals_string",
@@ -423,7 +505,7 @@ function pct(numerator, denominator) {
   return (numerator / denominator) * 100;
 }
 
-function summarizeByModel(records) {
+function summarizeByModel(records, analysisField = "analysis") {
   const map = new Map();
   for (const r of records) {
     if (!map.has(r.model)) map.set(r.model, []);
@@ -431,9 +513,10 @@ function summarizeByModel(records) {
   }
   const rows = [];
   for (const [model, items] of map.entries()) {
-    const parseOkCount = items.filter((r) => r.analysis.parseOk).length;
-    const reqEligible = items.filter((r) => r.analysis.requiredTotal > 0);
-    const reqPassCount = reqEligible.filter((r) => r.analysis.requiredPass).length;
+    const getAnalysis = (record) => record?.[analysisField] || null;
+    const parseOkCount = items.filter((r) => getAnalysis(r)?.parseOk).length;
+    const reqEligible = items.filter((r) => (getAnalysis(r)?.requiredTotal || 0) > 0);
+    const reqPassCount = reqEligible.filter((r) => getAnalysis(r)?.requiredPass).length;
     const exactEligible = items.filter((r) => r.exactMatch !== null);
     const exactPassCount = exactEligible.filter((r) => r.exactMatch === true).length;
     rows.push({
@@ -445,7 +528,7 @@ function summarizeByModel(records) {
       avgInputTokens: avg(items.map((r) => r.tokens.input)),
       avgOutputTokens: avg(items.map((r) => r.tokens.output)),
       avgTotalTokens: avg(items.map((r) => r.tokens.total)),
-      avgParseMs: avg(items.map((r) => r.analysis.parseMs)),
+      avgParseMs: avg(items.map((r) => getAnalysis(r)?.parseMs)),
     });
   }
   rows.sort((a, b) => (b.parseOkPct || 0) - (a.parseOkPct || 0));
@@ -542,7 +625,7 @@ function fmt(n, digits = 2) {
   return n.toFixed(digits);
 }
 
-function markdownReport({ config, summaries, compression, records, qualityGate }) {
+function markdownReport({ config, summaries, strictSummaries, compression, records, qualityGate }) {
   const lines = [];
   lines.push("# LLM Benchmark Report");
   lines.push("");
@@ -560,6 +643,16 @@ function markdownReport({ config, summaries, compression, records, qualityGate }
     lines.push(`| ${s.model} | ${s.samples} | ${fmt(s.parseOkPct)} | ${fmt(s.requiredPassPct)} | ${fmt(s.exactMatchPct)} | ${fmt(s.avgInputTokens)} | ${fmt(s.avgOutputTokens)} | ${fmt(s.avgTotalTokens)} | ${fmt(s.avgParseMs, 3)} |`);
   }
   lines.push("");
+  if (config.mode === "live" && Array.isArray(strictSummaries) && strictSummaries.length > 0) {
+    lines.push("## Strict Output Summary (Pre-Fix)");
+    lines.push("");
+    lines.push("| Model | Samples | Parse OK % | Required % | Avg Parse ms |");
+    lines.push("|---|---:|---:|---:|---:|");
+    for (const s of strictSummaries) {
+      lines.push(`| ${s.model} | ${s.samples} | ${fmt(s.parseOkPct)} | ${fmt(s.requiredPassPct)} | ${fmt(s.avgParseMs, 3)} |`);
+    }
+    lines.push("");
+  }
   if (config.mode === "live" && qualityGate?.enabled) {
     lines.push("## Quality Gate");
     lines.push("");
@@ -657,6 +750,8 @@ async function main() {
         };
         let rawResponse = null;
         let analysis = null;
+        let strictAnalysis = null;
+        let rawModelOutput = generated;
         const repairLog = [];
         const postFixes = [];
 
@@ -671,8 +766,9 @@ async function main() {
             maxOutputTokens: args.maxOutputTokens,
           });
           rawResponse = response.raw;
-          generated = stripFence(response.text);
-          const fixedInitial = applyStrictPostGenerationFixes(generated);
+          rawModelOutput = stripFence(response.text);
+          strictAnalysis = analyzeSource(rawModelOutput, oneCase.requiredSnippets || []);
+          const fixedInitial = applyStrictPostGenerationFixes(rawModelOutput);
           generated = fixedInitial.output;
           postFixes.push({
             stage: "initial",
@@ -699,8 +795,9 @@ async function main() {
               maxOutputTokens: args.maxOutputTokens,
             });
             rawResponse = repairResponse.raw;
-            generated = stripFence(repairResponse.text);
-            const fixedRepair = applyStrictPostGenerationFixes(generated);
+            rawModelOutput = stripFence(repairResponse.text);
+            strictAnalysis = analyzeSource(rawModelOutput, oneCase.requiredSnippets || []);
+            const fixedRepair = applyStrictPostGenerationFixes(rawModelOutput);
             generated = fixedRepair.output;
             postFixes.push({
               stage: `repair_${attempt}`,
@@ -722,6 +819,7 @@ async function main() {
         }
 
         if (!analysis) analysis = analyzeSource(generated, oneCase.requiredSnippets || []);
+        if (!strictAnalysis) strictAnalysis = analysis;
         let exactMatch = null;
         if (oneCase.expectedDsl && analysis.parseOk) {
           try {
@@ -738,9 +836,11 @@ async function main() {
           mode: args.mode,
           tokens: usageTokens,
           analysis,
+          strictAnalysis,
           exactMatch,
           prompt: oneCase.prompt,
           output: generated,
+          rawOutput: rawModelOutput,
           rawResponse,
           repairLog,
           postFixes,
@@ -751,6 +851,7 @@ async function main() {
 
   const compression = makeCompressionRows(cases);
   const summaries = summarizeByModel(records);
+  const strictSummaries = summarizeByModel(records, "strictAnalysis");
   const qualityViolations = qualityGateEnabled
     ? evaluateQualityGate(summaries, qualityThresholds)
     : [];
@@ -779,6 +880,7 @@ async function main() {
       baselineNames: Object.keys(c.baselines || {}),
     })),
     summaries,
+    strictSummaries,
     qualityGate,
     compression,
     records,
@@ -793,6 +895,7 @@ async function main() {
       models: args.models,
     },
     summaries,
+    strictSummaries,
     qualityGate,
     compression,
     records,

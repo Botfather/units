@@ -141,6 +141,7 @@ Set optional env vars first (same terminal session):
 ```
 export OPENAI_API_KEY=...      # required for live/provider model-backed benchmarks
 export IPERF3_HOST=...         # required for network suites in bench:system:run
+export LLM_BENCH_MODELS=...    # optional override for bench:llm:live models (comma-separated)
 ```
 
 Then run:
@@ -196,6 +197,11 @@ pnpm bench:llm
 Live model run (real usage tokens from API):
 ```
 OPENAI_API_KEY=... pnpm bench:llm:live
+```
+
+Run live benchmark with custom model list (comma-separated), including newer models:
+```
+OPENAI_API_KEY=... LLM_BENCH_MODELS=gpt-4.1-mini,gpt-4o-mini,gpt-5-2025-08-07 pnpm bench:llm:live
 ```
 
 Config lives in `bench/llm-cases.json`, with case files under `bench/cases/`.
