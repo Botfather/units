@@ -217,9 +217,15 @@ Run host-tree transform baseline scoring (completeness + efficiency) over curate
 pnpm bench:ui-ps
 ```
 
+Enforce CI-style thresholds against the latest benchmark output:
+```
+pnpm bench:ui-ps:gate
+```
+
 Outputs:
 - JSON metrics + per-case candidate scoring: `bench/results/ui-ps-bench.json`
 - Markdown report: `bench/results/ui-ps-bench.md`
+- Gate thresholds: `bench/ui-ps-gates.json`
 
 ## System Benchmarking
 Install the standard benchmark CLI tools:
