@@ -1,0 +1,36 @@
+{
+  "iconDefinitions": {
+    "_file": {
+      "iconPath": "./file-generic.svg"
+    },
+    "_folder": {
+      "iconPath": "./folder.svg"
+    },
+    "_folder_open": {
+      "iconPath": "./folder-open.svg"
+    },
+    "units_file": {
+      "iconPath": "./file-ui.svg"
+    },
+    "plugin_file": {
+      "iconPath": "./plugin.svg"
+    }
+  },
+  "file": "_file",
+  "folder": "_folder",
+  "folderExpanded": "_folder_open",
+  "fileExtensions": {
+    "ui": "units_file"
+  },
+  "languageIds": {
+    "units": "units_file"
+  },
+  "fileNames": {
+    "units.config.ui": "plugin_file",
+    "units.plugin.ui": "plugin_file"
+  },
+  "folderNames": {
+    "plugins": "_folder",
+    "units": "_folder"
+  }
+}
