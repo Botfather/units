@@ -1,0 +1,26 @@
+{
+  "name": "@botfather/units-dom-snapshot",
+  "version": "0.1.0",
+  "description": "DOM snapshot extraction utilities for Units UI compression pipelines.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Botfather/units.git",
+    "directory": "packages/units-dom-snapshot"
+  },
+  "homepage": "https://github.com/Botfather/units/tree/main/packages/units-dom-snapshot",
+  "bugs": {
+    "url": "https://github.com/Botfather/units/issues"
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

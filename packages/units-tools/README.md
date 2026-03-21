@@ -42,11 +42,13 @@ Checks that every `.ui` file is already canonically formatted. Exits non-zero if
 # Lint specific paths
 units-lint src/
 
-# No args: defaults to linting examples/ and packages/units-uikit-shadcn/
+# Alias with no args: defaults to linting examples/ and packages/units-uikit-shadcn/
 lint-ui
 ```
 
-> `lint-ui` is an alias for `units-lint`.
+> `lint-ui` is an alias wrapper around `units-lint`.
+> `lint-ui` defaults to `examples/` and `packages/units-uikit-shadcn/` when no args are provided.
+> `units-lint` itself requires one or more file/dir args.
 
 ---
 
@@ -113,6 +115,61 @@ units-watch src/components src/components/manifest.js
 ```
 
 Use this during development instead of relying solely on Vite's HMR when you need the manifest and sidecar files to stay up to date outside of Vite.
+
+---
+
+### `units-transform` — Execute a transform program on a host tree
+
+Runs a Units transform program (`Program (kind:'transform')`) against an input tree and outputs transformed IR + trace.
+
+```sh
+units-transform --program transforms/dom-default.ui --input fixtures/dom-tree.json --source dom --out result.json
+```
+
+Optional outputs:
+- `--trace-out trace.json`
+- `--agent-out compact-agent-tree.json`
+
+---
+
+### `units-verify` — Score + gate a transform output
+
+Verify either:
+- Program execution (`--program` + `--input`)
+- Existing before/after trees (`--before` + `--after`)
+
+```sh
+units-verify --program transforms/dom-default.ui --input fixtures/dom-tree.json --source dom --out verify.json
+```
+
+Custom gates:
+- `--gate-action-recall`
+- `--gate-name-recall`
+- `--gate-text-f1`
+
+---
+
+### `units-synthesize` — Iterative candidate refinement
+
+Runs synthesis rounds over a dataset, evaluates candidates with deterministic reward + gates, and optionally writes promoted programs into a verified library.
+
+```sh
+units-synthesize --dataset bench/transform-dataset.json --seed-dir transforms/seed --rounds 2 --candidates 4 --library-dir .units/library --out synth.json
+```
+
+Optional model-assisted candidate generation:
+- `--model gpt-4.1-mini` (requires `OPENAI_API_KEY`)
+- `--candidate-file candidates.json`
+
+---
+
+### `units-library` — Inspect, promote, rollback verified programs
+
+```sh
+units-library inspect --dir .units/library
+units-library promote --dir .units/library --program transforms/dom-default.ui --scores verify.json
+units-library rollback --dir .units/library --program-id dom-abc123def456
+```
 
 ## Recommended workflow
 

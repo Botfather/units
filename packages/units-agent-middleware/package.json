@@ -1,0 +1,29 @@
+{
+  "name": "@botfather/units-agent-middleware",
+  "version": "0.1.0",
+  "description": "Agent-agnostic middleware for rewriting UI trees with Units transform programs.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Botfather/units.git",
+    "directory": "packages/units-agent-middleware"
+  },
+  "homepage": "https://github.com/Botfather/units/tree/main/packages/units-agent-middleware",
+  "bugs": {
+    "url": "https://github.com/Botfather/units/issues"
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "dependencies": {
+    "@botfather/units": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

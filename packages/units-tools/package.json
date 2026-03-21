@@ -19,6 +19,10 @@
     "units-emit": "./units-emit.mjs",
     "units-manifest": "./units-manifest.mjs",
     "units-watch": "./units-watch.mjs",
+    "units-transform": "./units-transform.mjs",
+    "units-verify": "./units-verify.mjs",
+    "units-synthesize": "./units-synthesize.mjs",
+    "units-library": "./units-library.mjs",
     "format-ui": "./format-ui.mjs",
     "lint-ui": "./lint-ui.mjs"
   },
