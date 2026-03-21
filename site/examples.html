@@ -9,50 +9,103 @@
   <body>
     <main class="container">
       <nav class="nav">
-        <span class="brand">Units</span>
+        <a class="brand" href="./index.html" aria-label="Units home">
+          <img src="./logo-units-mark.svg" alt="" />
+          <span>Units</span>
+        </a>
         <a href="./index.html">Home</a>
         <a href="./docs.html">Documentation</a>
         <a href="./examples.html">Examples</a>
+        <a href="https://github.com/Botfather/units/tree/main/examples">Examples directory</a>
       </nav>
 
-      <section class="card">
-        <h1>Examples</h1>
-        <p>Reference implementations from this monorepo.</p>
+      <section class="card hero hero-compact">
+        <div>
+          <p class="eyebrow">Examples</p>
+          <h1>Reference apps for the language, tooling, and UI kit.</h1>
+          <p class="lead">
+            The example set is no longer just a single demo. The repo now carries focused apps for learning,
+            chat UIs, ShadCN-flavored composition, a todo workflow, and a portfolio-style header build.
+          </p>
+          <div class="actions">
+            <a class="btn" href="https://github.com/Botfather/units/tree/main/examples">Open examples</a>
+            <a class="btn secondary" href="./docs.html">Read docs first</a>
+          </div>
+        </div>
+
+        <aside class="hero-mark hero-mark-small" aria-hidden="true">
+          <img src="./logo-units-mark.svg" alt="" />
+        </aside>
       </section>
 
-      <section class="card grid">
-        <article>
-          <h2>Todo (live)</h2>
-          <p class="meta">Hosted on this Pages site.</p>
-          <p>
-            <a class="btn" href="./examples/todo/">Open live demo</a>
-          </p>
-          <p>
-            <a href="https://github.com/Botfather/units/tree/main/examples/todo-vite">Source directory</a>
-          </p>
+      <section class="grid feature-grid">
+        <article class="card tone-dark">
+          <p class="eyebrow">units-learn-demo</p>
+          <h2>learn-vite</h2>
+          <p class="meta">Guided reference app for the DSL shape, sections, and benchmark-oriented teaching copy.</p>
+          <p><a href="https://github.com/Botfather/units/tree/main/examples/learn-vite">Open source directory</a></p>
         </article>
 
-        <article>
-          <h2>Chat (source)</h2>
-          <p class="meta">Vite example from <code>examples/chat-vite</code>.</p>
-          <p>
-            <a href="https://github.com/Botfather/units/tree/main/examples/chat-vite">Open source directory</a>
-          </p>
+        <article class="card tone-cyan">
+          <p class="eyebrow">units-todo-demo</p>
+          <h2>todo-vite</h2>
+          <p class="meta">Task-list workflow demo using the core runtime, Vite plugin, tools package, and UI kit.</p>
+          <p><a href="https://github.com/Botfather/units/tree/main/examples/todo-vite">Open source directory</a></p>
         </article>
 
-        <article>
-          <h2>ShadCN Gallery (source)</h2>
-          <p class="meta">Vite example from <code>examples/shadcn-gallery-vite</code>.</p>
-          <p>
-            <a href="https://github.com/Botfather/units/tree/main/examples/shadcn-gallery-vite">Open source directory</a>
-          </p>
+        <article class="card tone-blue">
+          <p class="eyebrow">units-chat-demo</p>
+          <h2>chat-vite</h2>
+          <p class="meta">Chat transcript interface showing more realistic nested UI and interaction structure.</p>
+          <p><a href="https://github.com/Botfather/units/tree/main/examples/chat-vite">Open source directory</a></p>
+        </article>
+
+        <article class="card">
+          <p class="eyebrow">units-shadcn-gallery</p>
+          <h2>shadcn-gallery-vite</h2>
+          <p class="meta">Gallery-style reference app for the ShadCN-inspired Units component layer.</p>
+          <p><a href="https://github.com/Botfather/units/tree/main/examples/shadcn-gallery-vite">Open source directory</a></p>
+        </article>
+
+        <article class="card">
+          <p class="eyebrow">portfolio-vite</p>
+          <h2>portfolio-vite</h2>
+          <p class="meta">Smaller composition example focused on branding, hero layout, and profile-header structure.</p>
+          <p><a href="https://github.com/Botfather/units/tree/main/examples/portfolio-vite">Open source directory</a></p>
+        </article>
+      </section>
+
+      <section class="grid two-up">
+        <article class="card">
+          <p class="eyebrow">Shared stack</p>
+          <h2>What each example uses</h2>
+          <ul>
+            <li>@botfather/units</li>
+            <li>@botfather/vite-plugin-units</li>
+            <li>@botfather/vite-plugin-units-tools</li>
+            <li>@botfather/units-tools</li>
+            <li>@botfather/units-uikit-shadcn</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <p class="eyebrow">Run locally</p>
+          <h2>Start any example with pnpm filter</h2>
+          <pre><code>pnpm install
+pnpm --filter units-learn-demo dev
+pnpm --filter units-todo-demo dev
+pnpm --filter units-chat-demo dev
+pnpm --filter units-shadcn-gallery dev</code></pre>
         </article>
       </section>
 
       <section class="card">
-        <h2>Run Locally</h2>
-        <pre><code>pnpm install
-pnpm --filter units-todo-demo dev</code></pre>
+        <p class="eyebrow">Bench fixtures</p>
+        <h2>The benchmark corpus lives beside the examples</h2>
+        <p class="meta wide">
+          In addition to runnable apps, the repository keeps curated .ui and .jsx pairs under bench/cases plus a UI-PS
+          seed library. Those files are part of the practical example surface too, especially for token and transform evaluation.
+        </p>
       </section>
     </main>
   </body>

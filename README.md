@@ -1,33 +1,61 @@
 # Units
 
-[![Website](https://img.shields.io/badge/website-live-0f6b5f?style=flat-square)](https://botfather.github.io/units/)
+<p align="center">
+  <img src="./site/logo-units.svg" alt="Units logo" width="360" />
+</p>
 
-Lightweight DSL for building interactive UIs. This monorepo publishes:
-- `@botfather/units` (parser, printer, runtime, custom renderer, incremental sketch)
-- `@botfather/vite-plugin-units` (Vite build plugin)
-- `@botfather/vite-plugin-units-tools` (Vite dev tools: format/tokens/highlight)
-- `@botfather/units-tools` (CLI tools: format, lint, etc.)
-- `@botfather/units-agent-middleware` (agent-agnostic UI tree rewrite middleware)
-- `@botfather/units-agent-plugin` (agent-facing `compressUiForAgent` API returning DSL + AST)
-- `@botfather/units-agent-service` (HTTP `/compress-ui` service wrapper for arbitrary agents)
-- `@botfather/units-dom-snapshot` (arbitrary DOM snapshot extraction for agent pipelines)
-- `@botfather/units-ui-ir` (neutral UiNode IR schema + DOM/a11y adapters)
-- `@botfather/units-react-adapter` (React/JSX element tree -> UiNode IR adapter)
-- `@botfather/units-compiler` (UiNode/IR -> Units AST+DSL compiler with loop heuristics)
-- `@botfather/units-uikit-shadcn` (ShadCN-style Units UI kit)
-- `bench.js` (parse benchmark)
-- `DOCS.md` (full documentation)
-- `DOCS-LLM.md` (LLM/agent-optimized authoring profile)
-- `examples/learn-vite/` (learn / reference site — powers the [website](https://botfather.github.io/units/))
-- `examples/todo-vite/` (todo list demo)
-- `examples/chat-vite/` (chat transcript demo)
-- `examples/shadcn-gallery-vite/` (ShadCN gallery demo)
-- `examples/portfolio-vite/` (portfolio header demo)
+<p align="center">
+  <a href="https://botfather.github.io/units/"><img alt="Website" src="https://img.shields.io/badge/website-live-0B1220?style=flat-square"></a>
+  <a href="./DOCS.md"><img alt="Docs" src="https://img.shields.io/badge/docs-DOCS.md-22D3EE?style=flat-square&labelColor=0B1220"></a>
+  <a href="./DOCS-LLM.md"><img alt="LLM Docs" src="https://img.shields.io/badge/docs-DOCS--LLM.md-3B82F6?style=flat-square&labelColor=0B1220"></a>
+</p>
+
+Units is a lightweight DSL for interactive UI. The monorepo covers the language runtime, Vite and CLI tooling, VS Code support, agent-facing UI compression, DOM and IR adapters, compilation, reference apps, and benchmark suites for both runtime and model workflows.
+
+## Repo At A Glance
+
+- `@botfather/units` is the core parser, printer, runtime, and custom renderer entry point.
+- Vite, CLI, and editor tooling live in `@botfather/vite-plugin-units`, `@botfather/vite-plugin-units-tools`, `@botfather/units-tools`, and `vscode/units-vscode`.
+- The agent pipeline spans compression, DOM capture, IR normalization, React adaptation, and DSL compilation.
+- `examples/*`, `bench/*`, and `test/*` provide reference apps, benchmark corpora, and verification coverage.
+
+## Package Matrix
+
+| Package | Role | Notes |
+| --- | --- | --- |
+| `@botfather/units` | Core runtime | Parser, printer, React runtime, custom renderer, incremental parsing sketch |
+| `@botfather/vite-plugin-units` | Build integration | Load `.ui` files in Vite |
+| `@botfather/vite-plugin-units-tools` | Authoring helpers | Format, tokens, highlight, agent-targeted query imports |
+| `@botfather/units-tools` | CLI tooling | Format, lint, snapshot, transform, verify, synthesize, library workflows |
+| `@botfather/units-agent-middleware` | Agent middleware | Agent-agnostic UI tree rewrite layer |
+| `@botfather/units-agent-plugin` | Agent API | `compressUiForAgent` DSL and AST output |
+| `@botfather/units-agent-service` | HTTP wrapper | `/compress-ui` service for arbitrary agents |
+| `@botfather/units-dom-snapshot` | DOM extraction | Neutral snapshot capture from pages and browser automation flows |
+| `@botfather/units-ui-ir` | Neutral IR | `UiNode` schema and DOM or accessibility adapters |
+| `@botfather/units-react-adapter` | React adapter | React or JSX element tree to `UiNode` IR |
+| `@botfather/units-compiler` | Compiler | `UiNode` or IR to Units AST and DSL |
+| `@botfather/units-uikit-shadcn` | UI kit | ShadCN-style component layer authored in Units |
+
+## Examples
+
+- `examples/learn-vite/` - reference site and learning-oriented demo
+- `examples/todo-vite/` - todo workflow demo
+- `examples/chat-vite/` - chat transcript demo
+- `examples/shadcn-gallery-vite/` - ShadCN-style gallery demo
+- `examples/portfolio-vite/` - portfolio header demo
+
+## Key Repository Docs
+
+- `README.md` - GitHub landing page and repo map
+- `DOCS.md` - full technical documentation
+- `DOCS-LLM.md` - LLM and agent-oriented authoring profile
+- `vscode/units-vscode/` - VS Code extension for `.ui` files
 
 ## Website
 
 - Home: https://botfather.github.io/units/
-- Benchmarks: https://botfather.github.io/units/#benchmarks
+- Documentation hub: https://botfather.github.io/units/docs.html
+- Examples: https://botfather.github.io/units/examples.html
 
 ## Quick Start
 
@@ -329,7 +357,15 @@ make test-system-bench
 ```
 
 ## Demo
-See `examples/todo-vite` for a unified Vite demo (todo list) implemented purely in `.ui` files.
+Start with the example that matches the layer you want to inspect:
+
+- `examples/learn-vite` for the reference site and learning-oriented walkthrough
+- `examples/todo-vite` for a complete Vite todo app in `.ui`
+- `examples/chat-vite` for nested chat-style UI
+- `examples/shadcn-gallery-vite` for the ShadCN-inspired component layer
+- `examples/portfolio-vite` for a smaller branding and layout composition example
+
+For the GitHub Pages version of that entry point, see https://botfather.github.io/units/.
 
 For full docs, see `DOCS.md`.
 
@@ -387,7 +423,7 @@ The `@botfather/units-tools` package provides CLI utilities for managing Units f
 - `units-library inspect|promote|rollback ...`: Manage verified transform program library.
 
 ## VS Code Extension
-See `vscode/units-vscode` for a minimal VS Code extension that adds Units syntax highlighting, snippets, and formatting.
+See `vscode/units-vscode` for the Units VS Code extension, which adds syntax highlighting, snippets, formatting-on-save support, and an icon theme for `.ui` files.
 
 ## Contributing
 See `CONTRIBUTING.md` for development workflow and guidelines.
