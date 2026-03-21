@@ -44,6 +44,7 @@
     "test:units-dom-snapshot": "node --test ./test/units-dom-snapshot.test.mjs",
     "test:units-transform": "node --test ./test/units-transform.test.mjs",
     "test:system-bench": "node --test ./test/system-bench.test.mjs",
+    "test:coverage:gate": "node --test --experimental-test-coverage --test-coverage-lines=94 --test-coverage-branches=70 --test-coverage-functions=93",
     "changeset": "changeset",
     "changeset:version": "changeset version",
     "changeset:status": "changeset status --verbose",

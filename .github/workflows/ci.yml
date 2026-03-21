@@ -35,6 +35,9 @@ jobs:
       - name: Run full test suite
         run: node --test
 
+      - name: Enforce coverage thresholds
+        run: pnpm -s test:coverage:gate
+
       - name: Run UI-PS benchmark and enforce gates
         run: |
           pnpm -s bench:ui-ps
