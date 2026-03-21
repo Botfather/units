@@ -1,6 +1,6 @@
 {
   "name": "@botfather/vite-plugin-units-tools",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "Vite dev tools for Units (.ui) formatting, tokens, and highlighting.",
   "license": "MIT",
   "type": "module",
