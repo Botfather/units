@@ -182,11 +182,22 @@ importers:
         specifier: '>=18'
         version: 19.2.4
 
+  packages/units-agent-middleware:
+    dependencies:
+      '@botfather/units':
+        specifier: workspace:*
+        version: link:../units
+
+  packages/units-dom-snapshot: {}
+
   packages/units-tools:
     dependencies:
       '@botfather/units':
         specifier: workspace:*
         version: link:../units
+      '@botfather/units-dom-snapshot':
+        specifier: workspace:*
+        version: link:../units-dom-snapshot
 
   packages/units-uikit-shadcn:
     dependencies:
