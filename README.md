@@ -9,7 +9,10 @@ Lightweight DSL for building interactive UIs. This monorepo publishes:
 - `@botfather/units-tools` (CLI tools: format, lint, etc.)
 - `@botfather/units-agent-middleware` (agent-agnostic UI tree rewrite middleware)
 - `@botfather/units-agent-plugin` (agent-facing `compressUiForAgent` API returning DSL + AST)
+- `@botfather/units-agent-service` (HTTP `/compress-ui` service wrapper for arbitrary agents)
 - `@botfather/units-dom-snapshot` (arbitrary DOM snapshot extraction for agent pipelines)
+- `@botfather/units-ui-ir` (neutral UiNode IR schema + DOM/a11y adapters)
+- `@botfather/units-react-adapter` (React/JSX element tree -> UiNode IR adapter)
 - `@botfather/units-compiler` (UiNode/IR -> Units AST+DSL compiler with loop heuristics)
 - `@botfather/units-uikit-shadcn` (ShadCN-style Units UI kit)
 - `bench.js` (parse benchmark)
@@ -208,6 +211,22 @@ Provider + approx with compact optimized DSL pair set:
 OPENAI_API_KEY=... pnpm bench:react-vs-dsl:provider:optimized
 ```
 
+## UI-PS Baseline Benchmark
+Run host-tree transform baseline scoring (completeness + efficiency) over curated fixtures and a verified seed library:
+```
+pnpm bench:ui-ps
+```
+
+Enforce CI-style thresholds against the latest benchmark output:
+```
+pnpm bench:ui-ps:gate
+```
+
+Outputs:
+- JSON metrics + per-case candidate scoring: `bench/results/ui-ps-bench.json`
+- Markdown report: `bench/results/ui-ps-bench.md`
+- Gate thresholds: `bench/ui-ps-gates.json`
+
 ## System Benchmarking
 Install the standard benchmark CLI tools:
 ```
@@ -270,6 +289,7 @@ Use `@botfather/vite-plugin-units-tools` to load:
 - `.ui?format` for pretty-printed source
 - `.ui?tokens` for tokenized output suitable for syntax highlighting
 - `.ui?highlight` for prebuilt HTML spans
+- `.ui?agent` for agent-targeted DSL payload + rough token estimates
 
 TypeScript Support:
 - `@botfather/vite-plugin-units-tools` ships its own plugin types.

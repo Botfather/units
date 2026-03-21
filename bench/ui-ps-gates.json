@@ -1,0 +1,14 @@
+{
+  "min_case_count": 4,
+  "min_transformed_count": 2,
+  "min_gate_pass_count": 2,
+  "min_avg_action_recall": 1.0,
+  "min_avg_token_reduction": 0.1,
+  "min_avg_total_score": 0.95,
+  "min_avg_delta_from_baseline": 0.05,
+  "required_program_ids": [
+    "dom-drop-hidden-merge-v1",
+    "a11y-compact-dialog-v1",
+    "ir-compact-default-v1"
+  ]
+}

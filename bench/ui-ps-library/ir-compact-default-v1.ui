@@ -1,0 +1,14 @@
+Program (kind:'transform', source:'ir') {
+  Rule (id:'drop_hidden', match=@node.hidden === true || @node.state.hidden === true) {
+    Filter (when=false)
+    Pass
+  }
+  Rule (id:'drop_empty_text', match=@node.role == 'text') {
+    Filter (when=@node.text != '')
+    Pass
+  }
+  Rule (id:'merge_container_text', match=@node.role == 'container') {
+    Merge (strategy:'adjacentText', when=@child.role == 'text')
+    Pass
+  }
+}

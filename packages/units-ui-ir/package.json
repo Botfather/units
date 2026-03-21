@@ -1,0 +1,26 @@
+{
+  "name": "@botfather/units-ui-ir",
+  "version": "0.1.0",
+  "description": "Host-agnostic UiNode IR schema and normalization adapters for Units pipelines.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Botfather/units.git",
+    "directory": "packages/units-ui-ir"
+  },
+  "homepage": "https://github.com/Botfather/units/tree/main/packages/units-ui-ir",
+  "bugs": {
+    "url": "https://github.com/Botfather/units/issues"
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,15 +1,15 @@
 {
-  "name": "@botfather/units-compiler",
+  "name": "@botfather/units-agent-service",
   "version": "0.1.0",
-  "description": "Compile host-agnostic UI trees into Units AST/DSL with optional transform programs.",
+  "description": "Node HTTP service wrapper for Units agent UI compression.",
   "license": "MIT",
   "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Botfather/units.git",
-    "directory": "packages/units-compiler"
+    "directory": "packages/units-agent-service"
   },
-  "homepage": "https://github.com/Botfather/units/tree/main/packages/units-compiler",
+  "homepage": "https://github.com/Botfather/units/tree/main/packages/units-agent-service",
   "bugs": {
     "url": "https://github.com/Botfather/units/issues"
   },
@@ -21,9 +21,7 @@
     "README.md"
   ],
   "dependencies": {
-    "@botfather/units": "workspace:*",
-    "@botfather/units-react-adapter": "workspace:*",
-    "@botfather/units-ui-ir": "workspace:*"
+    "@botfather/units-agent-plugin": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

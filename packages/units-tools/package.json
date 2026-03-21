@@ -32,7 +32,9 @@
   ],
   "dependencies": {
     "@botfather/units": "workspace:*",
-    "@botfather/units-dom-snapshot": "workspace:*"
+    "@botfather/units-dom-snapshot": "workspace:*",
+    "@botfather/units-react-adapter": "workspace:*",
+    "@botfather/units-ui-ir": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

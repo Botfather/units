@@ -6,14 +6,14 @@ import {
   runTransformProgram,
 } from "@botfather/units/transform";
 import {
-  normalizeDomTree,
-  normalizeA11yTree,
-  normalizeIrNode,
-} from "@botfather/units/tree-ir";
-import {
   scoreProgram,
   verifyProgram,
 } from "@botfather/units/reward";
+import {
+  normalizeSourceType,
+  normalizeUiInputTree,
+  runtimeSourceType,
+} from "./ui-normalize.mjs";
 
 function parseArgs(argv) {
   const out = {
@@ -38,13 +38,7 @@ function parseArgs(argv) {
 }
 
 function usage() {
-  return `\nUsage:\n  units-verify --program <program.ui> --input <tree.json> [--source dom|a11y|ir]\n  units-verify --before <before.json> --after <after.json> [--source dom|a11y|ir]\n\nOptional:\n  --context <context.json>\n  --expectations <expectations.json>\n  --gate-action-recall <num>\n  --gate-name-recall <num>\n  --gate-text-f1 <num>\n  --out <result.json>\n`;
-}
-
-function normalizeTree(sourceType, tree) {
-  if (sourceType === "dom") return normalizeDomTree(tree);
-  if (sourceType === "a11y") return normalizeA11yTree(tree);
-  return normalizeIrNode(tree);
+  return `\nUsage:\n  units-verify --program <program.ui> --input <tree.json> [--source dom|a11y|react|ir]\n  units-verify --before <before.json> --after <after.json> [--source dom|a11y|react|ir]\n\nOptional:\n  --context <context.json>\n  --expectations <expectations.json>\n  --gate-action-recall <num>\n  --gate-name-recall <num>\n  --gate-text-f1 <num>\n  --out <result.json>\n`;
 }
 
 async function readJson(file) {
@@ -67,7 +61,8 @@ async function main() {
     return;
   }
 
-  const sourceType = String(args.source || "dom").toLowerCase();
+  const sourceType = normalizeSourceType(args.source || "dom");
+  const normalizedSourceType = runtimeSourceType(sourceType, "dom");
   const gates = {
     action_recall: Number.isFinite(args.gateActionRecall) ? args.gateActionRecall : undefined,
     name_recall: Number.isFinite(args.gateNameRecall) ? args.gateNameRecall : undefined,
@@ -87,7 +82,7 @@ async function main() {
       args.context ? readJson(args.context) : Promise.resolve({}),
     ]);
 
-    inputTree = normalizeTree(sourceType, rawInputTree);
+    inputTree = normalizeUiInputTree(sourceType, rawInputTree);
     const program = compileTransformProgram(programSource);
     run = runTransformProgram(program, inputTree, context || {});
     outputTree = run.tree;
@@ -96,8 +91,8 @@ async function main() {
       readJson(args.before),
       readJson(args.after),
     ]);
-    inputTree = normalizeTree(sourceType, rawBefore);
-    outputTree = normalizeTree(sourceType, rawAfter);
+    inputTree = normalizeUiInputTree(sourceType, rawBefore);
+    outputTree = normalizeUiInputTree(sourceType, rawAfter);
   } else {
     process.stderr.write("Provide either --program + --input or --before + --after\n");
     process.stderr.write(usage());
@@ -113,6 +108,7 @@ async function main() {
 
   const payload = {
     source_type: sourceType,
+    normalized_source_type: normalizedSourceType,
     score,
     verification,
     program: run?.program || null,

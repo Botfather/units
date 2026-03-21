@@ -1,18 +1,18 @@
-name: Release
+name: CI
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
-  release:
+  quality-gates:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-      id-token: write
+    timeout-minutes: 20
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,28 +28,26 @@ jobs:
           node-version: 20
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
-          registry-url: https://registry.npmjs.org
 
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      - name: Validate UI-PS quality gates
+      - name: Run UI-PS focused tests
         run: |
           pnpm -s test:units-tools-transform-verify
           pnpm -s test:ui-ps-bench
           pnpm -s test:ui-ps-gate-check
+
+      - name: Run UI-PS benchmark and enforce gates
+        run: |
           pnpm -s bench:ui-ps
           pnpm -s bench:ui-ps:gate
 
-      - name: Version or Publish
-        uses: changesets/action@v1
+      - name: Upload UI-PS benchmark artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          version: pnpm changeset:version
-          publish: pnpm release
-          createGithubReleases: true
-          commit: "ci: version packages"
-          title: "ci: version packages"
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_PAT || secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
+          name: ui-ps-bench-results
+          path: |
+            bench/results/ui-ps-bench.json
+            bench/results/ui-ps-bench.md

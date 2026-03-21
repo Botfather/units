@@ -16,6 +16,7 @@ export function createUnitsAgentPlugin(config?: any): {
     program: any;
     transformed: boolean;
     sourceType: string;
+    rewriteSourceType: string;
     target: string;
     tokenEstimate: number;
     maxTokens: number | null;
@@ -35,6 +36,7 @@ export function compressUiForAgent(uiTree: any, options?: CompressUiOptions): Pr
   program: any;
   transformed: boolean;
   sourceType: string;
+  rewriteSourceType: string;
   target: string;
   tokenEstimate: number;
   maxTokens: number | null;
