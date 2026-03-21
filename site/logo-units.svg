@@ -1,19 +1,11 @@
-<svg width="960" height="320" viewBox="0 0 960 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+<svg width="960" height="520" viewBox="0 0 960 520" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
   <title id="title">Units Project Logo</title>
   <desc id="desc">A geometric U-shaped mark built from modular tiles with the Units wordmark.</desc>
 
   <defs>
-    <linearGradient id="unitsBg" x1="0" y1="0" x2="320" y2="320" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#0B1220"/>
-      <stop offset="1" stop-color="#111D35"/>
-    </linearGradient>
     <linearGradient id="unitsAccent" x1="40" y1="40" x2="280" y2="280" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#22D3EE"/>
       <stop offset="1" stop-color="#3B82F6"/>
-    </linearGradient>
-    <linearGradient id="unitsText" x1="352" y1="70" x2="820" y2="250" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#0F172A"/>
-      <stop offset="1" stop-color="#1D4ED8"/>
     </linearGradient>
     <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
       <feGaussianBlur stdDeviation="6" result="blur"/>
@@ -24,7 +16,8 @@
     </filter>
   </defs>
 
-  <rect x="24" y="24" width="272" height="272" rx="52" fill="url(#unitsBg)"/>
+  <g transform="translate(320 16)">
+  <rect x="24" y="24" width="272" height="272" rx="52" fill="#0B1220"/>
 
   <!-- Modular grid accents -->
   <g opacity="0.2" stroke="#7DD3FC" stroke-width="1">
@@ -51,8 +44,8 @@
     <rect x="126" y="198" width="44" height="44" rx="10" fill="url(#unitsAccent)"/>
     <rect x="154" y="198" width="44" height="44" rx="10" fill="url(#unitsAccent)"/>
   </g>
+  </g>
 
   <!-- Wordmark -->
-  <text x="348" y="202" fill="url(#unitsText)" font-family="'Avenir Next', 'Segoe UI', sans-serif" font-size="124" font-weight="700" letter-spacing="2">units</text>
-  <text x="356" y="246" fill="#334155" font-family="'Avenir Next', 'Segoe UI', sans-serif" font-size="28" font-weight="500" letter-spacing="8">UI COMPOSER</text>
+  <text x="480" y="450" text-anchor="middle" filter="url(#softGlow)" fill="#7DD3FC" font-family="'Avenir Next', 'Segoe UI', sans-serif" font-size="124" font-weight="700" letter-spacing="2">Units</text>
 </svg>
