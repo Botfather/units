@@ -7,6 +7,8 @@ Lightweight DSL for building interactive UIs. This monorepo publishes:
 - `@botfather/vite-plugin-units` (Vite build plugin)
 - `@botfather/vite-plugin-units-tools` (Vite dev tools: format/tokens/highlight)
 - `@botfather/units-tools` (CLI tools: format, lint, etc.)
+- `@botfather/units-agent-middleware` (agent-agnostic UI tree rewrite middleware)
+- `@botfather/units-dom-snapshot` (arbitrary DOM snapshot extraction for agent pipelines)
 - `@botfather/units-uikit-shadcn` (ShadCN-style Units UI kit)
 - `bench.js` (parse benchmark)
 - `DOCS.md` (full documentation)
@@ -15,6 +17,7 @@ Lightweight DSL for building interactive UIs. This monorepo publishes:
 - `examples/todo-vite/` (todo list demo)
 - `examples/chat-vite/` (chat transcript demo)
 - `examples/shadcn-gallery-vite/` (ShadCN gallery demo)
+- `examples/portfolio-vite/` (portfolio header demo)
 
 ## Website
 
@@ -275,6 +278,11 @@ The `@botfather/units-tools` package provides CLI utilities for managing Units f
 - `units-lint <file-or-dir>`: Lint for syntax and formatting consistency.
 - `lint-ui [targets...]`: Lint all `.ui` files in `examples/` and `packages/units-uikit-shadcn/` (or pass targets).
 - `units-watch <rootDir> <outFile>`: Watch and emit AST changes.
+- `units-snapshot --url <https://example.com>`: Capture neutral UI tree snapshots from arbitrary web pages.
+- `units-transform --program <program.ui> --input <tree.json>`: Run transform DSL against host trees.
+- `units-verify ...`: Score transform output and apply reward gates.
+- `units-synthesize ...`: Run iterative candidate refinement with deterministic verification.
+- `units-library inspect|promote|rollback ...`: Manage verified transform program library.
 
 ## VS Code Extension
 See `vscode/units-vscode` for a minimal VS Code extension that adds Units syntax highlighting, snippets, and formatting.

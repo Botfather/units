@@ -11,7 +11,7 @@ Syntax highlighting and snippets for the Units DSL (`.ui`).
 ## Install (local)
 1) Open VS Code
 2) Run: `Developer: Install Extension from Location...`
-3) Select this folder: `rdl/vscode/units-vscode`
+3) Select this folder: `vscode/units-vscode`
 
 ## Build/Package
 Use `vsce` if you want to publish:
