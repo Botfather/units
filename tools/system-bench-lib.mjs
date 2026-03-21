@@ -186,13 +186,15 @@ export function normalizeConfig(config, configPath = null) {
     resultsDir: String(config?.defaults?.resultsDir || "bench/results/system"),
     scratchDir: String(config?.defaults?.scratchDir || ".bench/scratch"),
     diskBenchmarkFile: String(config?.defaults?.diskBenchmarkFile || ".bench/scratch/fio-benchmark.dat"),
-    cpuMaxPrime: ensurePositiveInteger(config?.defaults?.cpuMaxPrime, 20000),
+    cpuMaxPrime: ensurePositiveInteger(config?.defaults?.cpuMaxPrime, 200000),
     memoryBlockSize: String(config?.defaults?.memoryBlockSize || "1M"),
     memoryTotalSize: String(config?.defaults?.memoryTotalSize || "16G"),
     diskFileSize: String(config?.defaults?.diskFileSize || "4G"),
     diskRuntimeSeconds: ensurePositiveInteger(config?.defaults?.diskRuntimeSeconds, 30),
     diskQueueDepth: ensurePositiveInteger(config?.defaults?.diskQueueDepth, 32),
     diskNumJobs: ensurePositiveInteger(config?.defaults?.diskNumJobs, 1),
+    diskIoEngine: String(config?.defaults?.diskIoEngine || "posixaio"),
+    diskPreflightIoEngine: String(config?.defaults?.diskPreflightIoEngine || "sync"),
     networkPort: ensurePositiveInteger(config?.defaults?.networkPort, 5201),
     networkDurationSeconds: ensurePositiveInteger(config?.defaults?.networkDurationSeconds, 20),
   };
@@ -655,8 +657,18 @@ function aggregateMetric(values, selector, mode = "sum") {
   return picked.reduce((sum, value) => sum + value, 0);
 }
 
+function parseJsonDocument(output) {
+  const text = String(output || "").trim();
+  if (!text) return {};
+  if (text[0] === "{" || text[0] === "[") return JSON.parse(text);
+
+  const jsonStart = text.search(/[\[{]/);
+  if (jsonStart === -1) return JSON.parse(text);
+  return JSON.parse(text.slice(jsonStart));
+}
+
 function parseFioJsonOutput(output) {
-  const parsed = JSON.parse(String(output || "{}"));
+  const parsed = parseJsonDocument(output);
   const jobs = Array.isArray(parsed.jobs) ? parsed.jobs : [];
   return {
     read_bw_bytes_per_second: aggregateMetric(jobs, (job) => Number(job?.read?.bw_bytes || 0)),
@@ -670,7 +682,7 @@ function parseFioJsonOutput(output) {
 }
 
 function parseIperf3JsonOutput(output) {
-  const parsed = JSON.parse(String(output || "{}"));
+  const parsed = parseJsonDocument(output);
   const protocol = parsed?.start?.test_start?.protocol || null;
   const sent = parsed?.end?.sum_sent || parsed?.end?.sum || null;
   const received = parsed?.end?.sum_received || parsed?.end?.sum || null;
@@ -738,6 +750,7 @@ function summarizeExecution(suites) {
     total: suites.length,
     executed: 0,
     passed: 0,
+    warnings: 0,
     failed: 0,
     skipped: 0,
     timedOut: 0,
@@ -750,7 +763,8 @@ function summarizeExecution(suites) {
       continue;
     }
     summary.executed++;
-    if (status === "passed" || status === "passed_with_parse_error") summary.passed++;
+    if (status === "passed") summary.passed++;
+    else if (status === "passed_with_parse_error") summary.warnings++;
     else summary.failed++;
     if (suite.execution?.timedOut) summary.timedOut++;
     if (suite.execution?.parseError) summary.parseErrors++;
@@ -881,8 +895,10 @@ export function markdownReport(payload) {
   lines.push(`- Suites: \`${payload.suites?.length || 0}\``);
   if (payload.mode === "run") {
     lines.push(`- Executed: \`${payload.summary?.executed || 0}\``);
-    lines.push(`- Passed: \`${payload.summary?.passed || 0}\``);
+    lines.push(`- Passed cleanly: \`${payload.summary?.passed || 0}\``);
+    lines.push(`- Warnings: \`${payload.summary?.warnings || 0}\``);
     lines.push(`- Failed: \`${payload.summary?.failed || 0}\``);
+    lines.push(`- Parse errors: \`${payload.summary?.parseErrors || 0}\``);
   } else {
     lines.push(`- Ready: \`${payload.summary?.ready || 0}\``);
     lines.push(`- Missing dependencies: \`${payload.summary?.missingDependency || 0}\``);

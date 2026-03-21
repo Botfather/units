@@ -132,6 +132,33 @@ See the [live benchmarks table](https://botfather.github.io/units/#benchmarks) f
 node ./bench.js
 ```
 
+## DSL Benchmark Suite
+Run the DSL-specific benchmark suite:
+```
+pnpm bench:dsl
+```
+
+Quick smoke run:
+```
+pnpm bench:dsl:quick
+```
+
+What it measures:
+- Parse throughput on curated `.ui` programs
+- Format / printer throughput and format stability
+- Custom-renderer throughput with realistic scope sizes
+- Edit-loop cost via changed-range detection and `incrementalParse()`
+- Corpus parse / format throughput over `bench/cases`, `examples`, and the ShadCN Units kit
+
+Inputs:
+- Suite config: `bench/dsl-bench.config.json`
+- Curated cases: `bench/cases/*.ui`, `examples/*/src/*.ui`
+- Corpus sweep: `bench/cases/`, `examples/`, `packages/units-uikit-shadcn/shadcn/`
+
+Outputs:
+- JSON metrics: `bench/results/dsl-bench.json`
+- Markdown report: `bench/results/dsl-bench.md`
+
 ## LLM Benchmark (Token + Quality)
 Offline reference run (estimated tokens):
 ```
