@@ -188,6 +188,21 @@ importers:
         specifier: workspace:*
         version: link:../units
 
+  packages/units-agent-plugin:
+    dependencies:
+      '@botfather/units-agent-middleware':
+        specifier: workspace:*
+        version: link:../units-agent-middleware
+      '@botfather/units-compiler':
+        specifier: workspace:*
+        version: link:../units-compiler
+
+  packages/units-compiler:
+    dependencies:
+      '@botfather/units':
+        specifier: workspace:*
+        version: link:../units
+
   packages/units-dom-snapshot: {}
 
   packages/units-tools:
