@@ -138,7 +138,7 @@ const node = findSmallestEnclosingNode(ast, range.start, range.endPrev);
 const newAst = incrementalParse(prevAst, prevSource, nextSource);
 ```
 
-Useful for editor integrations. `incrementalParse` currently falls back to a full re-parse; `findChangedRange` and `findSmallestEnclosingNode` are fully functional for narrowing re-parse scope.
+Useful for editor integrations. `incrementalParse` attempts append-only and smallest-enclosing-node reparses first, then safely falls back to a full re-parse when needed.
 
 ### Tree IR adapters
 

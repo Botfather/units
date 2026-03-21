@@ -482,7 +482,7 @@ export function markdownReport(payload) {
   lines.push("- `parse` benchmarks isolate `parseUnits(source)`.");
   lines.push("- `format` benchmarks measure parser + printer cost via `formatUnits(source)`.");
   lines.push("- `render` benchmarks parse once, then measure custom-renderer tree construction with realistic scope data.");
-  lines.push("- `edit` benchmarks include `findChangedRange()` and `incrementalParse()`; today `incrementalParse()` still falls back to full parse.");
+  lines.push("- `edit` benchmarks include `findChangedRange()` and `incrementalParse()`, which now attempts append/subtree fast paths before full-parse fallback.");
   lines.push("- `plugin` benchmarks measure the synchronous load path used by the Vite plugins for AST, format, token, and highlight outputs.");
   return `${lines.join("\n")}\n`;
 }

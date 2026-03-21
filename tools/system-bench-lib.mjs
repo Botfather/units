@@ -623,6 +623,14 @@ function parseNumberFromMatch(regex, input) {
   return Number.isFinite(value) ? value : null;
 }
 
+const FIO_SHM_RESTRICTION_RE = /failed to setup shm segment|shmat:\s*Operation not permitted/i;
+
+function isFioSharedMemoryRestriction(suite, stepResult) {
+  if (!suite || suite.tool !== "fio" || !stepResult) return false;
+  const haystack = `${stepResult.error || ""}\n${stepResult.stderr || ""}\n${stepResult.stdout || ""}`;
+  return FIO_SHM_RESTRICTION_RE.test(haystack);
+}
+
 function parseSysbenchCpuOutput(output) {
   const text = String(output || "");
   return {
@@ -803,6 +811,20 @@ export async function executeBenchmarkPlan(plan, options = {}) {
         timeoutMs: suite.preflight.timeoutMs,
       }, { cwd, env, runCommandFn });
       if (preflight.exitCode !== 0) {
+        if (isFioSharedMemoryRestriction(suite, preflight)) {
+          suites.push({
+            ...suite,
+            execution: {
+              status: "skipped",
+              reason: "Environment does not allow fio shared-memory setup (shm).",
+              timedOut: Boolean(preflight.timedOut),
+              parseError: null,
+              metrics: null,
+              preflight,
+            },
+          });
+          continue;
+        }
         suites.push({
           ...suite,
           execution: {
@@ -827,17 +849,23 @@ export async function executeBenchmarkPlan(plan, options = {}) {
       ? parseBenchmarkOutput(suite.parser, result.stdout, result.stderr)
       : { metrics: null, error: null };
 
-    const status = result.exitCode === 0
-      ? (parsed.error ? "passed_with_parse_error" : "passed")
-      : "failed";
+    let status;
+    let reason = null;
+    if (result.exitCode === 0) {
+      status = parsed.error ? "passed_with_parse_error" : "passed";
+    } else if (isFioSharedMemoryRestriction(suite, result)) {
+      status = "skipped";
+      reason = "Environment does not allow fio shared-memory setup (shm).";
+    } else {
+      status = "failed";
+      reason = result.error || firstLine(result.stderr) || "Benchmark command failed.";
+    }
 
     suites.push({
       ...suite,
       execution: {
         status,
-        reason: result.exitCode === 0
-          ? null
-          : (result.error || firstLine(result.stderr) || "Benchmark command failed."),
+        reason,
         startedAt: result.startedAt,
         finishedAt: result.finishedAt,
         durationMs: result.durationMs,

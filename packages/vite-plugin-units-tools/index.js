@@ -97,6 +97,7 @@ export default function unitsTools(options = {}) {
   const include = options.include;
   const exclude = options.exclude;
   const classPrefix = options.classPrefix || "";
+  const loadCache = new Map();
 
   function isRelOrAbs(id) {
     return id.startsWith(".") || id.startsWith("/");
@@ -107,6 +108,21 @@ export default function unitsTools(options = {}) {
     if (include && !include.test(id)) return false;
     if (exclude && exclude.test(id)) return false;
     return true;
+  }
+
+  function getFileEntry(file) {
+    const stat = fs.statSync(file);
+    const cached = loadCache.get(file);
+    if (cached && cached.mtimeMs === stat.mtimeMs) return cached;
+    const fresh = {
+      mtimeMs: stat.mtimeMs,
+      code: fs.readFileSync(file, "utf-8"),
+      formatted: null,
+      tokens: null,
+      highlighted: null,
+    };
+    loadCache.set(file, fresh);
+    return fresh;
   }
 
   return {
@@ -129,24 +145,24 @@ export default function unitsTools(options = {}) {
       if (id.endsWith(".ui?format")) {
         const file = id.replace(/\?.*$/, "");
         if (!isAllowed(file)) return null;
-        const code = fs.readFileSync(file, "utf-8");
-        const formatted = formatUnits(code);
-        return `export default ${JSON.stringify(formatted)};\n`;
+        const entry = getFileEntry(file);
+        if (entry.formatted == null) entry.formatted = formatUnits(entry.code);
+        return `export default ${JSON.stringify(entry.formatted)};\n`;
       }
       if (id.endsWith(".ui?tokens")) {
         const file = id.replace(/\?.*$/, "");
         if (!isAllowed(file)) return null;
-        const code = fs.readFileSync(file, "utf-8");
-        const tokens = tokenizeUnits(code);
-        return `export default ${JSON.stringify(tokens)};\n`;
+        const entry = getFileEntry(file);
+        if (!entry.tokens) entry.tokens = tokenizeUnits(entry.code);
+        return `export default ${JSON.stringify(entry.tokens)};\n`;
       }
       if (id.endsWith(".ui?highlight")) {
         const file = id.replace(/\?.*$/, "");
         if (!isAllowed(file)) return null;
-        const code = fs.readFileSync(file, "utf-8");
-        const tokens = tokenizeUnits(code);
-        const html = highlightTokens(tokens, classPrefix);
-        return `export default ${JSON.stringify(html)};\n`;
+        const entry = getFileEntry(file);
+        if (!entry.tokens) entry.tokens = tokenizeUnits(entry.code);
+        if (entry.highlighted == null) entry.highlighted = highlightTokens(entry.tokens, classPrefix);
+        return `export default ${JSON.stringify(entry.highlighted)};\n`;
       }
       return null;
     },

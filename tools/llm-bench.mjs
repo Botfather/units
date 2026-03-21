@@ -11,12 +11,27 @@ const DEFAULT_OUT = "bench/results/llm-bench.json";
 const DEFAULT_REPORT = "bench/results/llm-bench.md";
 const DEFAULT_MODELS = ["gpt-4.1-mini", "gpt-4o-mini"];
 const DEFAULT_BASE_URL = "https://api.openai.com/v1";
+const DEFAULT_REPAIR_ATTEMPTS = 1;
+const DEFAULT_LIVE_MIN_PARSE_OK_PCT = 90;
+const DEFAULT_LIVE_MIN_REQUIRED_PCT = 80;
 
 const DEFAULT_SYSTEM_PROMPT = [
   "You are editing a Units .ui file.",
-  "Follow the LLM Authoring Profile from DOCS-LLM.md.",
+  "Return only valid Units DSL. Never output XML/HTML/JSX/Lisp/JSON/markdown.",
+  "Use Units grammar only: Tag (props) { children }, directives #if/#for/#slot/#key, text '...'.",
   "Always use parentheses for props and comma-separated props.",
-  "Use single quotes and one node per line.",
+  "Use single quotes.",
+  "Always key loops with #key.",
+  "Use explicit event handlers: !event { handler(@event) }.",
+  "Do not wrap output in code fences and do not add explanation.",
+  "Example:",
+  "App {",
+  "  #if (@items.length == 0) {",
+  "    text 'Nothing here yet.'",
+  "  }",
+  "}",
+  "",
+  "Before finalizing, self-check that output parses as Units DSL and includes required structures from the request.",
   "Return only valid Units DSL; no markdown fences or explanation.",
 ].join("\n");
 
@@ -31,6 +46,11 @@ function parseArgs(argv) {
     baseUrl: process.env.OPENAI_BASE_URL || DEFAULT_BASE_URL,
     temperature: 0,
     maxOutputTokens: 1200,
+    repairAttempts: DEFAULT_REPAIR_ATTEMPTS,
+    qualityGate: null,
+    minParseOkPct: null,
+    minRequiredPassPct: null,
+    minExactMatchPct: null,
     systemPrompt: DEFAULT_SYSTEM_PROMPT,
   };
   for (let i = 0; i < argv.length; i++) {
@@ -45,6 +65,12 @@ function parseArgs(argv) {
     } else if (arg === "--base-url") out.baseUrl = String(argv[++i] || out.baseUrl);
     else if (arg === "--temperature") out.temperature = Number(argv[++i] || out.temperature);
     else if (arg === "--max-output-tokens") out.maxOutputTokens = Math.max(1, Number(argv[++i] || out.maxOutputTokens));
+    else if (arg === "--repair-attempts") out.repairAttempts = Math.max(0, Number(argv[++i] || out.repairAttempts));
+    else if (arg === "--quality-gate") out.qualityGate = true;
+    else if (arg === "--no-quality-gate") out.qualityGate = false;
+    else if (arg === "--min-parse-ok-pct") out.minParseOkPct = Number(argv[++i] || out.minParseOkPct);
+    else if (arg === "--min-required-pct") out.minRequiredPassPct = Number(argv[++i] || out.minRequiredPassPct);
+    else if (arg === "--min-exact-pct") out.minExactMatchPct = Number(argv[++i] || out.minExactMatchPct);
     else if (arg === "--system-prompt-file") out.systemPromptFile = String(argv[++i] || "");
     else if (arg === "--help" || arg === "-h") {
       out.help = true;
@@ -69,6 +95,13 @@ Live mode env:
   OPENAI_API_KEY=...
 Optional:
   OPENAI_BASE_URL=https://api.openai.com/v1
+
+Live quality options:
+  --repair-attempts 1
+  --quality-gate / --no-quality-gate
+  --min-parse-ok-pct 90
+  --min-required-pct 80
+  --min-exact-pct 70
 `;
 }
 
@@ -309,12 +342,97 @@ function summarizeByModel(records) {
   return rows;
 }
 
+function clampPct(value) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  return Math.max(0, Math.min(100, value));
+}
+
+function usageFromResponse(responseUsage, promptText, generated) {
+  const input = typeof responseUsage?.inputTokens === "number"
+    ? responseUsage.inputTokens
+    : estimateTokens(promptText);
+  const output = typeof responseUsage?.outputTokens === "number"
+    ? responseUsage.outputTokens
+    : estimateTokens(generated);
+  const total = typeof responseUsage?.totalTokens === "number"
+    ? responseUsage.totalTokens
+    : input + output;
+  return {
+    input,
+    output,
+    total,
+    source: (
+      typeof responseUsage?.inputTokens === "number" || typeof responseUsage?.outputTokens === "number"
+    ) ? "provider_usage" : "estimated",
+  };
+}
+
+function mergeUsage(a, b) {
+  if (!a) return b;
+  if (!b) return a;
+  return {
+    input: (a.input || 0) + (b.input || 0),
+    output: (a.output || 0) + (b.output || 0),
+    total: (a.total || 0) + (b.total || 0),
+    source: a.source === b.source ? a.source : "mixed",
+  };
+}
+
+function buildRepairPrompt({ prompt, generated, parseError, requiredSnippets }) {
+  const required = Array.isArray(requiredSnippets) && requiredSnippets.length > 0
+    ? requiredSnippets.map((snippet) => `- ${snippet}`).join("\n")
+    : "- (none)";
+  return [
+    "Your previous answer was invalid or incomplete Units DSL.",
+    `Original task: ${prompt}`,
+    `Parser error: ${parseError || "(none)"} `,
+    "Required snippets to include:",
+    required,
+    "",
+    "Fix and return only valid Units DSL.",
+    "Do not output any explanation.",
+    "Previous output:",
+    generated,
+  ].join("\n");
+}
+
+function evaluateQualityGate(summaries, thresholds) {
+  const violations = [];
+  for (const summary of summaries) {
+    if (thresholds.minParseOkPct != null && summary.parseOkPct != null && summary.parseOkPct < thresholds.minParseOkPct) {
+      violations.push({
+        model: summary.model,
+        metric: "parseOkPct",
+        value: summary.parseOkPct,
+        min: thresholds.minParseOkPct,
+      });
+    }
+    if (thresholds.minRequiredPassPct != null && summary.requiredPassPct != null && summary.requiredPassPct < thresholds.minRequiredPassPct) {
+      violations.push({
+        model: summary.model,
+        metric: "requiredPassPct",
+        value: summary.requiredPassPct,
+        min: thresholds.minRequiredPassPct,
+      });
+    }
+    if (thresholds.minExactMatchPct != null && summary.exactMatchPct != null && summary.exactMatchPct < thresholds.minExactMatchPct) {
+      violations.push({
+        model: summary.model,
+        metric: "exactMatchPct",
+        value: summary.exactMatchPct,
+        min: thresholds.minExactMatchPct,
+      });
+    }
+  }
+  return violations;
+}
+
 function fmt(n, digits = 2) {
   if (typeof n !== "number" || !Number.isFinite(n)) return "-";
   return n.toFixed(digits);
 }
 
-function markdownReport({ config, summaries, compression, records }) {
+function markdownReport({ config, summaries, compression, records, qualityGate }) {
   const lines = [];
   lines.push("# LLM Benchmark Report");
   lines.push("");
@@ -332,6 +450,23 @@ function markdownReport({ config, summaries, compression, records }) {
     lines.push(`| ${s.model} | ${s.samples} | ${fmt(s.parseOkPct)} | ${fmt(s.requiredPassPct)} | ${fmt(s.exactMatchPct)} | ${fmt(s.avgInputTokens)} | ${fmt(s.avgOutputTokens)} | ${fmt(s.avgTotalTokens)} | ${fmt(s.avgParseMs, 3)} |`);
   }
   lines.push("");
+  if (config.mode === "live" && qualityGate?.enabled) {
+    lines.push("## Quality Gate");
+    lines.push("");
+    lines.push(`- Parse OK minimum %: \`${qualityGate.thresholds.minParseOkPct ?? "-"}\``);
+    lines.push(`- Required minimum %: \`${qualityGate.thresholds.minRequiredPassPct ?? "-"}\``);
+    lines.push(`- Exact minimum %: \`${qualityGate.thresholds.minExactMatchPct ?? "-"}\``);
+    lines.push(`- Status: \`${qualityGate.violations.length === 0 ? "pass" : "fail"}\``);
+    if (qualityGate.violations.length > 0) {
+      lines.push("");
+      lines.push("| Model | Metric | Value % | Minimum % |");
+      lines.push("|---|---|---:|---:|");
+      for (const v of qualityGate.violations) {
+        lines.push(`| ${v.model} | ${v.metric} | ${fmt(v.value)} | ${fmt(v.min)} |`);
+      }
+    }
+    lines.push("");
+  }
   if (compression.length > 0) {
     lines.push("## Estimated DSL Compression");
     lines.push("");
@@ -378,10 +513,18 @@ async function main() {
   if (!Array.isArray(args.models) || args.models.length === 0) {
     throw new Error("Pass at least one model via --models.");
   }
+  args.repairAttempts = Math.max(0, Number.isFinite(args.repairAttempts) ? Math.floor(args.repairAttempts) : DEFAULT_REPAIR_ATTEMPTS);
 
   if (args.systemPromptFile) {
     args.systemPrompt = await fs.readFile(path.resolve(process.cwd(), args.systemPromptFile), "utf-8");
   }
+
+  const qualityGateEnabled = args.qualityGate == null ? args.mode === "live" : Boolean(args.qualityGate);
+  const qualityThresholds = {
+    minParseOkPct: clampPct(args.minParseOkPct ?? (qualityGateEnabled && args.mode === "live" ? DEFAULT_LIVE_MIN_PARSE_OK_PCT : null)),
+    minRequiredPassPct: clampPct(args.minRequiredPassPct ?? (qualityGateEnabled && args.mode === "live" ? DEFAULT_LIVE_MIN_REQUIRED_PCT : null)),
+    minExactMatchPct: clampPct(args.minExactMatchPct),
+  };
 
   const cases = await loadCases(args.cases);
   const records = [];
@@ -403,6 +546,8 @@ async function main() {
           source: "estimated",
         };
         let rawResponse = null;
+        let analysis = null;
+        const repairLog = [];
 
         if (args.mode === "live") {
           const response = await callOpenAI({
@@ -416,27 +561,43 @@ async function main() {
           });
           rawResponse = response.raw;
           generated = stripFence(response.text);
+          usageTokens = usageFromResponse(response.usage, promptText, generated);
+          analysis = analyzeSource(generated, oneCase.requiredSnippets || []);
 
-          const input = typeof response.usage.inputTokens === "number"
-            ? response.usage.inputTokens
-            : estimateTokens(promptText);
-          const output = typeof response.usage.outputTokens === "number"
-            ? response.usage.outputTokens
-            : estimateTokens(generated);
-          const total = typeof response.usage.totalTokens === "number"
-            ? response.usage.totalTokens
-            : input + output;
-          usageTokens = {
-            input,
-            output,
-            total,
-            source: (
-              typeof response.usage.inputTokens === "number" || typeof response.usage.outputTokens === "number"
-            ) ? "provider_usage" : "estimated",
-          };
+          for (let attempt = 1; attempt <= args.repairAttempts; attempt++) {
+            if (analysis.parseOk && analysis.requiredPass) break;
+            const repairPrompt = buildRepairPrompt({
+              prompt: oneCase.prompt,
+              generated,
+              parseError: analysis.parseError,
+              requiredSnippets: oneCase.requiredSnippets || [],
+            });
+            const repairResponse = await callOpenAI({
+              apiKey,
+              baseUrl: args.baseUrl,
+              model,
+              systemPrompt: args.systemPrompt,
+              userPrompt: repairPrompt,
+              temperature: args.temperature,
+              maxOutputTokens: args.maxOutputTokens,
+            });
+            rawResponse = repairResponse.raw;
+            generated = stripFence(repairResponse.text);
+            usageTokens = mergeUsage(
+              usageTokens,
+              usageFromResponse(repairResponse.usage, `${args.systemPrompt}\n\n${repairPrompt}`, generated),
+            );
+            analysis = analyzeSource(generated, oneCase.requiredSnippets || []);
+            repairLog.push({
+              attempt,
+              parseOk: analysis.parseOk,
+              requiredPass: analysis.requiredPass,
+              parseError: analysis.parseError,
+            });
+          }
         }
 
-        const analysis = analyzeSource(generated, oneCase.requiredSnippets || []);
+        if (!analysis) analysis = analyzeSource(generated, oneCase.requiredSnippets || []);
         let exactMatch = null;
         if (oneCase.expectedDsl && analysis.parseOk) {
           try {
@@ -457,6 +618,7 @@ async function main() {
           prompt: oneCase.prompt,
           output: generated,
           rawResponse,
+          repairLog,
         });
       }
     }
@@ -464,6 +626,14 @@ async function main() {
 
   const compression = makeCompressionRows(cases);
   const summaries = summarizeByModel(records);
+  const qualityViolations = qualityGateEnabled
+    ? evaluateQualityGate(summaries, qualityThresholds)
+    : [];
+  const qualityGate = {
+    enabled: qualityGateEnabled,
+    thresholds: qualityThresholds,
+    violations: qualityViolations,
+  };
   const payload = {
     generatedAt: new Date().toISOString(),
     config: {
@@ -472,6 +642,8 @@ async function main() {
       models: args.models,
       casesPath: args.cases,
       baseUrl: args.baseUrl,
+      repairAttempts: args.repairAttempts,
+      qualityGate,
     },
     caseCount: cases.length,
     cases: cases.map((c) => ({
@@ -482,6 +654,7 @@ async function main() {
       baselineNames: Object.keys(c.baselines || {}),
     })),
     summaries,
+    qualityGate,
     compression,
     records,
   };
@@ -495,6 +668,7 @@ async function main() {
       models: args.models,
     },
     summaries,
+    qualityGate,
     compression,
     records,
   });
@@ -502,6 +676,10 @@ async function main() {
   const outPath = await writeFileSafe(args.out, `${JSON.stringify(payload, null, 2)}\n`);
   const reportPath = await writeFileSafe(args.report, reportMd);
   process.stdout.write(`Wrote ${outPath}\nWrote ${reportPath}\n`);
+  if (qualityGateEnabled && qualityViolations.length > 0) {
+    process.stderr.write(`Live quality gate failed with ${qualityViolations.length} violation(s).\n`);
+    process.exitCode = 1;
+  }
 }
 
 main().catch((err) => {
