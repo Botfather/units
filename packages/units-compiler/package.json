@@ -1,0 +1,29 @@
+{
+  "name": "@botfather/units-compiler",
+  "version": "0.1.0",
+  "description": "Compile host-agnostic UI trees into Units AST/DSL with optional transform programs.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Botfather/units.git",
+    "directory": "packages/units-compiler"
+  },
+  "homepage": "https://github.com/Botfather/units/tree/main/packages/units-compiler",
+  "bugs": {
+    "url": "https://github.com/Botfather/units/issues"
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "dependencies": {
+    "@botfather/units": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

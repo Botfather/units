@@ -9,6 +9,7 @@ Lightweight DSL for building interactive UIs. This monorepo publishes:
 - `@botfather/units-tools` (CLI tools: format, lint, etc.)
 - `@botfather/units-agent-middleware` (agent-agnostic UI tree rewrite middleware)
 - `@botfather/units-dom-snapshot` (arbitrary DOM snapshot extraction for agent pipelines)
+- `@botfather/units-compiler` (UiNode/IR -> Units AST+DSL compiler with loop heuristics)
 - `@botfather/units-uikit-shadcn` (ShadCN-style Units UI kit)
 - `bench.js` (parse benchmark)
 - `DOCS.md` (full documentation)
