@@ -17,6 +17,8 @@
   ],
   "scripts": {
     "bench:parser": "node ./bench.js",
+    "bench:dsl": "node ./tools/dsl-bench.mjs --config ./bench/dsl-bench.config.json --out ./bench/results/dsl-bench.json --report ./bench/results/dsl-bench.md",
+    "bench:dsl:quick": "node ./tools/dsl-bench.mjs --config ./bench/dsl-bench.config.json --quick --out ./bench/results/dsl-bench-quick.json --report ./bench/results/dsl-bench-quick.md",
     "bench:system:plan": "node ./tools/system-bench.mjs plan --config ./bench/system-bench.config.json --out ./bench/results/system-bench-plan.json --report ./bench/results/system-bench-plan.md",
     "bench:system:run": "node ./tools/system-bench.mjs run --config ./bench/system-bench.config.json --out ./bench/results/system-bench.json --report ./bench/results/system-bench.md",
     "bench:llm": "node ./tools/llm-bench.mjs --mode offline --cases ./bench/llm-cases.json --out ./bench/results/llm-bench.json --report ./bench/results/llm-bench.md",
@@ -26,6 +28,7 @@
     "bench:react-vs-dsl:provider": "node ./tools/react-vs-dsl-bench.mjs --pairs ./bench/react-vs-dsl-pairs.json --include-synthetic false --tokenizer-mode provider --provider-model gpt-4.1-mini --out ./bench/results/react-vs-dsl-provider.json --report ./bench/results/react-vs-dsl-provider.md",
     "bench:react-vs-dsl:provider:both": "node ./tools/react-vs-dsl-bench.mjs --pairs ./bench/react-vs-dsl-pairs.json --include-synthetic false --tokenizer-mode both --provider-model gpt-4.1-mini --out ./bench/results/react-vs-dsl-provider-both.json --report ./bench/results/react-vs-dsl-provider-both.md",
     "bench:react-vs-dsl:provider:optimized": "node ./tools/react-vs-dsl-bench.mjs --pairs ./bench/react-vs-dsl-pairs-optimized.json --include-synthetic false --tokenizer-mode both --provider-model gpt-4.1-mini --out ./bench/results/react-vs-dsl-provider-both-optimized.json --report ./bench/results/react-vs-dsl-provider-both-optimized.md",
+    "test:dsl-bench": "node --test ./test/dsl-bench.test.mjs",
     "test:system-bench": "node --test ./test/system-bench.test.mjs",
     "changeset": "changeset",
     "changeset:version": "changeset version",

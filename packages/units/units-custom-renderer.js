@@ -3,9 +3,20 @@
 
 export function createUnitsRenderer(host) {
   const evalExpr = host.evalExpr || ((raw, scope, locals) => {
-    const normalized = raw.replace(/@([A-Za-z_$][\\w.$]*)/g, "$1");
-    const fn = new Function("scope", "locals", `with(scope){with(locals||{}){return (${normalized});}}`);
-    return fn(scope, locals || {});
+    let normalized = raw.replace(/@\(/g, "(");
+    normalized = normalized.replace(/@([A-Za-z_$][\w.$]*)/g, "$1");
+    normalized = normalized.replace(
+      /set\s*\(\s*([A-Za-z_$][\w.$]*)\s*:=/g,
+      "set('$1',",
+    );
+    const fn = new Function(
+      "scope",
+      "locals",
+      "event",
+      "set",
+      `with(scope){with(locals||{}){return (${normalized});}}`,
+    );
+    return fn(scope, locals || {}, locals?.event, locals?.set || scope?.set);
   });
 
   function splitInterpolations(value) {
@@ -57,7 +68,7 @@ export function createUnitsRenderer(host) {
     return parts;
   }
 
-  function renderText(value, locals) {
+  function renderText(value, scope, locals) {
     const parts = splitInterpolations(value);
     if (parts.length === 1 && parts[0].type === "text") return host.text(parts[0].value);
     return host.fragment(
@@ -79,7 +90,7 @@ export function createUnitsRenderer(host) {
 
     function renderNode(node, locals) {
       if (!node) return null;
-      if (node.type === "text") return renderText(node.value, locals);
+      if (node.type === "text") return renderText(node.value, scope, locals);
       if (node.type === "expr") return host.text(String(evalExpr(node.value.raw, scope, locals)));
       if (node.type === "directive") return renderDirective(node, locals);
       if (node.type === "tag") return renderTag(node, locals);

@@ -182,14 +182,15 @@ Latency (ms):
          avg:                                    0.06
          95th percentile:                        0.08
 `);
-  const fio = parseBenchmarkOutput("fio_json", JSON.stringify({
-    jobs: [
-      {
-        read: { bw_bytes: 1048576, iops: 256, clat_ns: { mean: 1500 } },
-        write: { bw_bytes: 524288, iops: 128, clat_ns: { mean: 3200 } },
-      },
-    ],
-  }));
+  const fio = parseBenchmarkOutput("fio_json", `note: both iodepth >= 1 and synchronous I/O engine are selected, queue depth will be capped at 1
+${JSON.stringify({
+  jobs: [
+    {
+      read: { bw_bytes: 1048576, iops: 256, clat_ns: { mean: 1500 } },
+      write: { bw_bytes: 524288, iops: 128, clat_ns: { mean: 3200 } },
+    },
+  ],
+})}`);
   const iperf = parseBenchmarkOutput("iperf3_json", JSON.stringify({
     start: { test_start: { protocol: "TCP", duration: 20 } },
     end: {
@@ -268,6 +269,63 @@ test("executeBenchmarkPlan runs ready suites with preflight and parses output", 
   assert.equal(suite.execution.metrics.latency_ms_avg, 0.22);
 });
 
+test("executeBenchmarkPlan counts parse warnings separately from clean passes", async () => {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "system-bench-warning-"));
+  const plan = {
+    generatedAt: "2026-03-17T00:00:00.000Z",
+    mode: "plan",
+    config: { path: path.join(tempDir, "bench.json"), name: "mock" },
+    machine: {
+      id: "cc9584c0-05f6-425f-8973-2849b0e1a6aa",
+      identityFile: path.join(tempDir, ".bench", "machine-id.json"),
+      profile: makeProfile(tempDir),
+    },
+    paths: {
+      resultsDir: path.join(tempDir, "results"),
+      scratchDir: path.join(tempDir, ".bench", "scratch"),
+      diskBenchmarkFile: path.join(tempDir, ".bench", "scratch", "fio.dat"),
+      cwd: tempDir,
+    },
+    tooling: {
+      node: { available: true, version: process.version, probeCommand: ["node", "--version"] },
+    },
+    summary: { total: 1, ready: 1, optional: 0, disabled: 0, missingDependency: 0, requiresConfiguration: 0 },
+    suites: [
+      {
+        id: "mock_warning",
+        title: "Mock Warning",
+        category: "disk",
+        standard: "fio",
+        tool: "node",
+        parser: "fio_json",
+        description: null,
+        notes: null,
+        optional: false,
+        expectedMetrics: ["read_iops"],
+        timeoutMs: 5000,
+        status: "ready",
+        reason: null,
+        requiredEnv: [],
+        missingContext: [],
+        command: ["node", "-e", "process.stdout.write('note: warning\\nnot-json')"],
+        commandString: "node mock-warning",
+        preflight: null,
+      },
+    ],
+  };
+
+  const executed = await executeBenchmarkPlan(plan);
+  const suite = executed.suites[0];
+
+  assert.equal(executed.summary.executed, 1);
+  assert.equal(executed.summary.passed, 0);
+  assert.equal(executed.summary.warnings, 1);
+  assert.equal(executed.summary.failed, 0);
+  assert.equal(executed.summary.parseErrors, 1);
+  assert.equal(suite.execution.status, "passed_with_parse_error");
+  assert.match(suite.execution.parseError, /Unexpected token|not valid JSON/);
+});
+
 test("markdownReport includes machine UUID and suite status details", () => {
   const report = markdownReport({
     generatedAt: "2026-03-17T00:00:00.000Z",
@@ -300,6 +358,46 @@ test("markdownReport includes machine UUID and suite status details", () => {
   assert.match(report, /Machine UUID: `f7fd9f73-f64e-420f-b6db-7637ff76f8e5`/);
   assert.match(report, /cpu_sysbench_single/);
   assert.match(report, /CPU Prime Single Thread/);
+});
+
+test("markdownReport shows warning counts for run payloads", () => {
+  const report = markdownReport({
+    generatedAt: "2026-03-17T00:00:00.000Z",
+    mode: "run",
+    config: { path: "bench/system-bench.config.json", name: "system-standard-v1" },
+    machine: {
+      id: "f7fd9f73-f64e-420f-b6db-7637ff76f8e5",
+      identityFile: ".bench/machine-id.json",
+      profile: makeProfile(process.cwd()),
+    },
+    tooling: {
+      node: { available: true, version: process.version, probeCommand: ["node", "--version"] },
+    },
+    summary: { total: 1, executed: 1, passed: 0, warnings: 1, failed: 0, skipped: 0, timedOut: 0, parseErrors: 1 },
+    suites: [
+      {
+        id: "disk_fio_seq_read",
+        title: "Disk Sequential Read",
+        category: "disk",
+        standard: "fio",
+        status: "ready",
+        tool: "fio",
+        commandString: "fio --name=seq_read",
+        expectedMetrics: ["read_iops"],
+        requiredEnv: [],
+        execution: {
+          status: "passed_with_parse_error",
+          durationMs: 123,
+          metrics: {},
+          parseError: "bad json",
+        },
+      },
+    ],
+  });
+
+  assert.match(report, /Passed cleanly: `0`/);
+  assert.match(report, /Warnings: `1`/);
+  assert.match(report, /Parse errors: `1`/);
 });
 
 test("CLI plan command writes a report and JSON payload without running benchmarks", async () => {

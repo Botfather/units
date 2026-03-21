@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "name": "units-dsl-bench-v1",
+  "description": "DSL-specific benchmark suite for Units parse, format, render, and edit-loop workloads.",
+  "cases": [
+    {
+      "id": "todo_list",
+      "title": "Todo List",
+      "file": "bench/cases/todo_list.ui",
+      "scopePreset": "todo",
+      "renderScenarios": [
+        { "id": "base", "size": 20 },
+        { "id": "large", "size": 500 }
+      ]
+    },
+    {
+      "id": "chat_thread",
+      "title": "Chat Thread",
+      "file": "bench/cases/chat_thread.ui",
+      "scopePreset": "chat",
+      "renderScenarios": [
+        { "id": "base", "size": 40 },
+        { "id": "large", "size": 1000 }
+      ]
+    },
+    {
+      "id": "expression_heavy",
+      "title": "Expression Heavy Grid",
+      "file": "bench/cases/expression_heavy.ui",
+      "scopePreset": "expression_heavy",
+      "renderScenarios": [
+        { "id": "base", "size": 24 },
+        { "id": "large", "size": 800 }
+      ]
+    },
+    {
+      "id": "gallery",
+      "title": "ShadCN Gallery",
+      "file": "examples/shadcn-gallery-vite/src/gallery.ui",
+      "scopePreset": "gallery",
+      "renderScenarios": [
+        { "id": "base", "size": 6 },
+        { "id": "large", "size": 120 }
+      ]
+    }
+  ],
+  "corpora": [
+    {
+      "id": "bench_cases",
+      "title": "Bench Cases Corpus",
+      "paths": ["bench/cases"],
+      "limit": null
+    },
+    {
+      "id": "examples",
+      "title": "Examples Corpus",
+      "paths": ["examples"],
+      "limit": null
+    },
+    {
+      "id": "shadcn_uikit",
+      "title": "ShadCN UIKit Corpus",
+      "paths": ["packages/units-uikit-shadcn/shadcn"],
+      "limit": 260
+    }
+  ]
+}

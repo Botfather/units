@@ -47,7 +47,7 @@ async function main() {
 
   process.stdout.write(`Wrote ${outPath}\nWrote ${reportPath}\n`);
 
-  if (args.command === "run" && payload.summary.failed > 0) {
+  if (args.command === "run" && (payload.summary.failed > 0 || payload.summary.parseErrors > 0)) {
     process.exitCode = 1;
   }
 }
