@@ -35,6 +35,7 @@ Thanks for your interest in contributing to Units.
 ## Releases
 - Use Changesets for all package version bumps.
 - Run `pnpm changeset` and commit the generated file under `.changeset/`.
+- If a change does not affect publishable packages (for example docs/workflows/site only), run `pnpm changeset add --empty` and commit it so CI changeset checks pass.
 - On merge to `main`, GitHub Actions opens/updates a release PR with version updates.
 - The VS Code extension package under `vscode/units-vscode` is intentionally private and not part of npm releases.
 
