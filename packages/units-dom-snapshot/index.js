@@ -419,7 +419,34 @@ export async function captureSnapshotWithPlaywright(options = {}) {
     ? options.snapshotOptions
     : {};
 
-  const functionSource = snapshotUiFromRoot.toString();
+  const functionSource = [
+    isObject,
+    toArray,
+    normalizeWhitespace,
+    toNumber,
+    copyDataset,
+    collectClassNames,
+    attrReader,
+    listAttributeNames,
+    inferRole,
+    inferInteractions,
+    styleFromNode,
+    rectFromNode,
+    viewportSize,
+    isModal,
+    shouldPruneInvisible,
+    isOffscreen,
+    isScriptLikeTag,
+    isElementNode,
+    isTextNode,
+    childNodesOf,
+    collectAria,
+    buildAttributeSubset,
+    isPureLayoutWrapper,
+    snapshotUiFromRoot,
+  ]
+    .map((fn) => fn.toString())
+    .join("\n\n");
 
   let browser = null;
   let context = null;
@@ -440,7 +467,7 @@ export async function captureSnapshotWithPlaywright(options = {}) {
       ({ selector, opts, source }) => {
         const root = selector ? document.querySelector(selector) : document.body;
         if (!root) return null;
-        const build = (0, eval)(`(${source})`);
+        const build = (0, eval)(`(() => {\n${source}\nreturn snapshotUiFromRoot;\n})()`);
         return build(root, {
           ...opts,
           viewportWidth: window.innerWidth,

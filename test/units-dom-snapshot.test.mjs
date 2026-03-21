@@ -3,8 +3,10 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { pathToFileURL } from "node:url";
 
 import {
+  snapshotUi,
   snapshotUiFromRoot,
   captureSnapshotWithPlaywright,
 } from "../packages/units-dom-snapshot/index.js";
@@ -200,4 +202,220 @@ test("captureSnapshotWithPlaywright returns actionable error when module is miss
     }),
     /Playwright module/,
   );
+});
+
+test("snapshotUi throws outside browser context and supports mocked document/window", () => {
+  assert.throws(
+    () => snapshotUi({ documentRef: null, windowRef: null }),
+    /browser context/,
+  );
+
+  const root = elementNode("main", {
+    textContent: "",
+  }, [
+    elementNode("button", {
+      textContent: "Act",
+      attributes: { "aria-label": "Act" },
+    }),
+  ]);
+
+  const doc = {
+    body: root,
+    querySelector: (selector) => (selector === "#app" ? root : null),
+  };
+  const win = {
+    innerWidth: 1024,
+    innerHeight: 768,
+    getComputedStyle: computedStyleFor,
+  };
+
+  const fromBody = snapshotUi({
+    documentRef: doc,
+    windowRef: win,
+  });
+  assert.ok(fromBody);
+  assert.equal(fromBody.tag, "main");
+
+  const fromSelector = snapshotUi({
+    documentRef: doc,
+    windowRef: win,
+    rootSelector: "#app",
+  });
+  assert.ok(fromSelector);
+  assert.equal(fromSelector.tag, "main");
+
+  const missing = snapshotUi({
+    documentRef: doc,
+    windowRef: win,
+    rootSelector: "#missing",
+  });
+  assert.equal(missing, null);
+});
+
+test("snapshotUiFromRoot covers layout-wrapper pruning, fallback rects, and compact style mode", () => {
+  const plainText = {
+    nodeType: 3,
+    nodeValue: "  hello   world  ",
+  };
+
+  const childViaChildrenArray = {
+    nodeType: 1,
+    tagName: "SPAN",
+    attributes: [{ name: "aria-label", value: "Greeting" }],
+    children: [plainText],
+    classList: new Set(["chip", "pill"]),
+    dataset: {},
+    style: {},
+    textContent: "hello world",
+  };
+
+  const wrapperRoot = {
+    nodeType: 1,
+    tagName: "DIV",
+    attributes: {},
+    // Single child keeps wrapper eligible for pruning.
+    children: [childViaChildrenArray],
+    dataset: {},
+    style: {},
+    textContent: "",
+  };
+
+  const snapshot = snapshotUiFromRoot(wrapperRoot, {
+    pruneLayoutWrappers: true,
+    pruneOffscreen: false,
+    includeStyleSummary: false,
+    viewportWidth: 400,
+    viewportHeight: 300,
+  });
+
+  assert.ok(snapshot);
+  // Root wrapper is pruned and replaced by its lone child.
+  assert.equal(snapshot.tag, "span");
+  assert.ok(!("styleSummary" in snapshot), "styleSummary omitted when includeStyleSummary=false");
+  assert.deepEqual(snapshot.classes, ["chip", "pill"]);
+});
+
+test("captureSnapshotWithPlaywright validates browser type and url/page requirements", async () => {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "units-playwright-mock-"));
+  const modulePath = path.join(tempDir, "mock-playwright.mjs");
+  const moduleUrl = pathToFileURL(modulePath).href;
+
+  await fs.writeFile(modulePath, `
+export const chromium = {};
+`, "utf-8");
+
+  await assert.rejects(
+    () => captureSnapshotWithPlaywright({
+      url: "https://example.com",
+      playwrightModule: moduleUrl,
+      browserType: "chromium",
+    }),
+    /Unsupported browserType/,
+  );
+
+  const modulePath2 = path.join(tempDir, "mock-playwright-launch.mjs");
+  const moduleUrl2 = pathToFileURL(modulePath2).href;
+  await fs.writeFile(modulePath2, `
+export const chromium = {
+  async launch() {
+    return {
+      async newContext() { return { async newPage() { return {}; }, async close() {} }; },
+      async close() {},
+    };
+  },
+};
+`, "utf-8");
+
+  await assert.rejects(
+    () => captureSnapshotWithPlaywright({
+      playwrightModule: moduleUrl2,
+      browserType: "chromium",
+    }),
+    /requires either options.url or an existing options.page/,
+  );
+});
+
+test("captureSnapshotWithPlaywright executes with both existing page and launched browser", async () => {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "units-playwright-ok-"));
+  const modulePath = path.join(tempDir, "mock-playwright-ok.mjs");
+  const dynamicUrl = pathToFileURL(modulePath).href;
+
+  await fs.writeFile(modulePath, `
+export const chromium = {
+  async launch() {
+    return {
+      async newContext() {
+        return {
+          async newPage() {
+            return globalThis.__mockPageFactory();
+          },
+          async close() {},
+        };
+      },
+      async close() {},
+    };
+  },
+};
+`, "utf-8");
+
+  function createMockPage(url = "https://mocked.local/page") {
+    return {
+      async goto() {},
+      url() {
+        return url;
+      },
+      async evaluate(fn, payload) {
+        const root = elementNode("body", {}, [
+          elementNode("button", {
+            textContent: "Submit",
+            attributes: { "aria-label": "Submit" },
+            onclick: true,
+          }),
+        ]);
+        const prevDoc = globalThis.document;
+        const prevWin = globalThis.window;
+        globalThis.document = {
+          body: root,
+          querySelector: (selector) => (selector === "body" ? root : null),
+        };
+        globalThis.window = {
+          innerWidth: 1280,
+          innerHeight: 720,
+          getComputedStyle: computedStyleFor,
+        };
+        try {
+          return await fn(payload);
+        } finally {
+          globalThis.document = prevDoc;
+          globalThis.window = prevWin;
+        }
+      },
+    };
+  }
+
+  // Reuse existing page path.
+  const reused = await captureSnapshotWithPlaywright({
+    playwrightModule: dynamicUrl,
+    browserType: "chromium",
+    page: createMockPage("https://reuse.local/page"),
+    rootSelector: "body",
+  });
+  assert.ok(reused.snapshot);
+  assert.equal(reused.metadata.url, "https://reuse.local/page");
+
+  // Launched browser path (exercise launch/newContext/newPage/finally close).
+  globalThis.__mockPageFactory = () => createMockPage("https://launched.local/page");
+  try {
+    const launched = await captureSnapshotWithPlaywright({
+      url: "https://example.com",
+      playwrightModule: dynamicUrl,
+      browserType: "chromium",
+      rootSelector: "body",
+    });
+    assert.ok(launched.snapshot);
+    assert.equal(launched.metadata.url, "https://launched.local/page");
+    assert.equal(launched.metadata.browserType, "chromium");
+  } finally {
+    delete globalThis.__mockPageFactory;
+  }
 });

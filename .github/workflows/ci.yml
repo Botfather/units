@@ -32,11 +32,8 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      - name: Run UI-PS focused tests
-        run: |
-          pnpm -s test:units-tools-transform-verify
-          pnpm -s test:ui-ps-bench
-          pnpm -s test:ui-ps-gate-check
+      - name: Run full test suite
+        run: node --test
 
       - name: Run UI-PS benchmark and enforce gates
         run: |

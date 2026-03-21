@@ -2,6 +2,7 @@
 // Requires React as a peer dependency.
 
 import React from "react";
+import { normalizeUnitsExpression } from "./expression-normalize.js";
 
 export function createUnitsEvaluator() {
   const cache = new Map();
@@ -9,13 +10,8 @@ export function createUnitsEvaluator() {
     const key = raw;
     let fn = cache.get(key);
     if (!fn) {
-      // Allow a simple := transform inside set(...) calls.
-      let normalized = raw.replace(/@\(/g, "(");
-      normalized = normalized.replace(/@([A-Za-z_$][\w.$]*)/g, "$1");
-      const transformed = normalized.replace(
-        /set\s*\(\s*([A-Za-z_$][\w.$]*)\s*:=/g,
-        "set('$1',",
-      );
+      // Keep @ in string literals intact, while normalizing scope refs and set(x:=...) syntax.
+      const transformed = normalizeUnitsExpression(raw, { transformSetAssignment: true });
       fn = new Function(
         "scope",
         "locals",

@@ -28,6 +28,7 @@ Thanks for your interest in contributing to Units.
 ## Pull requests
 - Describe the problem and the fix
 - Include tests or repro steps where possible
+- Ensure `node --test` passes locally (CI runs the full suite).
 - Ensure `pnpm -C examples/todo-vite lint:ui` passes for the demo app
 
 ## Releases

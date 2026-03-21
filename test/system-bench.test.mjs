@@ -8,12 +8,17 @@ import test from "node:test";
 import { promisify } from "node:util";
 import {
   buildBenchmarkPlan,
+  collectMachineProfile,
   ensureMachineIdentity,
   executeBenchmarkPlan,
+  inspectTooling,
   loadConfig,
   markdownReport,
   normalizeConfig,
+  parseArgs,
   parseBenchmarkOutput,
+  resolveTemplateString,
+  usage,
 } from "../tools/system-bench-lib.mjs";
 
 const execFileAsync = promisify(execFile);
@@ -76,6 +81,172 @@ test("ensureMachineIdentity creates a UUID once and reuses it", async () => {
   assert.equal(second.machineId, first.machineId);
   assert.equal(second.created, false);
   assert.equal(second.hostSnapshot.hostname, "bench-host");
+});
+
+test("parseArgs rejects unknown commands and usage contains command documentation", () => {
+  assert.throws(
+    () => parseArgs(["deploy"]),
+    /Unknown command "deploy"/,
+  );
+
+  const help = usage();
+  assert.match(help, /Usage:/);
+  assert.match(help, /Commands:/);
+  assert.match(help, /plan/);
+  assert.match(help, /run/);
+});
+
+test("normalizeConfig validates config and suite/preflight structure", () => {
+  assert.throws(() => normalizeConfig(null), /Benchmark config must be a JSON object/);
+  assert.throws(() => normalizeConfig({ suites: [] }), /non-empty `suites` array/);
+  assert.throws(
+    () => normalizeConfig({ suites: [null] }),
+    /Suite at index 0 must be an object/,
+  );
+  assert.throws(
+    () => normalizeConfig({ suites: [{ id: "suite_without_command" }] }),
+    /must include a non-empty `command` array/,
+  );
+  assert.throws(
+    () => normalizeConfig({
+      suites: [
+        {
+          id: "bad_preflight_type",
+          command: ["node", "--version"],
+          preflight: "bad",
+        },
+      ],
+    }),
+    /Suite preflight must be an object/,
+  );
+  assert.throws(
+    () => normalizeConfig({
+      suites: [
+        {
+          id: "bad_preflight_command",
+          command: ["node", "--version"],
+          preflight: {
+            command: [],
+          },
+        },
+      ],
+    }),
+    /Suite preflight must include a non-empty `command` array/,
+  );
+});
+
+test("ensureMachineIdentity rejects invalid UUID payloads", async () => {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "system-bench-id-invalid-"));
+  const uuidFile = path.join(tempDir, ".bench", "machine-id.json");
+  await fs.mkdir(path.dirname(uuidFile), { recursive: true });
+  await fs.writeFile(uuidFile, `${JSON.stringify({
+    machineId: "not-a-uuid",
+    createdAt: "2026-03-17T00:00:00.000Z",
+  })}\n`);
+
+  await assert.rejects(
+    () => ensureMachineIdentity(uuidFile, {}),
+    /is invalid/,
+  );
+});
+
+test("resolveTemplateString reports missing keys and supports fallback values", () => {
+  const resolved = resolveTemplateString(
+    "host={{machine.hostname}} port={{defaults.networkPort||5201}} missing={{env.MISSING}}",
+    {
+      machine: { hostname: "bench-host" },
+      defaults: { networkPort: 9000 },
+      env: {},
+    },
+  );
+
+  assert.equal(resolved.value, "host=bench-host port=9000 missing=<missing:env.MISSING>");
+  assert.deepEqual(resolved.missing, ["env.MISSING"]);
+});
+
+test("inspectTooling records ENOENT and generic probe failures", async () => {
+  const tooling = await inspectTooling(["missing-bin", "broken-bin"], {
+    runCommand: async (command) => {
+      if (command === "missing-bin") {
+        const err = new Error("not found");
+        err.code = "ENOENT";
+        throw err;
+      }
+      throw new Error("probe exploded");
+    },
+  });
+
+  assert.equal(tooling["missing-bin"].available, false);
+  assert.equal(tooling["missing-bin"].error, "Command not found.");
+  assert.equal(tooling["broken-bin"].available, false);
+  assert.match(tooling["broken-bin"].error, /probe exploded/);
+});
+
+test("collectMachineProfile handles disk/git probe failures gracefully", async () => {
+  const osApi = {
+    cpus: () => [{ model: "Fake CPU", speed: 3000 }],
+    availableParallelism: () => 4,
+    totalmem: () => 16 * 1024 ** 3,
+    loadavg: () => [1, 0.5, 0.25],
+    uptime: () => 1234,
+    hostname: () => "bench-host",
+    platform: () => "linux",
+    release: () => "6.8.0",
+    arch: () => "x64",
+    machine: () => "x86_64",
+    version: () => "#1 SMP",
+  };
+
+  const withInvalidDf = await collectMachineProfile({
+    cwd: process.cwd(),
+    osApi,
+    runCommand: async (command) => {
+      if (command === "df") {
+        return {
+          stdout: "Filesystem 1024-blocks Used Available Capacity Mounted on\n/dev/disk abc def ghi 0% /tmp\n",
+          stderr: "",
+          exitCode: 0,
+          signal: null,
+          timedOut: false,
+          error: null,
+        };
+      }
+      if (command === "git") {
+        throw new Error("git missing");
+      }
+      return {
+        stdout: "",
+        stderr: "",
+        exitCode: 0,
+        signal: null,
+        timedOut: false,
+        error: null,
+      };
+    },
+  });
+
+  assert.equal(withInvalidDf.disk.filesystem, "/dev/disk");
+  assert.equal(withInvalidDf.disk.sizeBytes, null);
+  assert.equal(withInvalidDf.repository.gitRevision, null);
+  assert.equal(withInvalidDf.repository.gitBranch, null);
+
+  const withDfThrow = await collectMachineProfile({
+    cwd: process.cwd(),
+    osApi,
+    runCommand: async (command) => {
+      if (command === "df") throw new Error("df unavailable");
+      return {
+        stdout: "ok\n",
+        stderr: "",
+        exitCode: 0,
+        signal: null,
+        timedOut: false,
+        error: null,
+      };
+    },
+  });
+
+  assert.equal(withDfThrow.disk, null);
 });
 
 test("repo system benchmark config stays valid and covers core categories", async () => {
@@ -154,6 +325,59 @@ test("buildBenchmarkPlan resolves machine values and flags missing dependencies 
   assert.equal(plan.suites[2].status, "requires_configuration");
 });
 
+test("buildBenchmarkPlan marks disabled suites and resolves preflight templates", async () => {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "system-bench-plan-disabled-"));
+  const config = normalizeConfig({
+    name: "test-plan-disabled",
+    defaults: {
+      cpuMaxPrime: 42000,
+    },
+    suites: [
+      {
+        id: "disabled_suite",
+        title: "Disabled Suite",
+        tool: "node",
+        command: ["node", "--version"],
+        disabled: true,
+      },
+      {
+        id: "preflight_suite",
+        title: "Suite With Preflight",
+        tool: "node",
+        command: ["node", "-e", "process.stdout.write('ok')"],
+        preflight: {
+          command: [
+            "node",
+            "-e",
+            "process.stdout.write('{{identity.machineId}} {{defaults.cpuMaxPrime}}')",
+          ],
+        },
+      },
+    ],
+  });
+
+  const plan = await buildBenchmarkPlan({
+    config,
+    identity: {
+      machineId: "e5ab7a57-6df9-4ad6-86be-003d98e7f54f",
+      createdAt: "2026-03-17T00:00:00.000Z",
+      hostSnapshot: { hostname: "bench-host", platform: "darwin", arch: "arm64" },
+      filePath: path.join(tempDir, ".bench", "machine-id.json"),
+    },
+    machineProfile: makeProfile(tempDir),
+    cwd: tempDir,
+    env: {},
+    tooling: {
+      node: { available: true, version: process.version, probeCommand: ["node", "--version"] },
+    },
+  });
+
+  assert.equal(plan.suites[0].status, "disabled");
+  assert.match(plan.suites[0].reason, /disabled/i);
+  assert.equal(plan.suites[1].status, "ready");
+  assert.match(plan.suites[1].preflight.commandString, /e5ab7a57-6df9-4ad6-86be-003d98e7f54f 42000/);
+});
+
 test("benchmark parsers extract core metrics from standard tool outputs", () => {
   const cpu = parseBenchmarkOutput("sysbench_cpu", `
 CPU speed:
@@ -205,6 +429,18 @@ ${JSON.stringify({
   assert.equal(fio.metrics.read_iops, 256);
   assert.equal(iperf.metrics.protocol, "TCP");
   assert.equal(iperf.metrics.received_bits_per_second, 905000000);
+});
+
+test("parseBenchmarkOutput handles null and unknown parser values", () => {
+  const noParser = parseBenchmarkOutput(null, "ignored");
+  assert.deepEqual(noParser, {
+    metrics: {},
+    error: null,
+  });
+
+  const unknown = parseBenchmarkOutput("unknown_parser", "ignored");
+  assert.equal(unknown.metrics.read_iops, undefined);
+  assert.equal(unknown.error, "Unknown parser \"unknown_parser\".");
 });
 
 test("executeBenchmarkPlan runs ready suites with preflight and parses output", async () => {
@@ -416,6 +652,134 @@ test("executeBenchmarkPlan skips fio suites when shm is blocked by environment",
   assert.match(executed.suites[0].execution.reason, /shared-memory setup/i);
 });
 
+test("executeBenchmarkPlan handles non-ready, preflight failure, and command execution errors", async () => {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "system-bench-failure-mix-"));
+  const plan = {
+    generatedAt: "2026-03-17T00:00:00.000Z",
+    mode: "plan",
+    config: { path: path.join(tempDir, "bench.json"), name: "mock" },
+    machine: {
+      id: "cc9584c0-05f6-425f-8973-2849b0e1a6aa",
+      identityFile: path.join(tempDir, ".bench", "machine-id.json"),
+      profile: makeProfile(tempDir),
+    },
+    paths: {
+      resultsDir: path.join(tempDir, "results"),
+      scratchDir: path.join(tempDir, ".bench", "scratch"),
+      diskBenchmarkFile: path.join(tempDir, ".bench", "scratch", "fio.dat"),
+      cwd: tempDir,
+    },
+    tooling: {
+      node: { available: true, version: process.version, probeCommand: ["node", "--version"] },
+    },
+    summary: { total: 3, ready: 2, optional: 0, disabled: 0, missingDependency: 0, requiresConfiguration: 1 },
+    suites: [
+      {
+        id: "not_ready",
+        title: "Not Ready Suite",
+        category: "network",
+        standard: "mock",
+        tool: "node",
+        parser: null,
+        description: null,
+        notes: null,
+        optional: false,
+        expectedMetrics: [],
+        timeoutMs: 1000,
+        status: "requires_configuration",
+        reason: "Missing configuration: API_HOST.",
+        requiredEnv: [{ name: "API_HOST", configured: false, value: null }],
+        missingContext: ["env.API_HOST"],
+        command: ["node", "-e", "process.stdout.write('skip')"],
+        commandString: "node skip",
+        preflight: null,
+      },
+      {
+        id: "preflight_fails",
+        title: "Preflight Fails",
+        category: "cpu",
+        standard: "mock",
+        tool: "node",
+        parser: null,
+        description: null,
+        notes: null,
+        optional: false,
+        expectedMetrics: [],
+        timeoutMs: 1000,
+        status: "ready",
+        reason: null,
+        requiredEnv: [],
+        missingContext: [],
+        command: ["never-runs"],
+        commandString: "never-runs",
+        preflight: {
+          description: "preflight",
+          tool: "node",
+          timeoutMs: 1000,
+          command: ["preflight-cmd"],
+          commandString: "preflight-cmd",
+        },
+      },
+      {
+        id: "command_throws",
+        title: "Command Throws",
+        category: "cpu",
+        standard: "mock",
+        tool: "node",
+        parser: null,
+        description: null,
+        notes: null,
+        optional: false,
+        expectedMetrics: [],
+        timeoutMs: 1000,
+        status: "ready",
+        reason: null,
+        requiredEnv: [],
+        missingContext: [],
+        command: ["missing-cmd"],
+        commandString: "missing-cmd",
+        preflight: null,
+      },
+    ],
+  };
+
+  const executed = await executeBenchmarkPlan(plan, {
+    runCommand: async (command) => {
+      if (command === "preflight-cmd") {
+        return {
+          stdout: "",
+          stderr: "preflight failed",
+          exitCode: 2,
+          signal: null,
+          timedOut: false,
+          error: "preflight failed",
+        };
+      }
+      if (command === "missing-cmd") {
+        const err = new Error("spawn missing-cmd ENOENT");
+        err.code = "ENOENT";
+        throw err;
+      }
+      return {
+        stdout: "",
+        stderr: "",
+        exitCode: 0,
+        signal: null,
+        timedOut: false,
+        error: null,
+      };
+    },
+  });
+
+  assert.equal(executed.summary.executed, 2);
+  assert.equal(executed.summary.failed, 2);
+  assert.equal(executed.summary.skipped, 1);
+  assert.equal(executed.suites[0].execution.status, "skipped");
+  assert.equal(executed.suites[1].execution.status, "failed_preflight");
+  assert.equal(executed.suites[2].execution.status, "failed");
+  assert.match(executed.suites[2].execution.reason, /ENOENT/);
+});
+
 test("markdownReport includes machine UUID and suite status details", () => {
   const report = markdownReport({
     generatedAt: "2026-03-17T00:00:00.000Z",
@@ -448,6 +812,52 @@ test("markdownReport includes machine UUID and suite status details", () => {
   assert.match(report, /Machine UUID: `f7fd9f73-f64e-420f-b6db-7637ff76f8e5`/);
   assert.match(report, /cpu_sysbench_single/);
   assert.match(report, /CPU Prime Single Thread/);
+});
+
+test("markdownReport renders required env summaries and metric formatting edge-cases", () => {
+  const report = markdownReport({
+    generatedAt: "2026-03-17T00:00:00.000Z",
+    mode: "run",
+    config: { path: "bench/system-bench.config.json", name: "system-standard-v1" },
+    machine: {
+      id: "f7fd9f73-f64e-420f-b6db-7637ff76f8e5",
+      identityFile: ".bench/machine-id.json",
+      profile: makeProfile(process.cwd()),
+    },
+    tooling: {
+      node: { available: true, version: process.version, probeCommand: ["node", "--version"] },
+    },
+    summary: { total: 1, executed: 1, passed: 1, warnings: 0, failed: 0, skipped: 0, timedOut: 0, parseErrors: 0 },
+    suites: [
+      {
+        id: "metric_edge_case",
+        title: "Metric Edge Case",
+        category: "cpu",
+        standard: "sysbench",
+        status: "ready",
+        tool: "node",
+        commandString: "node --version",
+        expectedMetrics: ["events_per_second", "empty_value", "label"],
+        requiredEnv: [
+          { name: "TOKEN", configured: true, value: "abc" },
+          { name: "HOST", configured: false, value: null },
+        ],
+        execution: {
+          status: "passed",
+          durationMs: 5,
+          metrics: {
+            events_per_second: 123.456,
+            empty_value: "",
+            label: "ok",
+          },
+          parseError: null,
+        },
+      },
+    ],
+  });
+
+  assert.match(report, /Required env: TOKEN=abc, HOST=<missing>/);
+  assert.match(report, /events_per_second=123.46, empty_value=-, label=ok/);
 });
 
 test("markdownReport shows warning counts for run payloads", () => {

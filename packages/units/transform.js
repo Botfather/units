@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { parseUnits } from "./units-parser.js";
 import { formatUnits } from "./units-print.js";
 import { normalizeIrNode } from "./tree-ir.js";
+import { normalizeUnitsExpression } from "./expression-normalize.js";
 
 const expressionCache = new Map();
 
@@ -10,10 +11,8 @@ function isObject(value) {
 }
 
 function normalizeExpression(raw) {
-  let source = String(raw || "").trim();
+  let source = normalizeUnitsExpression(raw).trim();
   if (!source) source = "true";
-  source = source.replace(/@\(/g, "(");
-  source = source.replace(/@([A-Za-z_$][\w.$]*)/g, "$1");
   return source;
 }
 

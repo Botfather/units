@@ -103,6 +103,8 @@ This is transformed into:
 set('selected', @item.id)
 ```
 
+Expression normalization only rewrites scope-style `@identifier` tokens outside quoted strings. Literal `@` characters inside string literals are preserved.
+
 ## React Runtime
 `renderUnits(ast, scope, options)`
 
@@ -121,6 +123,8 @@ const host = {
 };
 ```
 
+The custom renderer follows the same directive flow semantics as the React runtime for `#if/#elif/#else` chains and `#for/#key`.
+
 ## Notes
 - Parsing is O(n) and dependency-free.
 - The grammar is intentionally small to keep parsing fast and extensible.
@@ -134,6 +138,17 @@ See the [live benchmarks table](https://botfather.github.io/units/#benchmarks) f
 ## Benchmark
 ```
 node ./bench.js
+```
+
+## Testing
+Run the full repository test suite:
+```
+node --test
+```
+
+Run coverage:
+```
+node --test --experimental-test-coverage
 ```
 
 ## DSL Benchmark Suite

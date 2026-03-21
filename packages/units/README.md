@@ -113,6 +113,8 @@ const renderer = createUnitsRenderer({
 const node = renderer.render(ast, scope, options);
 ```
 
+Custom renderer directive behavior mirrors runtime semantics for `#if/#elif/#else` and `#for/#key`.
+
 ### Expression evaluator
 
 ```js
@@ -122,7 +124,7 @@ const evalExpr = createUnitsEvaluator();
 const result = evalExpr("@items.length > 0", scope);
 ```
 
-Expressions use `@` as the scope accessor prefix. The evaluator caches compiled `Function` objects per expression string.
+Expressions use `@` as the scope accessor prefix. The evaluator caches compiled `Function` objects per expression string, and scope-prefix normalization preserves literal `@` characters inside quoted strings.
 
 ### Incremental parsing
 
