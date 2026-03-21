@@ -90,15 +90,42 @@ test("evaluateGates fails with readable failure messages", () => {
   assert.ok(result.failures.some((line) => line.includes("Required program missing")));
 });
 
-test("runGateCheck reads real bench output and gates", async () => {
-  const output = await runGateCheck({
-    result: "bench/results/ui-ps-bench.json",
-    gates: "bench/ui-ps-gates.json",
-  });
+test("runGateCheck reads payload and gates from provided paths", async () => {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "ui-ps-gate-pass-"));
+  const resultPath = path.join(tempDir, "result.json");
+  const gatesPath = path.join(tempDir, "gates.json");
 
-  assert.ok(output.resultPath.endsWith("bench/results/ui-ps-bench.json"));
-  assert.ok(output.gatesPath.endsWith("bench/ui-ps-gates.json"));
-  assert.equal(typeof output.evaluation.passed, "boolean");
+  await fs.writeFile(resultPath, `${JSON.stringify({
+    summary: {
+      case_count: 3,
+      transformed_count: 2,
+      gate_pass_count: 2,
+      avg_action_recall: 1,
+      avg_token_reduction: 0.2,
+      avg_total_score: 1,
+      avg_delta_from_baseline: 0.1,
+    },
+    library: {
+      program_ids: ["required-program"],
+    },
+  }, null, 2)}\n`, "utf-8");
+
+  await fs.writeFile(gatesPath, `${JSON.stringify({
+    min_case_count: 2,
+    min_transformed_count: 1,
+    min_gate_pass_count: 1,
+    min_avg_action_recall: 0.9,
+    min_avg_token_reduction: 0.1,
+    min_avg_total_score: 0.8,
+    min_avg_delta_from_baseline: 0,
+    required_program_ids: ["required-program"],
+  }, null, 2)}\n`, "utf-8");
+
+  const output = await runGateCheck({ result: resultPath, gates: gatesPath });
+
+  assert.equal(output.resultPath, resultPath);
+  assert.equal(output.gatesPath, gatesPath);
+  assert.equal(output.evaluation.passed, true);
 });
 
 test("ui-ps gate CLI exits non-zero when thresholds are violated", async () => {
