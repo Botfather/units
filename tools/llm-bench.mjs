@@ -120,6 +120,116 @@ function stripFence(value) {
   return src;
 }
 
+function escapeForSingleQuotedText(value) {
+  return String(value || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+}
+
+function applyStrictPostGenerationFixes(value) {
+  let src = String(value || "");
+  const fixes = [];
+
+  function replaceCounted(name, pattern, replacement) {
+    let count = 0;
+    src = src.replace(pattern, (...args) => {
+      count++;
+      if (typeof replacement === "function") return replacement(...args);
+      return replacement;
+    });
+    if (count > 0) fixes.push({ name, count });
+  }
+
+  // Event shorthand from JSX-like form: !click={ ... } => !click { ... }
+  replaceCounted(
+    "event_equals_braces",
+    /!([A-Za-z_$][\w:-]*)\s*=\s*\{([^{}]*)\}/g,
+    (_m, eventName, body) => `!${eventName} { ${String(body).trim()} }`,
+  );
+
+  // Event shorthand with arrow wrapper: !click={ () => doThing() } => !click { doThing() }
+  replaceCounted(
+    "event_arrow_wrapper",
+    /!([A-Za-z_$][\w:-]*)\s*=\s*\{\s*\([^)]*\)\s*=>\s*([^{}]+?)\s*\}/g,
+    (_m, eventName, body) => `!${eventName} { ${String(body).trim()} }`,
+  );
+
+  // Common loop form from natural language models: #for @items as item => #for (item in @items)
+  replaceCounted(
+    "for_as_syntax",
+    /#for\s+@([A-Za-z_$][\w.$[\]?]*)\s+as\s+([A-Za-z_$][\w$]*)/g,
+    (_m, list, item) => `#for (${item} in @${list})`,
+  );
+  replaceCounted(
+    "for_as_syntax_no_at",
+    /#for\s+([A-Za-z_$][\w.$[\]?]*)\s+as\s+([A-Za-z_$][\w$]*)/g,
+    (_m, list, item) => `#for (${item} in @${list})`,
+  );
+
+  // Property assignment normalization inside prop lists: key='x' => key:'x', key=@x => key:@x, key=x => key:@x
+  replaceCounted(
+    "prop_equals_string",
+    /([,(]\s*)([A-Za-z_$][\w:.-]*)\s*=\s*'([^']*)'/g,
+    (_m, lead, key, str) => `${lead}${key}:'${str}'`,
+  );
+  replaceCounted(
+    "prop_equals_expr_at",
+    /([,(]\s*)([A-Za-z_$][\w:.-]*)\s*=\s*@([A-Za-z_$][\w.$[\]?]*)/g,
+    (_m, lead, key, expr) => `${lead}${key}:@${expr}`,
+  );
+  replaceCounted(
+    "prop_equals_literal",
+    /([,(]\s*)([A-Za-z_$][\w:.-]*)\s*=\s*(true|false|null|-?\d+(?:\.\d+)?)/g,
+    (_m, lead, key, lit) => `${lead}${key}:${lit}`,
+  );
+  replaceCounted(
+    "prop_equals_identifier",
+    /([,(]\s*)([A-Za-z_$][\w:.-]*)\s*=\s*([A-Za-z_$][\w.$[\]?]*)/g,
+    (_m, lead, key, expr) => `${lead}${key}:@${expr}`,
+  );
+
+  // Bare text expression form: text @value => text '@{value}'
+  replaceCounted(
+    "text_bare_expr",
+    /\btext\s+@([A-Za-z_$][\w.$[\]?]*)\b/g,
+    (_m, expr) => `text '@{${expr}}'`,
+  );
+  // text "literal" => text 'literal'
+  replaceCounted(
+    "text_double_quoted_literal",
+    /^([ \t]*)text[ \t]+"([^"\n]*)"[ \t]*$/gm,
+    (_m, indent, literal) => `${indent}text '${escapeForSingleQuotedText(literal)}'`,
+  );
+
+  // Strict fixer: Units requires text values to be single-quoted strings.
+  // Convert common model output forms like:
+  //   text message.content
+  //   text @message.content
+  //   text message?.value ?? 'fallback'
+  // into:
+  //   text '@{...}'
+  replaceCounted(
+    "text_non_string_rhs",
+    /^([ \t]*)text[ \t]+(.+?)([ \t]*)$/gm,
+    (_m, indent, rhsRaw, tailWs) => {
+      const rhs = String(rhsRaw || "").trim();
+      if (!rhs) return `${indent}text ''${tailWs || ""}`;
+      if (rhs.startsWith("'")) return `${indent}text ${rhs}${tailWs || ""}`;
+      if (rhs.startsWith("@{") && rhs.endsWith("}")) {
+        return `${indent}text '${escapeForSingleQuotedText(rhs)}'${tailWs || ""}`;
+      }
+      if (rhs.startsWith("@")) {
+        const expr = rhs.slice(1).trim();
+        return `${indent}text '@{${escapeForSingleQuotedText(expr)}}'${tailWs || ""}`;
+      }
+      return `${indent}text '@{${escapeForSingleQuotedText(rhs)}}'${tailWs || ""}`;
+    },
+  );
+
+  return {
+    output: src,
+    fixes,
+  };
+}
+
 function countAstStats(ast) {
   let nodes = 0;
   let depthMax = 0;
@@ -548,6 +658,7 @@ async function main() {
         let rawResponse = null;
         let analysis = null;
         const repairLog = [];
+        const postFixes = [];
 
         if (args.mode === "live") {
           const response = await callOpenAI({
@@ -561,6 +672,12 @@ async function main() {
           });
           rawResponse = response.raw;
           generated = stripFence(response.text);
+          const fixedInitial = applyStrictPostGenerationFixes(generated);
+          generated = fixedInitial.output;
+          postFixes.push({
+            stage: "initial",
+            fixes: fixedInitial.fixes,
+          });
           usageTokens = usageFromResponse(response.usage, promptText, generated);
           analysis = analyzeSource(generated, oneCase.requiredSnippets || []);
 
@@ -583,6 +700,12 @@ async function main() {
             });
             rawResponse = repairResponse.raw;
             generated = stripFence(repairResponse.text);
+            const fixedRepair = applyStrictPostGenerationFixes(generated);
+            generated = fixedRepair.output;
+            postFixes.push({
+              stage: `repair_${attempt}`,
+              fixes: fixedRepair.fixes,
+            });
             usageTokens = mergeUsage(
               usageTokens,
               usageFromResponse(repairResponse.usage, `${args.systemPrompt}\n\n${repairPrompt}`, generated),
@@ -593,6 +716,7 @@ async function main() {
               parseOk: analysis.parseOk,
               requiredPass: analysis.requiredPass,
               parseError: analysis.parseError,
+              fixes: fixedRepair.fixes,
             });
           }
         }
@@ -619,6 +743,7 @@ async function main() {
           output: generated,
           rawResponse,
           repairLog,
+          postFixes,
         });
       }
     }
