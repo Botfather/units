@@ -176,6 +176,27 @@ Provider + approx with compact optimized DSL pair set:
 OPENAI_API_KEY=... pnpm bench:react-vs-dsl:provider:optimized
 ```
 
+## System Benchmarking
+Install the standard benchmark CLI tools:
+```
+make bench-system-install
+```
+
+Alias:
+```
+make install-bench-tools
+```
+
+Generate a machine-aware benchmark plan without executing the benchmarks:
+```
+make bench-system-plan
+```
+
+Run the system benchmark test coverage:
+```
+make test-system-bench
+```
+
 ## Demo
 See `examples/todo-vite` for a unified Vite demo (todo list) implemented purely in `.ui` files.
 
