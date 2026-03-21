@@ -1,17 +1,41 @@
 // Custom renderer skeleton for Units AST.
 // Provide host callbacks to build your own UI tree.
 
+import { normalizeUnitsExpression } from "./expression-normalize.js";
+
 export function createUnitsRenderer(host) {
+  const compiledExprCache = new Map();
+  const interpolationCache = new Map();
+
+  function compileExpression(raw) {
+    const key = String(raw || "");
+    if (compiledExprCache.has(key)) return compiledExprCache.get(key);
+    const normalized = normalizeUnitsExpression(key, { transformSetAssignment: true });
+    const fn = new Function(
+      "scope",
+      "locals",
+      "event",
+      "set",
+      `with(scope){with(locals||{}){return (${normalized});}}`,
+    );
+    compiledExprCache.set(key, fn);
+    return fn;
+  }
+
   const evalExpr = host.evalExpr || ((raw, scope, locals) => {
-    const normalized = raw.replace(/@([A-Za-z_$][\\w.$]*)/g, "$1");
-    const fn = new Function("scope", "locals", `with(scope){with(locals||{}){return (${normalized});}}`);
-    return fn(scope, locals || {});
+    const fn = compileExpression(raw);
+    return fn(scope, locals || {}, locals?.event, locals?.set || scope?.set);
   });
 
   function splitInterpolations(value) {
     const text = String(value ?? "");
+    if (interpolationCache.has(text)) return interpolationCache.get(text);
     const parts = [];
-    if (!text.includes("@{")) return [{ type: "text", value: text }];
+    if (!text.includes("@{")) {
+      const out = [{ type: "text", value: text }];
+      interpolationCache.set(text, out);
+      return out;
+    }
     let i = 0;
     while (i < text.length) {
       const idx = text.indexOf("@{", i);
@@ -54,10 +78,11 @@ export function createUnitsRenderer(host) {
       parts.push({ type: "expr", value: expr });
       i = j + 1;
     }
+    interpolationCache.set(text, parts);
     return parts;
   }
 
-  function renderText(value, locals) {
+  function renderText(value, scope, locals) {
     const parts = splitInterpolations(value);
     if (parts.length === 1 && parts[0].type === "text") return host.text(parts[0].value);
     return host.fragment(
@@ -79,7 +104,7 @@ export function createUnitsRenderer(host) {
 
     function renderNode(node, locals) {
       if (!node) return null;
-      if (node.type === "text") return renderText(node.value, locals);
+      if (node.type === "text") return renderText(node.value, scope, locals);
       if (node.type === "expr") return host.text(String(evalExpr(node.value.raw, scope, locals)));
       if (node.type === "directive") return renderDirective(node, locals);
       if (node.type === "tag") return renderTag(node, locals);
@@ -89,11 +114,6 @@ export function createUnitsRenderer(host) {
     function renderDirective(node, locals) {
       const name = node.name;
       const args = node.args || "";
-      if (name === "if") {
-        const cond = evalExpr(args, scope, locals);
-        if (!cond) return null;
-        return renderChildren(node.children, locals);
-      }
       if (name === "for") {
         const m = args.match(/^\s*([A-Za-z_$][\w$]*)\s*(?:,\s*([A-Za-z_$][\w$]*))?\s+in\s+(.+)$/);
         if (!m) return null;
@@ -103,7 +123,9 @@ export function createUnitsRenderer(host) {
         const list = evalExpr(listExpr, scope, locals) || [];
         const out = [];
         for (let idx = 0; idx < list.length; idx++) {
-          const childLocals = { ...locals, [itemName]: list[idx], [idxName]: idx };
+          const childLocals = Object.create(locals || null);
+          childLocals[itemName] = list[idx];
+          childLocals[idxName] = idx;
           out.push(renderChildren(node.children, childLocals));
         }
         return out;
@@ -113,6 +135,9 @@ export function createUnitsRenderer(host) {
         const slot = slots[slotName];
         if (slot == null) return null;
         return typeof slot === "function" ? slot(locals) : slot;
+      }
+      if (name === "key" || name === "elif" || name === "else") {
+        return null;
       }
       return renderChildren(node.children, locals);
     }
@@ -143,6 +168,58 @@ export function createUnitsRenderer(host) {
       const out = [];
       for (let idx = 0; idx < (children || []).length; idx++) {
         const child = children[idx];
+        if (child.type === "directive" && child.name === "key") {
+          const next = children[idx + 1];
+          if (next && next.type === "tag") {
+            const key = evalExpr(child.args || "", scope, locals);
+            const rendered = renderNode(
+              {
+                ...next,
+                props: [
+                  ...(next.props || []),
+                  { kind: "value", key: "key", value: key },
+                ],
+              },
+              locals,
+            );
+            out.push(rendered);
+            idx++;
+            continue;
+          }
+        }
+        if (child.type === "directive" && child.name === "if") {
+          let matched = false;
+          if (evalExpr(child.args || "", scope, locals)) {
+            pushChild(out, renderChildren(child.children, locals));
+            matched = true;
+          }
+
+          let next = idx + 1;
+          while (next < children.length && children[next].type === "directive") {
+            if (children[next].name === "elif") {
+              if (!matched && evalExpr(children[next].args || "", scope, locals)) {
+                pushChild(out, renderChildren(children[next].children, locals));
+                matched = true;
+              }
+              next++;
+              continue;
+            }
+            if (children[next].name === "else") {
+              if (!matched) {
+                pushChild(out, renderChildren(children[next].children, locals));
+                matched = true;
+              }
+              next++;
+              break;
+            }
+            break;
+          }
+          if (!matched) {
+            out.push(null);
+          }
+          idx = next - 1;
+          continue;
+        }
         pushChild(out, renderNode(child, locals));
       }
       return host.fragment(out);

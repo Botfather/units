@@ -4,7 +4,7 @@ A complete UI component kit modeled after [shadcn/ui](https://ui.shadcn.com/), w
 
 ## What is it?
 
-This package ships ~200 pre-built components covering the full shadcn/ui component set: buttons, cards, dialogs, tables, forms, navigation, data display, and more. Each component is a Units `.ui` template that produces Tailwind-class-based markup. Behavioral concerns (Radix primitives, state, portals) are wired in the host application's renderer layer, keeping the templates pure and portable.
+This package ships ~260 pre-built components covering the full shadcn/ui component set: buttons, cards, dialogs, tables, forms, navigation, data display, and more. Each component is a Units `.ui` template that produces Tailwind-class-based markup. Behavioral concerns (Radix primitives, state, portals) are wired in the host application's renderer layer, keeping the templates pure and portable.
 
 ## Installation
 
@@ -28,7 +28,7 @@ import uiAst from "./app.ui"; // via vite-plugin-units
 import { withShadcnComponents } from "@botfather/units-uikit-shadcn";
 import "@botfather/units-uikit-shadcn/shadcn.css";
 
-// withShadcnComponents() merges all ~200 components into renderUnits options
+// withShadcnComponents() merges all ~260 components into renderUnits options
 const element = renderUnits(uiAst, scope, withShadcnComponents());
 ```
 

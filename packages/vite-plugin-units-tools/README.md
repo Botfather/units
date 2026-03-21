@@ -1,10 +1,10 @@
 # @botfather/vite-plugin-units-tools
 
-Vite plugin providing dev-time virtual query imports for Units `.ui` files: formatted source text, token streams, and syntax-highlighted HTML. Primarily useful for documentation sites, playgrounds, and editor tooling built on Vite.
+Vite plugin providing dev-time virtual query imports for Units `.ui` files: formatted source text, token streams, syntax-highlighted HTML, and agent-targeted summary payloads. Primarily useful for documentation sites, playgrounds, and editor tooling built on Vite.
 
 ## What is it?
 
-This plugin complements `vite-plugin-units` with extra query variants for each `.ui` file. Instead of loading the AST, these queries give you human-readable representations of the source: canonical formatted text, a flat token array, or a ready-to-render HTML string with syntax-highlight class names.
+This plugin complements `vite-plugin-units` with extra query variants for each `.ui` file. Instead of loading the AST, these queries give you human-readable or agent-targeted representations: canonical formatted text, a flat token array, syntax-highlighted HTML, or an object with formatted DSL and token estimates.
 
 ## Installation
 
@@ -37,6 +37,7 @@ export default defineConfig({
 | `import x from './foo.ui?format'` | `string` | Canonical formatted source via `formatUnits` |
 | `import x from './foo.ui?tokens'` | `Array<{type, value}>` | Flat token stream |
 | `import x from './foo.ui?highlight'` | `string` | HTML string of `<span class="…">` elements |
+| `import x from './foo.ui?agent'` | `{ dsl, tokenEstimate, sourceTokenEstimate, tokenReduction, target }` | Agent-facing DSL + rough token estimates |
 
 ### `?format`
 
@@ -81,6 +82,20 @@ With `classPrefix: "ui"`, the output looks like:
 
 Apply your own CSS to style each token class.
 
+### `?agent`
+
+Returns an object intended for agent-context debugging:
+- `dsl`: formatted Units source
+- `sourceTokenEstimate`: rough token estimate from the original source
+- `tokenEstimate`: rough token estimate from formatted DSL
+- `tokenReduction`: `(sourceTokenEstimate - tokenEstimate) / sourceTokenEstimate`
+- `target`: target profile (`chat` by default, override with `?agent&target=planner`)
+
+```js
+import agentPayload from "./Button.ui?agent";
+// { dsl, target, sourceTokenEstimate, tokenEstimate, tokenReduction }
+```
+
 ## Options
 
 ```ts
@@ -89,12 +104,13 @@ unitsTools(options?: {
   exclude?: RegExp;       // Skip paths matching this pattern
   classPrefix?: string;   // Prefix for highlight span class names (default: "")
                           // e.g. "ui" → class="ui-tok-ident"
+  agentTarget?: string;   // Default target for ?agent query (default: "chat")
 })
 ```
 
 ## TypeScript
 
-Add the type reference to your app entry or a `.d.ts` file to get typed `?format`, `?tokens`, and `?highlight` imports:
+Add the type reference to your app entry or a `.d.ts` file to get typed `?format`, `?tokens`, `?highlight`, and `?agent` imports:
 
 ```ts
 /// <reference types="@botfather/units/ui" />

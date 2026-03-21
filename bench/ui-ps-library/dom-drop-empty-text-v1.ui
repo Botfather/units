@@ -1,0 +1,6 @@
+Program (kind:'transform', source:'dom') {
+  Rule (id:'drop_empty_text', match=@node.role == 'text') {
+    Filter (when=@node.text != '')
+    Pass
+  }
+}

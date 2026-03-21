@@ -1,0 +1,31 @@
+{
+  "name": "@botfather/units-agent-plugin",
+  "version": "0.1.0",
+  "description": "Agent-facing UI compression plugin for Units DSL context generation.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Botfather/units.git",
+    "directory": "packages/units-agent-plugin"
+  },
+  "homepage": "https://github.com/Botfather/units/tree/main/packages/units-agent-plugin",
+  "bugs": {
+    "url": "https://github.com/Botfather/units/issues"
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "dependencies": {
+    "@botfather/units-agent-middleware": "workspace:*",
+    "@botfather/units-compiler": "workspace:*",
+    "@botfather/units-react-adapter": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

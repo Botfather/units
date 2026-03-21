@@ -1,5 +1,10 @@
 // Tiny benchmark for parser performance.
-import { parseUnits } from "@botfather/units/parser";
+let parseUnits;
+try {
+  ({ parseUnits } = await import("@botfather/units/parser"));
+} catch {
+  ({ parseUnits } = await import("./packages/units/units-parser.js"));
+}
 
 const sample = `
 App {

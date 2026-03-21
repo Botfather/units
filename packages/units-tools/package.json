@@ -19,6 +19,11 @@
     "units-emit": "./units-emit.mjs",
     "units-manifest": "./units-manifest.mjs",
     "units-watch": "./units-watch.mjs",
+    "units-snapshot": "./units-snapshot.mjs",
+    "units-transform": "./units-transform.mjs",
+    "units-verify": "./units-verify.mjs",
+    "units-synthesize": "./units-synthesize.mjs",
+    "units-library": "./units-library.mjs",
     "format-ui": "./format-ui.mjs",
     "lint-ui": "./lint-ui.mjs"
   },
@@ -26,7 +31,10 @@
     "*.mjs"
   ],
   "dependencies": {
-    "@botfather/units": "workspace:*"
+    "@botfather/units": "workspace:*",
+    "@botfather/units-dom-snapshot": "workspace:*",
+    "@botfather/units-react-adapter": "workspace:*",
+    "@botfather/units-ui-ir": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

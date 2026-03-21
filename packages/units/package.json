@@ -22,6 +22,11 @@
     "./runtime": "./units-runtime.js",
     "./custom-renderer": "./units-custom-renderer.js",
     "./incremental": "./incremental.js",
+    "./tree-ir": "./tree-ir.js",
+    "./transform": "./transform.js",
+    "./reward": "./reward.js",
+    "./library": "./transform-library.js",
+    "./synthesis": "./transform-synthesis.js",
     "./ui": {
       "types": "./ui.d.ts",
       "default": "./ui.js"

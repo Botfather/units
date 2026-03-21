@@ -22,3 +22,25 @@ declare module "*.ui?highlight" {
   const html: string;
   export default html;
 }
+
+declare module "*.ui?agent" {
+  const payload: {
+    dsl: string;
+    target: string;
+    sourceTokenEstimate: number;
+    tokenEstimate: number;
+    tokenReduction: number;
+  };
+  export default payload;
+}
+
+declare module "*.ui?agent*" {
+  const payload: {
+    dsl: string;
+    target: string;
+    sourceTokenEstimate: number;
+    tokenEstimate: number;
+    tokenReduction: number;
+  };
+  export default payload;
+}

@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  quality-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Run full test suite
+        run: node --test
+
+      - name: Enforce coverage thresholds
+        run: pnpm -s test:coverage:gate
+
+      - name: Run UI-PS benchmark and enforce gates
+        run: |
+          pnpm -s bench:ui-ps
+          pnpm -s bench:ui-ps:gate
+
+      - name: Upload UI-PS benchmark artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-ps-bench-results
+          path: |
+            bench/results/ui-ps-bench.json
+            bench/results/ui-ps-bench.md

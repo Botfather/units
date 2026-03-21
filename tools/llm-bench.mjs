@@ -11,12 +11,27 @@ const DEFAULT_OUT = "bench/results/llm-bench.json";
 const DEFAULT_REPORT = "bench/results/llm-bench.md";
 const DEFAULT_MODELS = ["gpt-4.1-mini", "gpt-4o-mini"];
 const DEFAULT_BASE_URL = "https://api.openai.com/v1";
+const DEFAULT_REPAIR_ATTEMPTS = 1;
+const DEFAULT_LIVE_MIN_PARSE_OK_PCT = 90;
+const DEFAULT_LIVE_MIN_REQUIRED_PCT = 80;
 
 const DEFAULT_SYSTEM_PROMPT = [
   "You are editing a Units .ui file.",
-  "Follow the LLM Authoring Profile from DOCS-LLM.md.",
+  "Return only valid Units DSL. Never output XML/HTML/JSX/Lisp/JSON/markdown.",
+  "Use Units grammar only: Tag (props) { children }, directives #if/#for/#slot/#key, text '...'.",
   "Always use parentheses for props and comma-separated props.",
-  "Use single quotes and one node per line.",
+  "Use single quotes.",
+  "Always key loops with #key.",
+  "Use explicit event handlers: !event { handler(@event) }.",
+  "Do not wrap output in code fences and do not add explanation.",
+  "Example:",
+  "App {",
+  "  #if (@items.length == 0) {",
+  "    text 'Nothing here yet.'",
+  "  }",
+  "}",
+  "",
+  "Before finalizing, self-check that output parses as Units DSL and includes required structures from the request.",
   "Return only valid Units DSL; no markdown fences or explanation.",
 ].join("\n");
 
@@ -31,6 +46,11 @@ function parseArgs(argv) {
     baseUrl: process.env.OPENAI_BASE_URL || DEFAULT_BASE_URL,
     temperature: 0,
     maxOutputTokens: 1200,
+    repairAttempts: DEFAULT_REPAIR_ATTEMPTS,
+    qualityGate: null,
+    minParseOkPct: null,
+    minRequiredPassPct: null,
+    minExactMatchPct: null,
     systemPrompt: DEFAULT_SYSTEM_PROMPT,
   };
   for (let i = 0; i < argv.length; i++) {
@@ -45,6 +65,12 @@ function parseArgs(argv) {
     } else if (arg === "--base-url") out.baseUrl = String(argv[++i] || out.baseUrl);
     else if (arg === "--temperature") out.temperature = Number(argv[++i] || out.temperature);
     else if (arg === "--max-output-tokens") out.maxOutputTokens = Math.max(1, Number(argv[++i] || out.maxOutputTokens));
+    else if (arg === "--repair-attempts") out.repairAttempts = Math.max(0, Number(argv[++i] || out.repairAttempts));
+    else if (arg === "--quality-gate") out.qualityGate = true;
+    else if (arg === "--no-quality-gate") out.qualityGate = false;
+    else if (arg === "--min-parse-ok-pct") out.minParseOkPct = Number(argv[++i] || out.minParseOkPct);
+    else if (arg === "--min-required-pct") out.minRequiredPassPct = Number(argv[++i] || out.minRequiredPassPct);
+    else if (arg === "--min-exact-pct") out.minExactMatchPct = Number(argv[++i] || out.minExactMatchPct);
     else if (arg === "--system-prompt-file") out.systemPromptFile = String(argv[++i] || "");
     else if (arg === "--help" || arg === "-h") {
       out.help = true;
@@ -69,6 +95,13 @@ Live mode env:
   OPENAI_API_KEY=...
 Optional:
   OPENAI_BASE_URL=https://api.openai.com/v1
+
+Live quality options:
+  --repair-attempts 1
+  --quality-gate / --no-quality-gate
+  --min-parse-ok-pct 90
+  --min-required-pct 80
+  --min-exact-pct 70
 `;
 }
 
@@ -85,6 +118,198 @@ function stripFence(value) {
   const m = src.match(/^```(?:[a-zA-Z0-9_-]+)?\n([\s\S]*?)\n```$/);
   if (m) return m[1].trim();
   return src;
+}
+
+function escapeForSingleQuotedText(value) {
+  return String(value || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+}
+
+function applyStrictPostGenerationFixes(value) {
+  let src = String(value || "");
+  const fixes = [];
+
+  function replaceCounted(name, pattern, replacement) {
+    let count = 0;
+    src = src.replace(pattern, (...args) => {
+      count++;
+      if (typeof replacement === "function") return replacement(...args);
+      return replacement;
+    });
+    if (count > 0) fixes.push({ name, count });
+  }
+
+  // Event shorthand from JSX-like form: !click={ ... } => !click { ... }
+  replaceCounted(
+    "event_equals_braces",
+    /!([A-Za-z_$][\w:-]*)\s*=\s*\{([^{}]*)\}/g,
+    (_m, eventName, body) => `!${eventName} { ${String(body).trim()} }`,
+  );
+
+  // Event shorthand with arrow wrapper: !click={ () => doThing() } => !click { doThing() }
+  replaceCounted(
+    "event_arrow_wrapper",
+    /!([A-Za-z_$][\w:-]*)\s*=\s*\{\s*\([^)]*\)\s*=>\s*([^{}]+?)\s*\}/g,
+    (_m, eventName, body) => `!${eventName} { ${String(body).trim()} }`,
+  );
+
+  // Common loop form from natural language models: #for @items as item => #for (item in @items)
+  replaceCounted(
+    "for_as_syntax",
+    /#for\s+@([A-Za-z_$][\w.$[\]?]*)\s+as\s+([A-Za-z_$][\w$]*)/g,
+    (_m, list, item) => `#for (${item} in @${list})`,
+  );
+  replaceCounted(
+    "for_as_syntax_no_at",
+    /#for\s+([A-Za-z_$][\w.$[\]?]*)\s+as\s+([A-Za-z_$][\w$]*)/g,
+    (_m, list, item) => `#for (${item} in @${list})`,
+  );
+
+  // Standalone event handlers in child position are invalid Units nodes:
+  //   Tag {
+  //     !submit { onSubmit(@event) }
+  //     ...
+  //   }
+  // Try to attach to the nearest parent tag opening line when unambiguous.
+  // If no safe parent shape is found, wrap as parser-safe benchmark-only node.
+  {
+    const lines = src.split("\n");
+    const depthBefore = [];
+    const tagOpenByLine = new Map();
+    const tagOpenLineRe = /^([ \t]*)([A-Za-z_][\w:.-]*)(\s*\(([^()]*)\))?\s*\{\s*$/;
+    const standaloneEventLineRe = /^([ \t]*)!([A-Za-z_$][\w:-]*)\s*\{([^{}]*)\}\s*$/;
+
+    let depth = 0;
+    for (let idx = 0; idx < lines.length; idx++) {
+      const line = lines[idx];
+      depthBefore[idx] = depth;
+      const tagMatch = line.match(tagOpenLineRe);
+      if (tagMatch) tagOpenByLine.set(idx, tagMatch);
+      const withoutSingleQuoted = line.replace(/'([^'\\]|\\.)*'/g, "");
+      const openCount = (withoutSingleQuoted.match(/\{/g) || []).length;
+      const closeCount = (withoutSingleQuoted.match(/\}/g) || []).length;
+      depth = Math.max(0, depth + openCount - closeCount);
+    }
+
+    let attachedCount = 0;
+    let wrappedCount = 0;
+    let droppedDuplicateCount = 0;
+
+    for (let idx = 0; idx < lines.length; idx++) {
+      const eventMatch = lines[idx].match(standaloneEventLineRe);
+      if (!eventMatch) continue;
+
+      const [, indent, eventName, bodyRaw] = eventMatch;
+      const body = String(bodyRaw || "").trim();
+      const childDepth = depthBefore[idx];
+      let parentIdx = -1;
+      let parentMatch = null;
+
+      if (childDepth > 0) {
+        for (let k = idx - 1; k >= 0; k--) {
+          if (depthBefore[k] !== childDepth - 1) continue;
+          const maybeTag = tagOpenByLine.get(k);
+          if (maybeTag) {
+            parentIdx = k;
+            parentMatch = maybeTag;
+            break;
+          }
+        }
+      }
+
+      if (parentIdx >= 0 && parentMatch) {
+        const [, parentIndent, tagName, parenGroup, propsRaw] = parentMatch;
+        if (lines[parentIdx].includes(`!${eventName}`)) {
+          lines[idx] = "";
+          droppedDuplicateCount++;
+          continue;
+        }
+        const eventProp = `!${eventName} { ${body} }`;
+        if (parenGroup) {
+          const props = String(propsRaw || "").trim();
+          const nextProps = props ? `${props}, ${eventProp}` : eventProp;
+          lines[parentIdx] = `${parentIndent}${tagName} (${nextProps}) {`;
+        } else {
+          lines[parentIdx] = `${parentIndent}${tagName} (${eventProp}) {`;
+        }
+        lines[idx] = "";
+        attachedCount++;
+        continue;
+      }
+
+      lines[idx] = `${indent}__EventHook (!${eventName} { ${body} })`;
+      wrappedCount++;
+    }
+
+    if (attachedCount > 0) fixes.push({ name: "event_child_attached_to_parent", count: attachedCount });
+    if (wrappedCount > 0) fixes.push({ name: "event_child_wrapped", count: wrappedCount });
+    if (droppedDuplicateCount > 0) fixes.push({ name: "event_child_duplicate_dropped", count: droppedDuplicateCount });
+    src = lines.join("\n");
+  }
+
+  // Property assignment normalization inside prop lists: key='x' => key:'x', key=@x => key:@x, key=x => key:@x
+  replaceCounted(
+    "prop_equals_string",
+    /([,(]\s*)([A-Za-z_$][\w:.-]*)\s*=\s*'([^']*)'/g,
+    (_m, lead, key, str) => `${lead}${key}:'${str}'`,
+  );
+  replaceCounted(
+    "prop_equals_expr_at",
+    /([,(]\s*)([A-Za-z_$][\w:.-]*)\s*=\s*@([A-Za-z_$][\w.$[\]?]*)/g,
+    (_m, lead, key, expr) => `${lead}${key}:@${expr}`,
+  );
+  replaceCounted(
+    "prop_equals_literal",
+    /([,(]\s*)([A-Za-z_$][\w:.-]*)\s*=\s*(true|false|null|-?\d+(?:\.\d+)?)/g,
+    (_m, lead, key, lit) => `${lead}${key}:${lit}`,
+  );
+  replaceCounted(
+    "prop_equals_identifier",
+    /([,(]\s*)([A-Za-z_$][\w:.-]*)\s*=\s*([A-Za-z_$][\w.$[\]?]*)/g,
+    (_m, lead, key, expr) => `${lead}${key}:@${expr}`,
+  );
+
+  // Bare text expression form: text @value => text '@{value}'
+  replaceCounted(
+    "text_bare_expr",
+    /\btext\s+@([A-Za-z_$][\w.$[\]?]*)\b/g,
+    (_m, expr) => `text '@{${expr}}'`,
+  );
+  // text "literal" => text 'literal'
+  replaceCounted(
+    "text_double_quoted_literal",
+    /^([ \t]*)text[ \t]+"([^"\n]*)"[ \t]*$/gm,
+    (_m, indent, literal) => `${indent}text '${escapeForSingleQuotedText(literal)}'`,
+  );
+
+  // Strict fixer: Units requires text values to be single-quoted strings.
+  // Convert common model output forms like:
+  //   text message.content
+  //   text @message.content
+  //   text message?.value ?? 'fallback'
+  // into:
+  //   text '@{...}'
+  replaceCounted(
+    "text_non_string_rhs",
+    /^([ \t]*)text[ \t]+(.+?)([ \t]*)$/gm,
+    (_m, indent, rhsRaw, tailWs) => {
+      const rhs = String(rhsRaw || "").trim();
+      if (!rhs) return `${indent}text ''${tailWs || ""}`;
+      if (rhs.startsWith("'")) return `${indent}text ${rhs}${tailWs || ""}`;
+      if (rhs.startsWith("@{") && rhs.endsWith("}")) {
+        return `${indent}text '${escapeForSingleQuotedText(rhs)}'${tailWs || ""}`;
+      }
+      if (rhs.startsWith("@")) {
+        const expr = rhs.slice(1).trim();
+        return `${indent}text '@{${escapeForSingleQuotedText(expr)}}'${tailWs || ""}`;
+      }
+      return `${indent}text '@{${escapeForSingleQuotedText(rhs)}}'${tailWs || ""}`;
+    },
+  );
+
+  return {
+    output: src,
+    fixes,
+  };
 }
 
 function countAstStats(ast) {
@@ -173,29 +398,47 @@ async function callOpenAI({
   maxOutputTokens,
 }) {
   const endpoint = `${String(baseUrl).replace(/\/$/, "")}/responses`;
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model,
-      temperature,
-      max_output_tokens: maxOutputTokens,
-      input: [
-        { role: "system", content: [{ type: "input_text", text: systemPrompt }] },
-        { role: "user", content: [{ type: "input_text", text: userPrompt }] },
-      ],
-    }),
-  });
+  const headers = {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+  };
+  const payloadBase = {
+    model,
+    max_output_tokens: maxOutputTokens,
+    input: [
+      { role: "system", content: [{ type: "input_text", text: systemPrompt }] },
+      { role: "user", content: [{ type: "input_text", text: userPrompt }] },
+    ],
+  };
+  const withTemperature = (
+    typeof temperature === "number" && Number.isFinite(temperature)
+  ) ? { ...payloadBase, temperature } : payloadBase;
 
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`OpenAI API error ${response.status}: ${body.slice(0, 300)}`);
+  async function post(payload) {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+    });
+    const bodyText = await response.text();
+    return { response, bodyText };
   }
 
-  const json = await response.json();
+  let usedTemperature = Object.prototype.hasOwnProperty.call(withTemperature, "temperature");
+  let { response, bodyText } = await post(withTemperature);
+  if (!response.ok && usedTemperature && response.status === 400) {
+    const unsupportedTemperature = /unsupported parameter:\s*'temperature'|"param"\s*:\s*"temperature"/i.test(bodyText);
+    if (unsupportedTemperature) {
+      usedTemperature = false;
+      ({ response, bodyText } = await post(payloadBase));
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(`OpenAI API error ${response.status}: ${bodyText.slice(0, 300)}`);
+  }
+
+  const json = JSON.parse(bodyText);
   const usage = json?.usage || {};
   const inputTokens = usage.input_tokens ?? usage.prompt_tokens ?? null;
   const outputTokens = usage.output_tokens ?? usage.completion_tokens ?? null;
@@ -208,6 +451,9 @@ async function callOpenAI({
     raw: json,
     text: extractResponseText(json),
     usage: { inputTokens, outputTokens, totalTokens },
+    request: {
+      usedTemperature,
+    },
   };
 }
 
@@ -280,7 +526,7 @@ function pct(numerator, denominator) {
   return (numerator / denominator) * 100;
 }
 
-function summarizeByModel(records) {
+function summarizeByModel(records, analysisField = "analysis") {
   const map = new Map();
   for (const r of records) {
     if (!map.has(r.model)) map.set(r.model, []);
@@ -288,9 +534,10 @@ function summarizeByModel(records) {
   }
   const rows = [];
   for (const [model, items] of map.entries()) {
-    const parseOkCount = items.filter((r) => r.analysis.parseOk).length;
-    const reqEligible = items.filter((r) => r.analysis.requiredTotal > 0);
-    const reqPassCount = reqEligible.filter((r) => r.analysis.requiredPass).length;
+    const getAnalysis = (record) => record?.[analysisField] || null;
+    const parseOkCount = items.filter((r) => getAnalysis(r)?.parseOk).length;
+    const reqEligible = items.filter((r) => (getAnalysis(r)?.requiredTotal || 0) > 0);
+    const reqPassCount = reqEligible.filter((r) => getAnalysis(r)?.requiredPass).length;
     const exactEligible = items.filter((r) => r.exactMatch !== null);
     const exactPassCount = exactEligible.filter((r) => r.exactMatch === true).length;
     rows.push({
@@ -302,11 +549,96 @@ function summarizeByModel(records) {
       avgInputTokens: avg(items.map((r) => r.tokens.input)),
       avgOutputTokens: avg(items.map((r) => r.tokens.output)),
       avgTotalTokens: avg(items.map((r) => r.tokens.total)),
-      avgParseMs: avg(items.map((r) => r.analysis.parseMs)),
+      avgParseMs: avg(items.map((r) => getAnalysis(r)?.parseMs)),
     });
   }
   rows.sort((a, b) => (b.parseOkPct || 0) - (a.parseOkPct || 0));
   return rows;
+}
+
+function clampPct(value) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  return Math.max(0, Math.min(100, value));
+}
+
+function usageFromResponse(responseUsage, promptText, generated) {
+  const input = typeof responseUsage?.inputTokens === "number"
+    ? responseUsage.inputTokens
+    : estimateTokens(promptText);
+  const output = typeof responseUsage?.outputTokens === "number"
+    ? responseUsage.outputTokens
+    : estimateTokens(generated);
+  const total = typeof responseUsage?.totalTokens === "number"
+    ? responseUsage.totalTokens
+    : input + output;
+  return {
+    input,
+    output,
+    total,
+    source: (
+      typeof responseUsage?.inputTokens === "number" || typeof responseUsage?.outputTokens === "number"
+    ) ? "provider_usage" : "estimated",
+  };
+}
+
+function mergeUsage(a, b) {
+  if (!a) return b;
+  if (!b) return a;
+  return {
+    input: (a.input || 0) + (b.input || 0),
+    output: (a.output || 0) + (b.output || 0),
+    total: (a.total || 0) + (b.total || 0),
+    source: a.source === b.source ? a.source : "mixed",
+  };
+}
+
+function buildRepairPrompt({ prompt, generated, parseError, requiredSnippets }) {
+  const required = Array.isArray(requiredSnippets) && requiredSnippets.length > 0
+    ? requiredSnippets.map((snippet) => `- ${snippet}`).join("\n")
+    : "- (none)";
+  return [
+    "Your previous answer was invalid or incomplete Units DSL.",
+    `Original task: ${prompt}`,
+    `Parser error: ${parseError || "(none)"} `,
+    "Required snippets to include:",
+    required,
+    "",
+    "Fix and return only valid Units DSL.",
+    "Do not output any explanation.",
+    "Previous output:",
+    generated,
+  ].join("\n");
+}
+
+function evaluateQualityGate(summaries, thresholds) {
+  const violations = [];
+  for (const summary of summaries) {
+    if (thresholds.minParseOkPct != null && summary.parseOkPct != null && summary.parseOkPct < thresholds.minParseOkPct) {
+      violations.push({
+        model: summary.model,
+        metric: "parseOkPct",
+        value: summary.parseOkPct,
+        min: thresholds.minParseOkPct,
+      });
+    }
+    if (thresholds.minRequiredPassPct != null && summary.requiredPassPct != null && summary.requiredPassPct < thresholds.minRequiredPassPct) {
+      violations.push({
+        model: summary.model,
+        metric: "requiredPassPct",
+        value: summary.requiredPassPct,
+        min: thresholds.minRequiredPassPct,
+      });
+    }
+    if (thresholds.minExactMatchPct != null && summary.exactMatchPct != null && summary.exactMatchPct < thresholds.minExactMatchPct) {
+      violations.push({
+        model: summary.model,
+        metric: "exactMatchPct",
+        value: summary.exactMatchPct,
+        min: thresholds.minExactMatchPct,
+      });
+    }
+  }
+  return violations;
 }
 
 function fmt(n, digits = 2) {
@@ -314,7 +646,7 @@ function fmt(n, digits = 2) {
   return n.toFixed(digits);
 }
 
-function markdownReport({ config, summaries, compression, records }) {
+function markdownReport({ config, summaries, strictSummaries, compression, records, qualityGate }) {
   const lines = [];
   lines.push("# LLM Benchmark Report");
   lines.push("");
@@ -332,6 +664,33 @@ function markdownReport({ config, summaries, compression, records }) {
     lines.push(`| ${s.model} | ${s.samples} | ${fmt(s.parseOkPct)} | ${fmt(s.requiredPassPct)} | ${fmt(s.exactMatchPct)} | ${fmt(s.avgInputTokens)} | ${fmt(s.avgOutputTokens)} | ${fmt(s.avgTotalTokens)} | ${fmt(s.avgParseMs, 3)} |`);
   }
   lines.push("");
+  if (config.mode === "live" && Array.isArray(strictSummaries) && strictSummaries.length > 0) {
+    lines.push("## Strict Output Summary (Pre-Fix)");
+    lines.push("");
+    lines.push("| Model | Samples | Parse OK % | Required % | Avg Parse ms |");
+    lines.push("|---|---:|---:|---:|---:|");
+    for (const s of strictSummaries) {
+      lines.push(`| ${s.model} | ${s.samples} | ${fmt(s.parseOkPct)} | ${fmt(s.requiredPassPct)} | ${fmt(s.avgParseMs, 3)} |`);
+    }
+    lines.push("");
+  }
+  if (config.mode === "live" && qualityGate?.enabled) {
+    lines.push("## Quality Gate");
+    lines.push("");
+    lines.push(`- Parse OK minimum %: \`${qualityGate.thresholds.minParseOkPct ?? "-"}\``);
+    lines.push(`- Required minimum %: \`${qualityGate.thresholds.minRequiredPassPct ?? "-"}\``);
+    lines.push(`- Exact minimum %: \`${qualityGate.thresholds.minExactMatchPct ?? "-"}\``);
+    lines.push(`- Status: \`${qualityGate.violations.length === 0 ? "pass" : "fail"}\``);
+    if (qualityGate.violations.length > 0) {
+      lines.push("");
+      lines.push("| Model | Metric | Value % | Minimum % |");
+      lines.push("|---|---|---:|---:|");
+      for (const v of qualityGate.violations) {
+        lines.push(`| ${v.model} | ${v.metric} | ${fmt(v.value)} | ${fmt(v.min)} |`);
+      }
+    }
+    lines.push("");
+  }
   if (compression.length > 0) {
     lines.push("## Estimated DSL Compression");
     lines.push("");
@@ -378,10 +737,18 @@ async function main() {
   if (!Array.isArray(args.models) || args.models.length === 0) {
     throw new Error("Pass at least one model via --models.");
   }
+  args.repairAttempts = Math.max(0, Number.isFinite(args.repairAttempts) ? Math.floor(args.repairAttempts) : DEFAULT_REPAIR_ATTEMPTS);
 
   if (args.systemPromptFile) {
     args.systemPrompt = await fs.readFile(path.resolve(process.cwd(), args.systemPromptFile), "utf-8");
   }
+
+  const qualityGateEnabled = args.qualityGate == null ? args.mode === "live" : Boolean(args.qualityGate);
+  const qualityThresholds = {
+    minParseOkPct: clampPct(args.minParseOkPct ?? (qualityGateEnabled && args.mode === "live" ? DEFAULT_LIVE_MIN_PARSE_OK_PCT : null)),
+    minRequiredPassPct: clampPct(args.minRequiredPassPct ?? (qualityGateEnabled && args.mode === "live" ? DEFAULT_LIVE_MIN_REQUIRED_PCT : null)),
+    minExactMatchPct: clampPct(args.minExactMatchPct),
+  };
 
   const cases = await loadCases(args.cases);
   const records = [];
@@ -403,6 +770,11 @@ async function main() {
           source: "estimated",
         };
         let rawResponse = null;
+        let analysis = null;
+        let strictAnalysis = null;
+        let rawModelOutput = generated;
+        const repairLog = [];
+        const postFixes = [];
 
         if (args.mode === "live") {
           const response = await callOpenAI({
@@ -415,28 +787,60 @@ async function main() {
             maxOutputTokens: args.maxOutputTokens,
           });
           rawResponse = response.raw;
-          generated = stripFence(response.text);
+          rawModelOutput = stripFence(response.text);
+          strictAnalysis = analyzeSource(rawModelOutput, oneCase.requiredSnippets || []);
+          const fixedInitial = applyStrictPostGenerationFixes(rawModelOutput);
+          generated = fixedInitial.output;
+          postFixes.push({
+            stage: "initial",
+            fixes: fixedInitial.fixes,
+          });
+          usageTokens = usageFromResponse(response.usage, promptText, generated);
+          analysis = analyzeSource(generated, oneCase.requiredSnippets || []);
 
-          const input = typeof response.usage.inputTokens === "number"
-            ? response.usage.inputTokens
-            : estimateTokens(promptText);
-          const output = typeof response.usage.outputTokens === "number"
-            ? response.usage.outputTokens
-            : estimateTokens(generated);
-          const total = typeof response.usage.totalTokens === "number"
-            ? response.usage.totalTokens
-            : input + output;
-          usageTokens = {
-            input,
-            output,
-            total,
-            source: (
-              typeof response.usage.inputTokens === "number" || typeof response.usage.outputTokens === "number"
-            ) ? "provider_usage" : "estimated",
-          };
+          for (let attempt = 1; attempt <= args.repairAttempts; attempt++) {
+            if (analysis.parseOk && analysis.requiredPass) break;
+            const repairPrompt = buildRepairPrompt({
+              prompt: oneCase.prompt,
+              generated,
+              parseError: analysis.parseError,
+              requiredSnippets: oneCase.requiredSnippets || [],
+            });
+            const repairResponse = await callOpenAI({
+              apiKey,
+              baseUrl: args.baseUrl,
+              model,
+              systemPrompt: args.systemPrompt,
+              userPrompt: repairPrompt,
+              temperature: args.temperature,
+              maxOutputTokens: args.maxOutputTokens,
+            });
+            rawResponse = repairResponse.raw;
+            rawModelOutput = stripFence(repairResponse.text);
+            strictAnalysis = analyzeSource(rawModelOutput, oneCase.requiredSnippets || []);
+            const fixedRepair = applyStrictPostGenerationFixes(rawModelOutput);
+            generated = fixedRepair.output;
+            postFixes.push({
+              stage: `repair_${attempt}`,
+              fixes: fixedRepair.fixes,
+            });
+            usageTokens = mergeUsage(
+              usageTokens,
+              usageFromResponse(repairResponse.usage, `${args.systemPrompt}\n\n${repairPrompt}`, generated),
+            );
+            analysis = analyzeSource(generated, oneCase.requiredSnippets || []);
+            repairLog.push({
+              attempt,
+              parseOk: analysis.parseOk,
+              requiredPass: analysis.requiredPass,
+              parseError: analysis.parseError,
+              fixes: fixedRepair.fixes,
+            });
+          }
         }
 
-        const analysis = analyzeSource(generated, oneCase.requiredSnippets || []);
+        if (!analysis) analysis = analyzeSource(generated, oneCase.requiredSnippets || []);
+        if (!strictAnalysis) strictAnalysis = analysis;
         let exactMatch = null;
         if (oneCase.expectedDsl && analysis.parseOk) {
           try {
@@ -453,10 +857,14 @@ async function main() {
           mode: args.mode,
           tokens: usageTokens,
           analysis,
+          strictAnalysis,
           exactMatch,
           prompt: oneCase.prompt,
           output: generated,
+          rawOutput: rawModelOutput,
           rawResponse,
+          repairLog,
+          postFixes,
         });
       }
     }
@@ -464,6 +872,15 @@ async function main() {
 
   const compression = makeCompressionRows(cases);
   const summaries = summarizeByModel(records);
+  const strictSummaries = summarizeByModel(records, "strictAnalysis");
+  const qualityViolations = qualityGateEnabled
+    ? evaluateQualityGate(summaries, qualityThresholds)
+    : [];
+  const qualityGate = {
+    enabled: qualityGateEnabled,
+    thresholds: qualityThresholds,
+    violations: qualityViolations,
+  };
   const payload = {
     generatedAt: new Date().toISOString(),
     config: {
@@ -472,6 +889,8 @@ async function main() {
       models: args.models,
       casesPath: args.cases,
       baseUrl: args.baseUrl,
+      repairAttempts: args.repairAttempts,
+      qualityGate,
     },
     caseCount: cases.length,
     cases: cases.map((c) => ({
@@ -482,6 +901,8 @@ async function main() {
       baselineNames: Object.keys(c.baselines || {}),
     })),
     summaries,
+    strictSummaries,
+    qualityGate,
     compression,
     records,
   };
@@ -495,6 +916,8 @@ async function main() {
       models: args.models,
     },
     summaries,
+    strictSummaries,
+    qualityGate,
     compression,
     records,
   });
@@ -502,6 +925,10 @@ async function main() {
   const outPath = await writeFileSafe(args.out, `${JSON.stringify(payload, null, 2)}\n`);
   const reportPath = await writeFileSafe(args.report, reportMd);
   process.stdout.write(`Wrote ${outPath}\nWrote ${reportPath}\n`);
+  if (qualityGateEnabled && qualityViolations.length > 0) {
+    process.stderr.write(`Live quality gate failed with ${qualityViolations.length} violation(s).\n`);
+    process.exitCode = 1;
+  }
 }
 
 main().catch((err) => {

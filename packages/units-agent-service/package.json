@@ -1,0 +1,29 @@
+{
+  "name": "@botfather/units-agent-service",
+  "version": "0.1.0",
+  "description": "Node HTTP service wrapper for Units agent UI compression.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Botfather/units.git",
+    "directory": "packages/units-agent-service"
+  },
+  "homepage": "https://github.com/Botfather/units/tree/main/packages/units-agent-service",
+  "bugs": {
+    "url": "https://github.com/Botfather/units/issues"
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "dependencies": {
+    "@botfather/units-agent-plugin": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

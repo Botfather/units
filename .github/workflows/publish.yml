@@ -33,6 +33,14 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      - name: Validate UI-PS quality gates
+        run: |
+          pnpm -s test:units-tools-transform-verify
+          pnpm -s test:ui-ps-bench
+          pnpm -s test:ui-ps-gate-check
+          pnpm -s bench:ui-ps
+          pnpm -s bench:ui-ps:gate
+
       - name: Version or Publish
         uses: changesets/action@v1
         with:

@@ -7,6 +7,13 @@ Lightweight DSL for building interactive UIs. This monorepo publishes:
 - `@botfather/vite-plugin-units` (Vite build plugin)
 - `@botfather/vite-plugin-units-tools` (Vite dev tools: format/tokens/highlight)
 - `@botfather/units-tools` (CLI tools: format, lint, etc.)
+- `@botfather/units-agent-middleware` (agent-agnostic UI tree rewrite middleware)
+- `@botfather/units-agent-plugin` (agent-facing `compressUiForAgent` API returning DSL + AST)
+- `@botfather/units-agent-service` (HTTP `/compress-ui` service wrapper for arbitrary agents)
+- `@botfather/units-dom-snapshot` (arbitrary DOM snapshot extraction for agent pipelines)
+- `@botfather/units-ui-ir` (neutral UiNode IR schema + DOM/a11y adapters)
+- `@botfather/units-react-adapter` (React/JSX element tree -> UiNode IR adapter)
+- `@botfather/units-compiler` (UiNode/IR -> Units AST+DSL compiler with loop heuristics)
 - `@botfather/units-uikit-shadcn` (ShadCN-style Units UI kit)
 - `bench.js` (parse benchmark)
 - `DOCS.md` (full documentation)
@@ -15,6 +22,7 @@ Lightweight DSL for building interactive UIs. This monorepo publishes:
 - `examples/todo-vite/` (todo list demo)
 - `examples/chat-vite/` (chat transcript demo)
 - `examples/shadcn-gallery-vite/` (ShadCN gallery demo)
+- `examples/portfolio-vite/` (portfolio header demo)
 
 ## Website
 
@@ -95,6 +103,8 @@ This is transformed into:
 set('selected', @item.id)
 ```
 
+Expression normalization only rewrites scope-style `@identifier` tokens outside quoted strings. Literal `@` characters inside string literals are preserved.
+
 ## React Runtime
 `renderUnits(ast, scope, options)`
 
@@ -113,6 +123,8 @@ const host = {
 };
 ```
 
+The custom renderer follows the same directive flow semantics as the React runtime for `#if/#elif/#else` chains and `#for/#key`.
+
 ## Notes
 - Parsing is O(n) and dependency-free.
 - The grammar is intentionally small to keep parsing fast and extensible.
@@ -128,6 +140,69 @@ See the [live benchmarks table](https://botfather.github.io/units/#benchmarks) f
 node ./bench.js
 ```
 
+## Testing
+Run the full repository test suite:
+```
+node --test
+```
+
+Run coverage:
+```
+node --test --experimental-test-coverage
+```
+
+## Run Entire Benchmark Suite
+Set optional env vars first (same terminal session):
+```
+export OPENAI_API_KEY=...      # required for live/provider model-backed benchmarks
+export IPERF3_HOST=...         # required for network suites in bench:system:run
+export LLM_BENCH_MODELS=...    # optional override for bench:llm:live models (comma-separated)
+```
+
+Then run:
+```
+pnpm bench:parser
+pnpm bench:dsl
+pnpm bench:system:plan
+pnpm bench:system:run
+pnpm bench:llm
+pnpm bench:llm:live
+pnpm bench:react-vs-dsl
+pnpm bench:react-vs-dsl:quick
+pnpm bench:react-vs-dsl:provider
+pnpm bench:react-vs-dsl:provider:both
+pnpm bench:react-vs-dsl:provider:optimized
+pnpm bench:ui-ps
+pnpm bench:ui-ps:gate
+```
+
+## DSL Benchmark Suite
+Run the DSL-specific benchmark suite:
+```
+pnpm bench:dsl
+```
+
+Quick smoke run:
+```
+pnpm bench:dsl:quick
+```
+
+What it measures:
+- Parse throughput on curated `.ui` programs
+- Format / printer throughput and format stability
+- Custom-renderer throughput with realistic scope sizes
+- Edit-loop cost via changed-range detection and `incrementalParse()`
+- Corpus parse / format throughput over `bench/cases`, `examples`, and the ShadCN Units kit
+
+Inputs:
+- Suite config: `bench/dsl-bench.config.json`
+- Curated cases: `bench/cases/*.ui`, `examples/*/src/*.ui`
+- Corpus sweep: `bench/cases/`, `examples/`, `packages/units-uikit-shadcn/shadcn/`
+
+Outputs:
+- JSON metrics: `bench/results/dsl-bench.json`
+- Markdown report: `bench/results/dsl-bench.md`
+
 ## LLM Benchmark (Token + Quality)
 Offline reference run (estimated tokens):
 ```
@@ -137,6 +212,11 @@ pnpm bench:llm
 Live model run (real usage tokens from API):
 ```
 OPENAI_API_KEY=... pnpm bench:llm:live
+```
+
+Run live benchmark with custom model list (comma-separated), including newer models:
+```
+OPENAI_API_KEY=... LLM_BENCH_MODELS=gpt-4.1-mini,gpt-4o-mini,gpt-5-2025-08-07 pnpm bench:llm:live
 ```
 
 Config lives in `bench/llm-cases.json`, with case files under `bench/cases/`.
@@ -175,6 +255,57 @@ Provider + approx with compact optimized DSL pair set:
 ```
 OPENAI_API_KEY=... pnpm bench:react-vs-dsl:provider:optimized
 ```
+
+## UI-PS Baseline Benchmark
+Run host-tree transform baseline scoring (completeness + efficiency) over curated fixtures and a verified seed library:
+```
+pnpm bench:ui-ps
+```
+
+Enforce CI-style thresholds against the latest benchmark output:
+```
+pnpm bench:ui-ps:gate
+```
+
+Outputs:
+- JSON metrics + per-case candidate scoring: `bench/results/ui-ps-bench.json`
+- Markdown report: `bench/results/ui-ps-bench.md`
+- Gate thresholds: `bench/ui-ps-gates.json`
+- Fixture corpus: `bench/ui-ps-fixtures.json` (expanded tricky patterns + explicit `semantic-loss` probes)
+
+## UI-PS Tricky-Pattern Roadmap
+Goal: keep compression wins honest by expanding tricky fixture coverage while preserving action/name/text semantics.
+
+### Phase A: Near-term fixture expansion
+- Add 10-20 new fixtures across:
+  - Stacked modals and nested dialogs (`dialog` in `dialog`, focus-trap metadata).
+  - Dense tables/data-grids (sortable headers, row actions, inline pagination).
+  - Nested and multi-step forms (fieldset nesting, dependent inputs, required states).
+  - Repeated cards/feeds (mixed-action cards, optional badges/tags, lazy placeholders).
+  - Noisy text regions (alerts, banners, decorative separators, duplicated copy).
+- Add explicit semantic-loss probes for each category where compression can drop distinct actions (for example: dual CTAs, adjacent toggles, split pagination controls).
+
+### Phase B: Adapters and IR edge cases
+- Add parity fixtures for DOM vs accessibility vs IR inputs representing the same workflow.
+- Include edge cases:
+  - Hidden-but-relevant state (`aria-expanded`, `checked`, `selected`, `disabled`).
+  - Virtualized list snapshots (partial children + "load more" controls).
+  - Mixed navigation semantics (`button` vs `link` with similar names).
+
+### Phase C: Gate and scoring hardening
+- Keep strict semantic gates:
+  - `action_recall = 1.0`
+  - `name_recall >= 0.98`
+  - `text_f1 >= 0.95`
+- Add per-tag visibility in reports so regressions are easy to locate (`modal`, `table`, `semantic-loss`, etc.).
+- Raise `bench/ui-ps-gates.json` thresholds as corpus grows (case count, semantic-loss pass count, transformed count) and enforce through CI.
+
+### Definition of done for each expansion batch
+- Every new tricky category includes at least:
+  - 2 normal fixtures
+  - 1 semantic-loss probe
+- `pnpm bench:ui-ps` and `pnpm bench:ui-ps:gate` pass locally and in CI.
+- The markdown benchmark report shows no semantic-loss gate failures for the new tags.
 
 ## System Benchmarking
 Install the standard benchmark CLI tools:
@@ -238,6 +369,7 @@ Use `@botfather/vite-plugin-units-tools` to load:
 - `.ui?format` for pretty-printed source
 - `.ui?tokens` for tokenized output suitable for syntax highlighting
 - `.ui?highlight` for prebuilt HTML spans
+- `.ui?agent` for agent-targeted DSL payload + rough token estimates
 
 TypeScript Support:
 - `@botfather/vite-plugin-units-tools` ships its own plugin types.
@@ -248,6 +380,11 @@ The `@botfather/units-tools` package provides CLI utilities for managing Units f
 - `units-lint <file-or-dir>`: Lint for syntax and formatting consistency.
 - `lint-ui [targets...]`: Lint all `.ui` files in `examples/` and `packages/units-uikit-shadcn/` (or pass targets).
 - `units-watch <rootDir> <outFile>`: Watch and emit AST changes.
+- `units-snapshot --url <https://example.com>`: Capture neutral UI tree snapshots from arbitrary web pages.
+- `units-transform --program <program.ui> --input <tree.json>`: Run transform DSL against host trees.
+- `units-verify ...`: Score transform output and apply reward gates.
+- `units-synthesize ...`: Run iterative candidate refinement with deterministic verification.
+- `units-library inspect|promote|rollback ...`: Manage verified transform program library.
 
 ## VS Code Extension
 See `vscode/units-vscode` for a minimal VS Code extension that adds Units syntax highlighting, snippets, and formatting.

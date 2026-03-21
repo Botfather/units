@@ -1,0 +1,21 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Units UI File Icon</title>
+  <desc id="desc">File icon for .ui files with the Units U mark in neon tiles.</desc>
+
+  <path d="M22 8H76L106 38V112C106 116.418 102.418 120 98 120H22C17.582 120 14 116.418 14 112V16C14 11.582 17.582 8 22 8Z" fill="#0F172A"/>
+  <path d="M76 8V30C76 34.418 79.582 38 84 38H106" fill="#1E293B"/>
+  <path d="M76 8L106 38" stroke="#334155" stroke-width="2"/>
+
+  <g fill="#22D3EE">
+    <rect x="34" y="42" width="12" height="12" rx="3"/>
+    <rect x="34" y="58" width="12" height="12" rx="3"/>
+    <rect x="34" y="74" width="12" height="12" rx="3"/>
+
+    <rect x="70" y="42" width="12" height="12" rx="3"/>
+    <rect x="70" y="58" width="12" height="12" rx="3"/>
+    <rect x="70" y="74" width="12" height="12" rx="3"/>
+
+    <rect x="50" y="82" width="12" height="12" rx="3"/>
+    <rect x="56" y="82" width="12" height="12" rx="3"/>
+  </g>
+</svg>

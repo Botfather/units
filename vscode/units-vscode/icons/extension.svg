@@ -1,0 +1,41 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Units VS Code Extension Icon</title>
+  <desc id="desc">Rounded square icon with neon Units mark and subtle border.</desc>
+
+  <defs>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="32" y="32" width="448" height="448" rx="96" fill="#0B1220"/>
+  <rect x="40" y="40" width="432" height="432" rx="88" stroke="#1E293B" stroke-width="4"/>
+
+  <g opacity="0.24" stroke="#67E8F9" stroke-width="2">
+    <path d="M140 96V416"/>
+    <path d="M204 96V416"/>
+    <path d="M268 96V416"/>
+    <path d="M332 96V416"/>
+    <path d="M96 140H416"/>
+    <path d="M96 204H416"/>
+    <path d="M96 268H416"/>
+    <path d="M96 332H416"/>
+  </g>
+
+  <g filter="url(#glow)" fill="#22D3EE">
+    <rect x="128" y="128" width="64" height="64" rx="14"/>
+    <rect x="128" y="208" width="64" height="64" rx="14"/>
+    <rect x="128" y="288" width="64" height="64" rx="14"/>
+
+    <rect x="320" y="128" width="64" height="64" rx="14"/>
+    <rect x="320" y="208" width="64" height="64" rx="14"/>
+    <rect x="320" y="288" width="64" height="64" rx="14"/>
+
+    <rect x="208" y="328" width="64" height="64" rx="14"/>
+    <rect x="240" y="328" width="64" height="64" rx="14"/>
+  </g>
+</svg>

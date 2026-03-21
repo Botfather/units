@@ -113,6 +113,8 @@ const renderer = createUnitsRenderer({
 const node = renderer.render(ast, scope, options);
 ```
 
+Custom renderer directive behavior mirrors runtime semantics for `#if/#elif/#else` and `#for/#key`.
+
 ### Expression evaluator
 
 ```js
@@ -122,7 +124,7 @@ const evalExpr = createUnitsEvaluator();
 const result = evalExpr("@items.length > 0", scope);
 ```
 
-Expressions use `@` as the scope accessor prefix. The evaluator caches compiled `Function` objects per expression string.
+Expressions use `@` as the scope accessor prefix. The evaluator caches compiled `Function` objects per expression string, and scope-prefix normalization preserves literal `@` characters inside quoted strings.
 
 ### Incremental parsing
 
@@ -138,7 +140,58 @@ const node = findSmallestEnclosingNode(ast, range.start, range.endPrev);
 const newAst = incrementalParse(prevAst, prevSource, nextSource);
 ```
 
-Useful for editor integrations. `incrementalParse` currently falls back to a full re-parse; `findChangedRange` and `findSmallestEnclosingNode` are fully functional for narrowing re-parse scope.
+Useful for editor integrations. `incrementalParse` attempts append-only and smallest-enclosing-node reparses first, then safely falls back to a full re-parse when needed.
+
+### Tree IR adapters
+
+```js
+import {
+  normalizeDomTree,
+  normalizeA11yTree,
+  serializeAgentTree,
+} from "@botfather/units/tree-ir";
+
+const domIr = normalizeDomTree(rawDomLikeTree);
+const a11yIr = normalizeA11yTree(rawAccessibilityTree);
+const compact = serializeAgentTree(domIr);
+```
+
+### Transform programs
+
+```js
+import {
+  compileTransformProgram,
+  runTransformProgram,
+} from "@botfather/units/transform";
+
+const program = compileTransformProgram(programSource);
+const result = runTransformProgram(program, irTree, { task: "summarize" });
+```
+
+Transform programs use `.ui` syntax with a `Program (kind:'transform')` root and reserved transform tags (`Rule`, `Filter`, `Merge`, `Pass`) in transform mode.
+
+### Reward + verifier
+
+```js
+import { scoreProgram, verifyProgram } from "@botfather/units/reward";
+
+const score = scoreProgram({ inputTree, outputTree, expectations });
+const verification = verifyProgram(score, {
+  action_recall: 1,
+  name_recall: 0.98,
+  text_f1: 0.95,
+});
+```
+
+### Verified library + synthesis
+
+```js
+import {
+  createVerifiedProgramMetadata,
+  writeVerifiedProgram,
+} from "@botfather/units/library";
+import { runSynthesisLoop } from "@botfather/units/synthesis";
+```
 
 ### TypeScript types for Vite imports
 
@@ -161,6 +214,11 @@ import html from "./app.ui?highlight";
 | `@botfather/units/runtime` | `renderUnits`, `createUnitsEvaluator` |
 | `@botfather/units/custom-renderer` | `createUnitsRenderer` |
 | `@botfather/units/incremental` | Incremental parse helpers |
+| `@botfather/units/tree-ir` | DOM/AX normalization + compact serialization |
+| `@botfather/units/transform` | Transform program compiler + runtime |
+| `@botfather/units/reward` | Reward scoring + verifier gates |
+| `@botfather/units/library` | Verified program library helpers |
+| `@botfather/units/synthesis` | Iterative synthesis loop helpers |
 | `@botfather/units/ui` | Type declarations for `.ui` file imports |
 
 ## License
