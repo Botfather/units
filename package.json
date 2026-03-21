@@ -28,6 +28,8 @@
     "bench:react-vs-dsl:provider": "node ./tools/react-vs-dsl-bench.mjs --pairs ./bench/react-vs-dsl-pairs.json --include-synthetic false --tokenizer-mode provider --provider-model gpt-4.1-mini --out ./bench/results/react-vs-dsl-provider.json --report ./bench/results/react-vs-dsl-provider.md",
     "bench:react-vs-dsl:provider:both": "node ./tools/react-vs-dsl-bench.mjs --pairs ./bench/react-vs-dsl-pairs.json --include-synthetic false --tokenizer-mode both --provider-model gpt-4.1-mini --out ./bench/results/react-vs-dsl-provider-both.json --report ./bench/results/react-vs-dsl-provider-both.md",
     "bench:react-vs-dsl:provider:optimized": "node ./tools/react-vs-dsl-bench.mjs --pairs ./bench/react-vs-dsl-pairs-optimized.json --include-synthetic false --tokenizer-mode both --provider-model gpt-4.1-mini --out ./bench/results/react-vs-dsl-provider-both-optimized.json --report ./bench/results/react-vs-dsl-provider-both-optimized.md",
+    "test:units-agent-plugin": "node --test ./test/units-agent-plugin.test.mjs",
+    "test:units-compiler": "node --test ./test/units-compiler.test.mjs",
     "test:dsl-bench": "node --test ./test/dsl-bench.test.mjs",
     "test:units-dom-snapshot": "node --test ./test/units-dom-snapshot.test.mjs",
     "test:units-transform": "node --test ./test/units-transform.test.mjs",
