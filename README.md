@@ -43,6 +43,7 @@ Units is a lightweight DSL for interactive UI. The monorepo covers the language 
 - `examples/chat-vite/` - chat transcript demo
 - `examples/shadcn-gallery-vite/` - ShadCN-style gallery demo
 - `examples/portfolio-vite/` - portfolio header demo
+- `examples/dom-to-ui-extension-wxt/` - WXT extension that converts the current page DOM to `.ui` DSL
 
 ## Key Repository Docs
 
