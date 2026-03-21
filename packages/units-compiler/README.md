@@ -23,7 +23,7 @@ console.log(result.ast);
 ```
 
 `compileUiToUnits` pipeline:
-- Detect/normalize host tree into Units IR (`dom`, `a11y`, or `ir`)
+- Detect/normalize host tree into Units IR (`dom`, `a11y`, `react`, or `ir`)
 - Optionally run a Units transform program
 - Emit Units DSL (with small structural heuristics like `#for` on repeated leaf siblings)
 - Parse DSL back into Units AST

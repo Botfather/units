@@ -1,0 +1,18 @@
+{
+  "program_id": "a11y-compact-dialog-v1",
+  "fingerprint": "seed-a11y-compact-dialog-v1",
+  "source_type": "a11y",
+  "scores": {
+    "total": 1.09,
+    "R_completeness": 1.0,
+    "R_efficiency": 0.09,
+    "metrics": {}
+  },
+  "constraints_passed": true,
+  "created_at": "2026-03-21T00:00:00.000Z",
+  "active": true,
+  "provenance": {
+    "source": "seed",
+    "dataset": "bench/ui-ps-fixtures.json"
+  }
+}

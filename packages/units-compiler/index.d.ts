@@ -14,7 +14,7 @@ export type UiNode = {
 
 export type CompileUiOptions = {
   program?: any;
-  sourceType?: "auto" | "dom" | "a11y" | "ir" | string;
+  sourceType?: "auto" | "dom" | "a11y" | "ir" | "react" | string;
   context?: Record<string, any>;
   includeId?: boolean;
   includeActions?: boolean;

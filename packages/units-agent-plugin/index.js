@@ -1,17 +1,35 @@
 let middlewareMod;
 let compilerMod;
+let reactAdapterMod;
 
 try {
   middlewareMod = await import("@botfather/units-agent-middleware");
-  compilerMod = await import("@botfather/units-compiler");
 } catch {
   // Monorepo fallback for direct node execution without workspace linking.
   middlewareMod = await import("../units-agent-middleware/index.js");
+}
+
+try {
+  compilerMod = await import("@botfather/units-compiler");
+} catch {
+  // Monorepo fallback for direct node execution without workspace linking.
   compilerMod = await import("../units-compiler/index.js");
+}
+
+try {
+  reactAdapterMod = await import("@botfather/units-react-adapter");
+} catch {
+  // Monorepo fallback for direct node execution without workspace linking.
+  try {
+    reactAdapterMod = await import("../units-react-adapter/index.js");
+  } catch {
+    reactAdapterMod = {};
+  }
 }
 
 const { createUnitsAgentMiddleware } = middlewareMod;
 const { compileUiToUnits } = compilerMod;
+const normalizeReactTree = reactAdapterMod.normalizeReactTree || ((tree) => tree);
 
 const TARGET_PRESETS = {
   chat: {
@@ -66,7 +84,22 @@ function sourceTypeFromOptions(options, config) {
   const explicit = String(options?.sourceType || config?.sourceType || "dom").toLowerCase();
   if (explicit === "accessibility") return "a11y";
   if (explicit === "ax") return "a11y";
+  if (explicit === "jsx") return "react";
   return explicit;
+}
+
+function prepareRewriteInput(tree, sourceType) {
+  if (sourceType !== "react") {
+    return {
+      tree,
+      rewriteSourceType: sourceType,
+    };
+  }
+
+  return {
+    tree: normalizeReactTree(tree),
+    rewriteSourceType: "ir",
+  };
 }
 
 function mergeCompilerOptions(target, configOptions, callOptions) {
@@ -146,10 +179,11 @@ export function createUnitsAgentPlugin(config = {}) {
   async function compressUiForAgent(uiTree, options = {}) {
     const target = normalizeTarget(options.target || config.target);
     const sourceType = sourceTypeFromOptions(options, config);
+    const prepared = prepareRewriteInput(uiTree, sourceType);
 
     const rewrite = await middleware.rewrite({
-      tree: uiTree,
-      sourceType,
+      tree: prepared.tree,
+      sourceType: prepared.rewriteSourceType,
       taskContext: isObject(options.taskContext) ? options.taskContext : {},
       expectations: isObject(options.expectations) ? options.expectations : {},
     });
@@ -180,7 +214,8 @@ export function createUnitsAgentPlugin(config = {}) {
       programId: rewrite.selected_program?.program_id || null,
       program: rewrite.selected_program || null,
       transformed: rewrite.transformed === true,
-      sourceType: rewrite.source_type,
+      sourceType,
+      rewriteSourceType: rewrite.source_type,
       target,
       tokenEstimate,
       maxTokens: toFiniteNumber(options.maxTokens),

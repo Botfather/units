@@ -13,6 +13,24 @@ import {
   compressUiForAgent,
 } from "../packages/units-agent-plugin/index.js";
 
+const REACT_ELEMENT_TYPE = Symbol.for("react.element");
+
+function el(type, props = {}, ...children) {
+  const nextProps = {
+    ...props,
+  };
+
+  if (children.length === 1) nextProps.children = children[0];
+  else if (children.length > 1) nextProps.children = children;
+
+  return {
+    $$typeof: REACT_ELEMENT_TYPE,
+    type,
+    key: props.key ?? null,
+    props: nextProps,
+  };
+}
+
 const DOM_TRANSFORM_PROGRAM = `
 Program (kind:'transform', source:'dom') {
   Rule (id:'container_rule', match=@node.role == 'container') {
@@ -101,4 +119,26 @@ test("compressUiForAgent convenience export works with no verified program", asy
   assert.equal(result.programId, null);
   assert.equal(result.unitsAst.type, "document");
   assert.ok(typeof result.dsl === "string" && result.dsl.length > 0);
+});
+
+test("compressUiForAgent supports sourceType react and rewrites through IR", async () => {
+  const reactTree = el(
+    "div",
+    { id: "checkout" },
+    el("button", { onClick: () => {} }, "Pay"),
+  );
+
+  const result = await compressUiForAgent(reactTree, {
+    sourceType: "react",
+    target: "chat",
+    pluginConfig: {
+      libraryDir: path.join(os.tmpdir(), `units-react-empty-${Date.now()}`),
+    },
+  });
+
+  assert.equal(result.programId, null);
+  assert.equal(result.sourceType, "react");
+  assert.equal(result.rewriteSourceType, "ir");
+  assert.match(result.dsl, /Button/);
+  assert.equal(result.unitsAst.type, "document");
 });

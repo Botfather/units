@@ -4,6 +4,24 @@ import test from "node:test";
 import { parseUnits } from "../packages/units/index.js";
 import { compileUiToUnits } from "../packages/units-compiler/index.js";
 
+const REACT_ELEMENT_TYPE = Symbol.for("react.element");
+
+function el(type, props = {}, ...children) {
+  const nextProps = {
+    ...props,
+  };
+
+  if (children.length === 1) nextProps.children = children[0];
+  else if (children.length > 1) nextProps.children = children;
+
+  return {
+    $$typeof: REACT_ELEMENT_TYPE,
+    type,
+    key: props.key ?? null,
+    props: nextProps,
+  };
+}
+
 const MERGE_TEXT_PROGRAM = `
 Program (kind:'transform', source:'ir') {
   Rule (id:'container_rule', match=@node.role == 'container') {
@@ -158,4 +176,26 @@ test("compileUiToUnits emits #for loops for repeated leaf siblings", () => {
   const reparsed = parseUnits(result.dsl);
   assert.equal(reparsed.type, "document");
   assert.equal(result.stats.loop_groups, 1);
+});
+
+test("compileUiToUnits accepts sourceType react and normalizes JSX-style trees", () => {
+  const reactTree = el(
+    "div",
+    { id: "screen" },
+    "Checkout",
+    el("button", { id: "submit", onClick: () => {} }, "Submit order"),
+  );
+
+  const result = compileUiToUnits(reactTree, {
+    sourceType: "react",
+    enableLoopHeuristic: false,
+  });
+
+  assert.equal(result.source_type, "react");
+  assert.match(result.dsl, /Container/);
+  assert.match(result.dsl, /Button/);
+  assert.match(result.dsl, /Submit order/);
+
+  const reparsed = parseUnits(result.dsl);
+  assert.equal(reparsed.type, "document");
 });

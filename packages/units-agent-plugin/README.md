@@ -14,7 +14,7 @@ npm install @botfather/units-agent-plugin
 import { compressUiForAgent } from "@botfather/units-agent-plugin";
 
 const result = await compressUiForAgent(uiTree, {
-  sourceType: "dom",
+  sourceType: "dom", // also supports "a11y", "ir", and "react"
   target: "planner",
   maxTokens: 600,
   pluginConfig: {

@@ -93,6 +93,33 @@ function highlightTokens(tokens, classPrefix) {
   }).join("");
 }
 
+function estimatePromptTokens(source) {
+  const text = String(source ?? "").trim();
+  if (!text) return 0;
+  return text.split(/\s+/).length;
+}
+
+function parseToolQuery(id) {
+  const text = String(id || "");
+  const qidx = text.indexOf("?");
+  if (qidx === -1) return null;
+
+  const file = text.slice(0, qidx);
+  const queryRaw = text.slice(qidx + 1);
+  if (!file.endsWith(".ui")) return null;
+
+  const params = new URLSearchParams(queryRaw);
+  const first = [...params.keys()][0] || "";
+  const kind = String(first || "").toLowerCase();
+  if (!["format", "tokens", "highlight", "agent"].includes(kind)) return null;
+
+  return {
+    file,
+    kind,
+    params,
+  };
+}
+
 export default function unitsTools(options = {}) {
   const include = options.include;
   const exclude = options.exclude;
@@ -113,40 +140,59 @@ export default function unitsTools(options = {}) {
     name: "units-tools",
     enforce: "pre",
     async resolveId(source, importer) {
-      if (source.endsWith(".ui?format") || source.endsWith(".ui?tokens") || source.endsWith(".ui?highlight")) {
-        const base = source.replace(/\?.*$/, "");
-        if (isRelOrAbs(base)) {
-          const resolved = importer ? path.resolve(path.dirname(importer), base) : path.resolve(base);
-          return resolved + source.slice(base.length);
-        }
-        const resolved = await this.resolve(base, importer, { skipSelf: true });
-        if (!resolved) return null;
-        return resolved.id + source.slice(base.length);
+      const parsed = parseToolQuery(source);
+      if (!parsed) return null;
+      const base = parsed.file;
+      if (isRelOrAbs(base)) {
+        const resolved = importer ? path.resolve(path.dirname(importer), base) : path.resolve(base);
+        return resolved + source.slice(base.length);
       }
-      return null;
+      const resolved = await this.resolve(base, importer, { skipSelf: true });
+      if (!resolved) return null;
+      return resolved.id + source.slice(base.length);
     },
     load(id) {
-      if (id.endsWith(".ui?format")) {
-        const file = id.replace(/\?.*$/, "");
-        if (!isAllowed(file)) return null;
-        const code = fs.readFileSync(file, "utf-8");
+      const parsed = parseToolQuery(id);
+      if (!parsed) return null;
+
+      const file = parsed.file;
+      const kind = parsed.kind;
+      const params = parsed.params;
+      if (!isAllowed(file)) return null;
+
+      const code = fs.readFileSync(file, "utf-8");
+
+      if (kind === "format") {
         const formatted = formatUnits(code);
         return `export default ${JSON.stringify(formatted)};\n`;
       }
-      if (id.endsWith(".ui?tokens")) {
-        const file = id.replace(/\?.*$/, "");
-        if (!isAllowed(file)) return null;
-        const code = fs.readFileSync(file, "utf-8");
+      if (kind === "tokens") {
         const tokens = tokenizeUnits(code);
         return `export default ${JSON.stringify(tokens)};\n`;
       }
-      if (id.endsWith(".ui?highlight")) {
-        const file = id.replace(/\?.*$/, "");
-        if (!isAllowed(file)) return null;
-        const code = fs.readFileSync(file, "utf-8");
+      if (kind === "highlight") {
         const tokens = tokenizeUnits(code);
         const html = highlightTokens(tokens, classPrefix);
         return `export default ${JSON.stringify(html)};\n`;
+      }
+      if (kind === "agent") {
+        const dsl = formatUnits(code);
+        const target = String(params.get("target") || options.agentTarget || "chat").toLowerCase();
+        const sourceTokenEstimate = estimatePromptTokens(code);
+        const tokenEstimate = estimatePromptTokens(dsl);
+        const tokenReduction = sourceTokenEstimate > 0
+          ? (sourceTokenEstimate - tokenEstimate) / sourceTokenEstimate
+          : 0;
+
+        const payload = {
+          dsl,
+          target,
+          sourceTokenEstimate,
+          tokenEstimate,
+          tokenReduction,
+        };
+
+        return `export default ${JSON.stringify(payload)};\n`;
       }
       return null;
     },

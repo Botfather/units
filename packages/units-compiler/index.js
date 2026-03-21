@@ -1,28 +1,54 @@
 let parserMod;
 let printMod;
-let treeIrMod;
+let uiIrMod;
+let reactAdapterMod;
 let transformMod;
 
 try {
   parserMod = await import("@botfather/units/parser");
-  printMod = await import("@botfather/units/print");
-  treeIrMod = await import("@botfather/units/tree-ir");
-  transformMod = await import("@botfather/units/transform");
 } catch {
   // Monorepo fallback for direct node execution without workspace linking.
   parserMod = await import("../units/units-parser.js");
+}
+
+try {
+  printMod = await import("@botfather/units/print");
+} catch {
+  // Monorepo fallback for direct node execution without workspace linking.
   printMod = await import("../units/units-print.js");
-  treeIrMod = await import("../units/tree-ir.js");
+}
+
+try {
+  transformMod = await import("@botfather/units/transform");
+} catch {
+  // Monorepo fallback for direct node execution without workspace linking.
   transformMod = await import("../units/transform.js");
+}
+
+try {
+  uiIrMod = await import("@botfather/units-ui-ir");
+} catch {
+  // Monorepo fallback for direct node execution without workspace linking.
+  uiIrMod = await import("../units-ui-ir/index.js");
+}
+
+try {
+  reactAdapterMod = await import("@botfather/units-react-adapter");
+} catch {
+  // Monorepo fallback for direct node execution without workspace linking.
+  try {
+    reactAdapterMod = await import("../units-react-adapter/index.js");
+  } catch {
+    reactAdapterMod = {};
+  }
 }
 
 const { parseUnits } = parserMod;
 const { formatUnits } = printMod;
-const {
-  normalizeDomTree,
-  normalizeA11yTree,
-  normalizeIrNode,
-} = treeIrMod;
+const normalizeDomTree = uiIrMod.normalizeDomTree || uiIrMod.normalizeDomUiTree;
+const normalizeA11yTree = uiIrMod.normalizeA11yTree || uiIrMod.normalizeA11yUiTree;
+const normalizeIrNode = uiIrMod.normalizeIrNode || uiIrMod.normalizeUiNode;
+const normalizeReactTree = reactAdapterMod.normalizeReactTree || ((input) => normalizeIrNode(input));
 const { runTransformProgram } = transformMod;
 
 const ROLE_TAG_MAP = {
@@ -118,13 +144,19 @@ function countNodes(root) {
 }
 
 function detectSourceType(input, preferred) {
-  const normalizedPreferred = cleanText(preferred || "auto").toLowerCase();
+  const normalizedPreferred = normalizeSourceType(preferred, "auto");
   if (normalizedPreferred && normalizedPreferred !== "auto") return normalizedPreferred;
 
   const root = isObject(input) ? input : {};
 
-  const sourceMeta = cleanText(root?.meta?.source).toLowerCase();
-  if (sourceMeta === "dom" || sourceMeta === "a11y" || sourceMeta === "ir") return sourceMeta;
+  const sourceMeta = normalizeSourceType(root?.meta?.source, "");
+  if (sourceMeta === "dom" || sourceMeta === "a11y" || sourceMeta === "ir" || sourceMeta === "react") {
+    return sourceMeta;
+  }
+
+  const hasReactShape = (root.$$typeof != null && "type" in root)
+    || ("type" in root && "props" in root && !("tagName" in root) && !("attributes" in root));
+  if (hasReactShape) return "react";
 
   const hasIrShape = "role" in root && ("props" in root || "state" in root || "actions" in root || "meta" in root);
   if (hasIrShape) return "ir";
@@ -143,9 +175,19 @@ function detectSourceType(input, preferred) {
 }
 
 function normalizeInputTree(tree, sourceType) {
-  if (sourceType === "dom") return normalizeDomTree(tree);
-  if (sourceType === "a11y") return normalizeA11yTree(tree);
+  const normalizedSourceType = normalizeSourceType(sourceType, "ir");
+  if (normalizedSourceType === "react") return normalizeReactTree(tree);
+  if (normalizedSourceType === "dom") return normalizeDomTree(tree);
+  if (normalizedSourceType === "a11y") return normalizeA11yTree(tree);
   return normalizeIrNode(tree);
+}
+
+function normalizeSourceType(sourceType, fallback = "ir") {
+  const normalized = cleanText(sourceType || fallback).toLowerCase();
+  if (!normalized) return fallback;
+  if (normalized === "accessibility" || normalized === "ax") return "a11y";
+  if (normalized === "jsx") return "react";
+  return normalized;
 }
 
 function normalizeExpression(raw) {

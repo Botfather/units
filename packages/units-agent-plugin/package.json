@@ -22,7 +22,8 @@
   ],
   "dependencies": {
     "@botfather/units-agent-middleware": "workspace:*",
-    "@botfather/units-compiler": "workspace:*"
+    "@botfather/units-compiler": "workspace:*",
+    "@botfather/units-react-adapter": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

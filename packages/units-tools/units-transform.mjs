@@ -6,11 +6,11 @@ import {
   runTransformProgram,
 } from "@botfather/units/transform";
 import {
-  normalizeDomTree,
-  normalizeA11yTree,
-  normalizeIrNode,
+  normalizeSourceType,
+  normalizeUiInputTree,
+  runtimeSourceType,
   serializeAgentTree,
-} from "@botfather/units/tree-ir";
+} from "./ui-normalize.mjs";
 
 function parseArgs(argv) {
   const out = {
@@ -35,13 +35,7 @@ function parseArgs(argv) {
 }
 
 function usage() {
-  return `\nUsage:\n  units-transform --program <program.ui> --input <tree.json>\n                  [--source dom|a11y|ir]\n                  [--context context.json]\n                  [--out result.json]\n                  [--trace-out trace.json]\n                  [--agent-out agent.json]\n`;
-}
-
-function normalizeInput(sourceType, tree) {
-  if (sourceType === "dom") return normalizeDomTree(tree);
-  if (sourceType === "a11y") return normalizeA11yTree(tree);
-  return normalizeIrNode(tree);
+  return `\nUsage:\n  units-transform --program <program.ui> --input <tree.json>\n                  [--source dom|a11y|react|ir]\n                  [--context context.json]\n                  [--out result.json]\n                  [--trace-out trace.json]\n                  [--agent-out agent.json]\n`;
 }
 
 async function readJson(file) {
@@ -71,7 +65,8 @@ async function main() {
   }
 
   const programPath = path.resolve(process.cwd(), args.program);
-  const sourceType = String(args.source || "dom").toLowerCase();
+  const sourceType = normalizeSourceType(args.source || "dom");
+  const normalizedSourceType = runtimeSourceType(sourceType, "dom");
 
   const [programSource, rawInputTree, context] = await Promise.all([
     fs.readFile(programPath, "utf-8"),
@@ -79,12 +74,13 @@ async function main() {
     args.context ? readJson(args.context) : Promise.resolve({}),
   ]);
 
-  const inputTree = normalizeInput(sourceType, rawInputTree);
+  const inputTree = normalizeUiInputTree(sourceType, rawInputTree);
   const program = compileTransformProgram(programSource);
   const run = runTransformProgram(program, inputTree, context || {});
 
   const payload = {
     source_type: sourceType,
+    normalized_source_type: normalizedSourceType,
     program: run.program,
     tree: run.tree,
     trace: run.trace,

@@ -1,0 +1,209 @@
+{
+  "name": "ui-ps-fixtures-v1",
+  "description": "Host-tree fixtures used for baseline completeness + efficiency scoring and program selection.",
+  "gates": {
+    "action_recall": 1.0,
+    "name_recall": 0.98,
+    "text_f1": 0.95
+  },
+  "cases": [
+    {
+      "id": "dom_checkout_flow",
+      "title": "Checkout form with hidden helper copy",
+      "sourceType": "dom",
+      "tree": {
+        "tagName": "main",
+        "id": "checkout-root",
+        "children": [
+          { "type": "text", "text": "Checkout" },
+          {
+            "tagName": "section",
+            "attributes": { "aria-hidden": "true" },
+            "children": [
+              { "type": "text", "text": "Internal helper copy" }
+            ]
+          },
+          {
+            "tagName": "input",
+            "attributes": {
+              "type": "email",
+              "aria-label": "Email address",
+              "placeholder": "you@example.com"
+            }
+          },
+          {
+            "tagName": "button",
+            "attributes": { "aria-label": "Pay now" },
+            "textContent": "Pay now"
+          }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["input", "click"],
+        "expectedNames": ["Email address", "Pay now"],
+        "expectedText": "Checkout Email address Pay now"
+      }
+    },
+    {
+      "id": "dom_primary_nav",
+      "title": "Navigation menu with hidden decoration",
+      "sourceType": "dom",
+      "tree": {
+        "tagName": "nav",
+        "id": "primary-nav",
+        "children": [
+          {
+            "tagName": "span",
+            "attributes": { "aria-hidden": "true" },
+            "textContent": "decorative"
+          },
+          {
+            "tagName": "a",
+            "href": "/orders",
+            "attributes": {
+              "href": "/orders",
+              "aria-label": "Orders"
+            },
+            "textContent": "Orders"
+          },
+          {
+            "tagName": "a",
+            "href": "/billing",
+            "attributes": {
+              "href": "/billing",
+              "aria-label": "Billing"
+            },
+            "textContent": "Billing"
+          },
+          {
+            "tagName": "button",
+            "attributes": { "aria-label": "Sign out" },
+            "textContent": "Sign out"
+          }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["click"],
+        "expectedNames": ["Orders", "Billing", "Sign out"],
+        "expectedText": "Orders Billing Sign out"
+      }
+    },
+    {
+      "id": "a11y_preferences_dialog",
+      "title": "Accessibility tree for preferences dialog",
+      "sourceType": "a11y",
+      "tree": {
+        "id": "prefs-dialog",
+        "role": "dialog",
+        "name": "Preferences",
+        "children": [
+          {
+            "id": "title",
+            "role": "text",
+            "text": "Preferences"
+          },
+          {
+            "id": "spacer",
+            "role": "text",
+            "text": "   "
+          },
+          {
+            "id": "alerts",
+            "role": "checkbox",
+            "name": "Email alerts",
+            "state": { "checked": false },
+            "actions": ["toggle"]
+          },
+          {
+            "id": "save",
+            "role": "button",
+            "name": "Save preferences",
+            "actions": ["click"]
+          }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["toggle", "click"],
+        "expectedNames": ["Preferences", "Email alerts", "Save preferences"],
+        "expectedText": "Preferences Email alerts Save preferences"
+      }
+    },
+    {
+      "id": "ir_settings_panel",
+      "title": "IR settings panel with hidden debug text",
+      "sourceType": "ir",
+      "tree": {
+        "id": "settings-root",
+        "role": "container",
+        "name": "Settings",
+        "text": "",
+        "props": {},
+        "state": {},
+        "actions": [],
+        "meta": {},
+        "children": [
+          {
+            "id": "lead-1",
+            "role": "text",
+            "name": "",
+            "text": "Workspace",
+            "props": {},
+            "state": {},
+            "actions": [],
+            "meta": {},
+            "children": []
+          },
+          {
+            "id": "lead-2",
+            "role": "text",
+            "name": "",
+            "text": "settings",
+            "props": {},
+            "state": {},
+            "actions": [],
+            "meta": {},
+            "children": []
+          },
+          {
+            "id": "search",
+            "role": "input",
+            "name": "Search settings",
+            "text": "",
+            "props": { "placeholder": "Search" },
+            "state": {},
+            "actions": ["input"],
+            "meta": {},
+            "children": []
+          },
+          {
+            "id": "save-btn",
+            "role": "button",
+            "name": "Save",
+            "text": "Save",
+            "props": {},
+            "state": {},
+            "actions": ["click"],
+            "meta": {},
+            "children": []
+          },
+          {
+            "id": "debug",
+            "role": "text",
+            "name": "",
+            "text": "debug-only",
+            "props": {},
+            "state": { "hidden": true },
+            "actions": [],
+            "meta": {},
+            "children": []
+          }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["input", "click"],
+        "expectedNames": ["Settings", "Search settings", "Save"],
+        "expectedText": "Workspace settings Save"
+      }
+    }
+  ]
+}
