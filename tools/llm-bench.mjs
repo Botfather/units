@@ -398,29 +398,47 @@ async function callOpenAI({
   maxOutputTokens,
 }) {
   const endpoint = `${String(baseUrl).replace(/\/$/, "")}/responses`;
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model,
-      temperature,
-      max_output_tokens: maxOutputTokens,
-      input: [
-        { role: "system", content: [{ type: "input_text", text: systemPrompt }] },
-        { role: "user", content: [{ type: "input_text", text: userPrompt }] },
-      ],
-    }),
-  });
+  const headers = {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+  };
+  const payloadBase = {
+    model,
+    max_output_tokens: maxOutputTokens,
+    input: [
+      { role: "system", content: [{ type: "input_text", text: systemPrompt }] },
+      { role: "user", content: [{ type: "input_text", text: userPrompt }] },
+    ],
+  };
+  const withTemperature = (
+    typeof temperature === "number" && Number.isFinite(temperature)
+  ) ? { ...payloadBase, temperature } : payloadBase;
 
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`OpenAI API error ${response.status}: ${body.slice(0, 300)}`);
+  async function post(payload) {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+    });
+    const bodyText = await response.text();
+    return { response, bodyText };
   }
 
-  const json = await response.json();
+  let usedTemperature = Object.prototype.hasOwnProperty.call(withTemperature, "temperature");
+  let { response, bodyText } = await post(withTemperature);
+  if (!response.ok && usedTemperature && response.status === 400) {
+    const unsupportedTemperature = /unsupported parameter:\s*'temperature'|"param"\s*:\s*"temperature"/i.test(bodyText);
+    if (unsupportedTemperature) {
+      usedTemperature = false;
+      ({ response, bodyText } = await post(payloadBase));
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(`OpenAI API error ${response.status}: ${bodyText.slice(0, 300)}`);
+  }
+
+  const json = JSON.parse(bodyText);
   const usage = json?.usage || {};
   const inputTokens = usage.input_tokens ?? usage.prompt_tokens ?? null;
   const outputTokens = usage.output_tokens ?? usage.completion_tokens ?? null;
@@ -433,6 +451,9 @@ async function callOpenAI({
     raw: json,
     text: extractResponseText(json),
     usage: { inputTokens, outputTokens, totalTokens },
+    request: {
+      usedTemperature,
+    },
   };
 }
 
