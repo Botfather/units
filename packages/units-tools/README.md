@@ -118,6 +118,27 @@ Use this during development instead of relying solely on Vite's HMR when you nee
 
 ---
 
+### `units-snapshot` — Capture a neutral UI tree from any web page
+
+Runs a Playwright browser session, snapshots the DOM into a neutral `UiNode` tree, and prints/writes JSON for downstream transform middleware.
+
+```sh
+units-snapshot --url https://example.com --out snapshot.json
+```
+
+Useful options:
+- `--browser chromium|firefox|webkit`
+- `--root-selector body`
+- `--wait-until domcontentloaded`
+- `--max-depth 40`
+- `--prune-invisible true|false`
+- `--prune-offscreen true|false`
+- `--prune-layout-wrappers true|false`
+- `--include-style-summary true|false`
+- `--playwright-module playwright`
+
+---
+
 ### `units-transform` — Execute a transform program on a host tree
 
 Runs a Units transform program (`Program (kind:'transform')`) against an input tree and outputs transformed IR + trace.

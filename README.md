@@ -251,6 +251,7 @@ The `@botfather/units-tools` package provides CLI utilities for managing Units f
 - `units-lint <file-or-dir>`: Lint for syntax and formatting consistency.
 - `lint-ui [targets...]`: Lint all `.ui` files in `examples/` and `packages/units-uikit-shadcn/` (or pass targets).
 - `units-watch <rootDir> <outFile>`: Watch and emit AST changes.
+- `units-snapshot --url <https://example.com>`: Capture neutral UI tree snapshots from arbitrary web pages.
 - `units-transform --program <program.ui> --input <tree.json>`: Run transform DSL against host trees.
 - `units-verify ...`: Score transform output and apply reward gates.
 - `units-synthesize ...`: Run iterative candidate refinement with deterministic verification.
