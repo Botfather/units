@@ -196,14 +196,38 @@ importers:
       '@botfather/units-compiler':
         specifier: workspace:*
         version: link:../units-compiler
+      '@botfather/units-react-adapter':
+        specifier: workspace:*
+        version: link:../units-react-adapter
+
+  packages/units-agent-service:
+    dependencies:
+      '@botfather/units-agent-plugin':
+        specifier: workspace:*
+        version: link:../units-agent-plugin
 
   packages/units-compiler:
     dependencies:
       '@botfather/units':
         specifier: workspace:*
         version: link:../units
+      '@botfather/units-react-adapter':
+        specifier: workspace:*
+        version: link:../units-react-adapter
+      '@botfather/units-ui-ir':
+        specifier: workspace:*
+        version: link:../units-ui-ir
 
   packages/units-dom-snapshot: {}
+
+  packages/units-react-adapter:
+    dependencies:
+      '@botfather/units-ui-ir':
+        specifier: workspace:*
+        version: link:../units-ui-ir
+      react:
+        specifier: '>=18'
+        version: 19.2.4
 
   packages/units-tools:
     dependencies:
@@ -213,6 +237,14 @@ importers:
       '@botfather/units-dom-snapshot':
         specifier: workspace:*
         version: link:../units-dom-snapshot
+      '@botfather/units-react-adapter':
+        specifier: workspace:*
+        version: link:../units-react-adapter
+      '@botfather/units-ui-ir':
+        specifier: workspace:*
+        version: link:../units-ui-ir
+
+  packages/units-ui-ir: {}
 
   packages/units-uikit-shadcn:
     dependencies:
@@ -237,6 +269,8 @@ importers:
       vite:
         specifier: '>=4'
         version: 7.3.1
+
+  vscode/units-vscode: {}
 
 packages:
 
