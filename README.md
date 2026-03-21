@@ -136,6 +136,30 @@ See the [live benchmarks table](https://botfather.github.io/units/#benchmarks) f
 node ./bench.js
 ```
 
+## Run Entire Benchmark Suite
+Set optional env vars first (same terminal session):
+```
+export OPENAI_API_KEY=...      # required for live/provider model-backed benchmarks
+export IPERF3_HOST=...         # required for network suites in bench:system:run
+```
+
+Then run:
+```
+pnpm bench:parser
+pnpm bench:dsl
+pnpm bench:system:plan
+pnpm bench:system:run
+pnpm bench:llm
+pnpm bench:llm:live
+pnpm bench:react-vs-dsl
+pnpm bench:react-vs-dsl:quick
+pnpm bench:react-vs-dsl:provider
+pnpm bench:react-vs-dsl:provider:both
+pnpm bench:react-vs-dsl:provider:optimized
+pnpm bench:ui-ps
+pnpm bench:ui-ps:gate
+```
+
 ## DSL Benchmark Suite
 Run the DSL-specific benchmark suite:
 ```
