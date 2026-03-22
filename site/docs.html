@@ -1,133 +1,409 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Units Docs</title>
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body>
-    <main class="container">
-      <nav class="nav">
-        <a class="brand" href="./index.html" aria-label="Units home">
-          <img src="./logo-units-mark.svg" alt="" />
-          <span>Units</span>
-        </a>
-        <a href="./index.html">Home</a>
-        <a href="./docs.html">Documentation</a>
-        <a href="./examples.html">Examples</a>
-        <a href="https://github.com/Botfather/units/blob/main/DOCS.md">Full docs</a>
-      </nav>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Units Docs — Beginner to Expert</title>
+  <meta name="description" content="Learn Units from beginner to expert with a progressive documentation path." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink:     '#0d1b2e',
+            'ink-2': '#1b3050',
+            surface: '#ffffff',
+            ground:  '#f3f5fb',
+            edge:    '#dde4f0',
+            dim:     '#7a90aa',
+            accent:  '#4f46e5',
+            acc2:    '#06b6d4',
+            code:    '#0f172a',
+          },
+          fontFamily: {
+            sans: ['"Inter"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'Menlo', 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    code, pre { font-family: 'JetBrains Mono', Menlo, monospace; }
 
-      <section class="card hero hero-compact">
-        <div>
-          <p class="eyebrow">Documentation hub</p>
-          <h1>Repository docs, condensed for the Pages entry point.</h1>
-          <p class="lead">
-            Full technical detail still lives in the repository. This page is the short map: language shape,
-            runtime model, tooling layers, and the newer agent and evaluation packages that now sit beside the core DSL.
-          </p>
-          <div class="actions">
-            <a class="btn" href="https://github.com/Botfather/units/blob/main/DOCS.md">Open DOCS.md</a>
-            <a class="btn secondary" href="https://github.com/Botfather/units/blob/main/DOCS-LLM.md">Open DOCS-LLM.md</a>
+    /* ── two-column shell ── */
+    .page-shell {
+      display: grid;
+      grid-template-columns: 216px 1fr;
+      max-width: 1160px;
+      margin: 0 auto;
+      min-height: calc(100vh - 52px);
+    }
+    @media (max-width: 860px) {
+      .page-shell { grid-template-columns: 1fr; }
+      .left-rail  { display: none; }
+    }
+
+    /* ── sticky left rail ── */
+    .left-rail {
+      position: sticky;
+      top: 52px;
+      align-self: start;
+      height: calc(100vh - 52px);
+      overflow-y: auto;
+      padding: 1.5rem .875rem 1.5rem 1rem;
+      border-right: 1px solid #dde4f0;
+      background: #f9fafd;
+      display: flex;
+      flex-direction: column;
+      gap: .125rem;
+    }
+    .rail-group { margin-top: .875rem; padding: .25rem .5rem .125rem; font-size: .625rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #b0bece; }
+    .rail-link  { display: flex; align-items: center; gap: .5rem; padding: .35rem .5rem; border-radius: .375rem; font-size: .8rem; color: #7a90aa; text-decoration: none; transition: all .12s; }
+    .rail-link:hover { background: #eef1fb; color: #0d1b2e; }
+    .rail-dot   { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .45; flex-shrink: 0; }
+
+    /* ── level badge ── */
+    .lvl { display:inline-flex; align-items:center; padding:.15rem .65rem; border-radius:9999px; font-size:.65rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+    .lvl1 { background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; }
+    .lvl2 { background:#ecfeff; color:#0e7490; border:1px solid #a5f3fc; }
+    .lvl3 { background:#eef2ff; color:#4338ca; border:1px solid #c7d2fe; }
+    .lvl4 { background:#0d1b2e; color:#a5b4fc; border:1px solid #312e81; }
+
+    /* ── code window chrome ── */
+    .cw { border-radius: .625rem; overflow: hidden; border: 1px solid rgba(255,255,255,.07); background: #0f172a; }
+    .cw-bar { display:flex; align-items:center; gap:.35rem; padding:.5rem .875rem; border-bottom:1px solid rgba(255,255,255,.07); }
+    .dr { width:9px;height:9px;border-radius:50%;background:#ff5f57; }
+    .dy { width:9px;height:9px;border-radius:50%;background:#febc2e; }
+    .dg { width:9px;height:9px;border-radius:50%;background:#28c840; }
+    .cf { margin-left:.375rem; font-size:.68rem; color:rgba(255,255,255,.22); }
+
+    /* ── check list ── */
+    .check { display:flex; align-items:flex-start; gap:.6rem; padding:.3rem 0; font-size:.875rem; }
+    .check::before { content:'□'; color:#06b6d4; flex-shrink:0; font-size:1rem; margin-top:.05em; }
+
+    /* ── syntax ── */
+    .kw  { color:#e879f9; }
+    .tag { color:#38bdf8; }
+    .str { color:#86efac; }
+    .op  { color:#fbbf24; }
+    .var { color:#e2e8f0; }
+    .cm  { color:#4a5568; }
+    .at  { color:#fb923c; }
+  </style>
+</head>
+<body class="bg-ground text-ink antialiased">
+
+  <!-- NAV -->
+  <header class="sticky top-0 z-40 border-b border-edge bg-surface/90 backdrop-blur" style="height:52px;">
+    <div style="max-width:1160px;margin:0 auto;" class="flex h-full items-center gap-5 px-5">
+      <a href="./index.html" class="flex items-center gap-2 no-underline">
+        <img src="./logo-units-mark.svg" class="h-6 w-6" alt="Units" />
+        <span class="text-sm font-bold text-ink">Units</span>
+      </a>
+      <nav class="hidden md:flex items-center gap-4 ml-1">
+        <a href="./index.html"  class="text-sm text-dim hover:text-ink transition-colors">Theory</a>
+        <a href="./examples.html" class="text-sm text-dim hover:text-ink transition-colors">Examples</a>
+      </nav>
+      <div class="ml-auto flex items-center gap-2">
+        <a href="https://github.com/Botfather/units/blob/main/DOCS.md" class="rounded-md border border-edge px-3 py-1.5 text-xs font-semibold hover:bg-ground transition-colors">DOCS.md ↗</a>
+        <a href="https://github.com/Botfather/units" class="rounded-md bg-ink px-3 py-1.5 text-xs font-semibold text-white hover:bg-ink-2 transition-colors">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- PAGE SHELL -->
+  <div class="page-shell">
+
+    <!-- LEFT RAIL -->
+    <nav class="left-rail" aria-label="Documentation sections">
+      <div class="rail-group" style="margin-top:0">Getting started</div>
+      <a href="#intro"        class="rail-link"><span class="rail-dot"></span>Overview</a>
+      <div class="rail-group">Learning ladder</div>
+      <a href="#beginner"     class="rail-link"><span class="rail-dot"></span>① Beginner</a>
+      <a href="#intermediate" class="rail-link"><span class="rail-dot"></span>② Intermediate</a>
+      <a href="#advanced"     class="rail-link"><span class="rail-dot"></span>③ Advanced</a>
+      <a href="#expert"       class="rail-link"><span class="rail-dot"></span>④ Expert</a>
+      <div class="rail-group">Reference</div>
+      <a href="#glossary"     class="rail-link"><span class="rail-dot"></span>Glossary</a>
+      <div class="mt-auto pt-4 border-t border-edge" style="margin-top:auto;">
+        <a href="https://github.com/Botfather/units/blob/main/DOCS.md"     class="rail-link text-xs">↗ Full DOCS.md</a>
+        <a href="https://github.com/Botfather/units/blob/main/DOCS-LLM.md" class="rail-link text-xs">↗ DOCS-LLM.md</a>
+        <a href="./examples.html"                                           class="rail-link text-xs">↗ Examples</a>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="min-w-0 px-6 py-8 space-y-10 lg:px-10 lg:py-10">
+
+      <!-- INTRO -->
+      <section id="intro" class="rounded-2xl border border-edge bg-surface p-8 lg:p-10">
+        <span class="lvl lvl3">Documentation</span>
+        <h1 class="mt-3 text-3xl font-black tracking-tight lg:text-4xl">Learn Units from beginner to expert.</h1>
+        <p class="mt-3 max-w-2xl text-sm leading-relaxed text-dim">
+          Organized as a learning ladder. Start at your level, complete the hands-on check at the end of each
+          section, and advance when it feels intuitive — not just memorized.
+        </p>
+        <div class="mt-5 flex flex-wrap gap-3">
+          <a href="#beginner"     class="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity">Start at Beginner</a>
+          <a href="#intermediate" class="rounded-lg border border-edge px-4 py-2 text-sm font-semibold hover:bg-ground transition-colors">Skip to Intermediate</a>
+          <a href="https://github.com/Botfather/units/blob/main/DOCS.md" class="rounded-lg border border-edge px-4 py-2 text-sm font-semibold hover:bg-ground transition-colors">Open full DOCS.md ↗</a>
+        </div>
+
+        <!-- level cards -->
+        <div class="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <a href="#beginner" class="group rounded-xl border border-edge p-4 no-underline hover:shadow-md transition-all bg-surface">
+            <span class="lvl lvl1">Level 1</span>
+            <p class="mt-2 text-sm font-bold group-hover:text-accent transition-colors">Beginner</p>
+            <p class="mt-1 text-xs text-dim">Read and render your first <code class="bg-ground rounded px-1">.ui</code> file.</p>
+          </a>
+          <a href="#intermediate" class="group rounded-xl border border-edge p-4 no-underline hover:shadow-md transition-all bg-surface">
+            <span class="lvl lvl2">Level 2</span>
+            <p class="mt-2 text-sm font-bold group-hover:text-acc2 transition-colors">Intermediate</p>
+            <p class="mt-1 text-xs text-dim">Directives, loops, expressions, events.</p>
+          </a>
+          <a href="#advanced" class="group rounded-xl border border-edge p-4 no-underline hover:shadow-md transition-all bg-surface">
+            <span class="lvl lvl3">Level 3</span>
+            <p class="mt-2 text-sm font-bold group-hover:text-accent transition-colors">Advanced</p>
+            <p class="mt-1 text-xs text-dim">Vite plugin, tooling, renderer choices.</p>
+          </a>
+          <a href="#expert" class="group rounded-xl p-4 no-underline hover:opacity-90 transition-all" style="background:#0d1b2e;border:1px solid #1e3a5f;">
+            <span class="lvl lvl4">Level 4</span>
+            <p class="mt-2 text-sm font-bold text-white">Expert</p>
+            <p class="mt-1 text-xs" style="color:rgba(255,255,255,.4)">IR, compiler, agent middleware.</p>
+          </a>
+        </div>
+      </section>
+
+      <!-- ① BEGINNER -->
+      <section id="beginner" class="rounded-2xl border border-edge bg-surface p-7 space-y-5">
+        <div class="flex items-center gap-2.5 pb-1 border-b border-edge">
+          <span class="lvl lvl1">Level 1</span>
+          <h2 class="text-xl font-bold tracking-tight">Beginner — understand the shape of a Units template</h2>
+        </div>
+        <p class="text-sm leading-relaxed text-dim max-w-2xl">
+          Goal: read a <code class="bg-ground rounded px-1">.ui</code> file, map it to a component tree, and render it once.
+          Ignore optimization and advanced tooling for now.
+        </p>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="rounded-xl border border-edge bg-ground p-4">
+            <h3 class="text-sm font-semibold">You will learn</h3>
+            <ul class="mt-2 space-y-2 text-sm text-dim">
+              <li class="flex gap-2"><span class="text-accent shrink-0 mt-0.5">◆</span>How tags, text nodes, and props are written</li>
+              <li class="flex gap-2"><span class="text-accent shrink-0 mt-0.5">◆</span>How a <code class="bg-edge rounded px-1">.ui</code> file becomes an AST then rendered UI</li>
+              <li class="flex gap-2"><span class="text-accent shrink-0 mt-0.5">◆</span>How to run the first demo locally</li>
+            </ul>
+          </div>
+          <div class="rounded-xl border border-edge bg-ground p-4">
+            <h3 class="text-sm font-semibold">Do this first</h3>
+            <div class="mt-2 cw">
+              <div class="cw-bar"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+              <pre class="p-3 text-xs leading-loose font-mono"><code><span class="var">pnpm</span> <span class="str">install</span>
+<span class="var">pnpm</span> <span class="op">--filter</span> <span class="str">units-learn-demo</span> <span class="kw">dev</span></code></pre>
+            </div>
           </div>
         </div>
+        <div class="cw">
+          <div class="cw-bar"><span class="dr"></span><span class="dy"></span><span class="dg"></span><span class="cf">first-render.js</span></div>
+          <pre class="p-5 text-xs leading-loose font-mono overflow-x-auto"><code><span class="kw">import</span> <span class="op">{</span> <span class="var">parseUnits</span>, <span class="var">renderUnits</span> <span class="op">}</span> <span class="kw">from</span> <span class="str">"@botfather/units"</span><span class="op">;</span>
 
-        <aside class="hero-mark hero-mark-small" aria-hidden="true">
-          <img src="./logo-units-mark.svg" alt="" />
-        </aside>
-      </section>
-
-      <section class="grid two-up">
-        <article class="card">
-          <p class="eyebrow">Syntax snapshot</p>
-          <h2>Core surface</h2>
-          <pre><code>Tag ( props ) { children }
-text 'literal'
-@expr
-
-#if (@cond) { ... }
-#for (item, i in @items) { ... }
-#slot (name)</code></pre>
-        </article>
-
-        <article class="card">
-          <p class="eyebrow">Props and events</p>
-          <h2>Minimal but expressive</h2>
-          <pre><code>key:value
-key=@expr
-key?=@expr
-!click { set(selected:=@item.id) }
-on:click={ doThing(@item) }</code></pre>
-        </article>
-      </section>
-
-      <section class="grid feature-grid">
-        <article class="card tone-dark">
-          <p class="eyebrow">Runtime</p>
-          <h3>Execution model</h3>
-          <ul>
-            <li>React renderer with scoped evaluation</li>
-            <li>Custom host renderer API</li>
-            <li>Inline event and expression support</li>
-            <li>Directive flow for if, elif, else, for, slot, and key</li>
-          </ul>
-        </article>
-
-        <article class="card tone-cyan">
-          <p class="eyebrow">Tooling</p>
-          <h3>Authoring and build path</h3>
-          <ul>
-            <li>Vite plugin for .ui imports</li>
-            <li>Format/lint/token/highlight tools</li>
-            <li>CLI utilities for .ui workflows</li>
-            <li>VS Code language support with snippets, grammar, and icon theme</li>
-          </ul>
-        </article>
-
-        <article class="card tone-blue">
-          <p class="eyebrow">Agent additions</p>
-          <h3>Compression and neutral IR layers</h3>
-          <ul>
-            <li>units-agent-middleware for structural UI rewrites</li>
-            <li>units-agent-plugin and units-agent-service for compress-ui delivery</li>
-            <li>units-dom-snapshot, units-ui-ir, units-react-adapter, and units-compiler for extraction and compile flows</li>
-          </ul>
-        </article>
-
-        <article class="card">
-          <p class="eyebrow">Verification</p>
-          <h3>Benchmarks and tests</h3>
-          <ul>
-            <li>Parser, DSL, system, LLM, React-vs-DSL, and UI-PS benchmark families</li>
-            <li>Node test coverage across runtime, tools, compiler, DOM snapshot, adapters, and plugins</li>
-            <li>Machine-readable reports written under bench/results</li>
-          </ul>
-        </article>
-      </section>
-
-      <section class="card split-card">
-        <div>
-          <p class="eyebrow">Common commands</p>
-          <h2>Typical repository entry points</h2>
+<span class="kw">const</span> <span class="var">src</span> <span class="op">=</span> <span class="str">"Card { text 'Hello Units' }"</span><span class="op">;</span>
+<span class="kw">const</span> <span class="var">ast</span> <span class="op">=</span> <span class="var">parseUnits</span><span class="op">(</span><span class="var">src</span><span class="op">);</span>
+<span class="kw">const</span> <span class="var">ui</span>  <span class="op">=</span> <span class="var">renderUnits</span><span class="op">(</span><span class="var">ast</span>, <span class="op">{});</span></code></pre>
         </div>
-        <pre><code>pnpm bench:dsl
+        <div class="rounded-xl border border-cyan-100 bg-cyan-50 p-5">
+          <p class="text-sm font-semibold text-cyan-800">Check yourself</p>
+          <div class="mt-2 text-cyan-900">
+            <div class="check">Can you explain what <code class="bg-white/60 rounded px-1 text-xs">parseUnits</code> returns?</div>
+            <div class="check">Can you explain where <code class="bg-white/60 rounded px-1 text-xs">renderUnits</code> gets its data context from?</div>
+            <div class="check">Can you read <code class="bg-white/60 rounded px-1 text-xs">examples/learn-vite/src/learn.ui</code> without confusion?</div>
+          </div>
+          <p class="mt-3 text-xs text-cyan-700">Ready for <strong>Level 2</strong> when all three feel intuitive.</p>
+        </div>
+      </section>
+
+      <!-- ② INTERMEDIATE -->
+      <section id="intermediate" class="rounded-2xl border border-edge bg-surface p-7 space-y-5">
+        <div class="flex items-center gap-2.5 pb-1 border-b border-edge">
+          <span class="lvl lvl2">Level 2</span>
+          <h2 class="text-xl font-bold tracking-tight">Intermediate — build interactive templates with directives</h2>
+        </div>
+        <p class="text-sm leading-relaxed text-dim max-w-2xl">
+          Now you express UI behavior: conditions, loops, and event-driven updates.
+          Focus on readable state flow and predictability.
+        </p>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="rounded-xl border border-edge bg-ground p-4">
+            <h3 class="text-sm font-semibold">Key concepts</h3>
+            <ul class="mt-2 space-y-2 text-sm text-dim">
+              <li class="flex gap-2"><span class="text-acc2 shrink-0 mt-0.5">◆</span><code class="bg-edge rounded px-1 text-xs">#if</code>, <code class="bg-edge rounded px-1 text-xs">#else</code>, <code class="bg-edge rounded px-1 text-xs">#for</code> for structure-level logic</li>
+              <li class="flex gap-2"><span class="text-acc2 shrink-0 mt-0.5">◆</span><code class="bg-edge rounded px-1 text-xs">@expr</code> for context-aware values</li>
+              <li class="flex gap-2"><span class="text-acc2 shrink-0 mt-0.5">◆</span>Event handlers with <code class="bg-edge rounded px-1 text-xs">!event</code> notation</li>
+            </ul>
+          </div>
+          <div class="rounded-xl border border-edge bg-ground p-4">
+            <h3 class="text-sm font-semibold">Hands-on apps</h3>
+            <div class="mt-2 cw">
+              <div class="cw-bar"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+              <pre class="p-3 text-xs leading-loose font-mono"><code><span class="var">pnpm</span> <span class="op">--filter</span> <span class="str">units-todo-demo</span> <span class="kw">dev</span>
+<span class="var">pnpm</span> <span class="op">--filter</span> <span class="str">units-chat-demo</span> <span class="kw">dev</span></code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="cw">
+          <div class="cw-bar"><span class="dr"></span><span class="dy"></span><span class="dg"></span><span class="cf">task-list.ui</span></div>
+          <pre class="p-5 text-xs leading-loose font-mono overflow-x-auto"><code><span class="kw">#if</span> <span class="op">(</span><span class="at">@items.length</span> <span class="op">=== 0) {</span>
+  <span class="tag">Empty</span> <span class="op">{</span> <span class="kw">text</span> <span class="str">'No tasks yet'</span> <span class="op">}</span>
+<span class="op">}</span> <span class="kw">#else</span> <span class="op">{</span>
+  <span class="kw">#for</span> <span class="op">(</span><span class="var">item</span> <span class="kw">in</span> <span class="at">@items</span><span class="op">) {</span>
+    <span class="tag">TaskCard</span> <span class="var">title</span>=<span class="at">@item.title</span> <span class="op">!</span><span class="str">click</span> <span class="op">{</span> <span class="kw">set</span><span class="op">(</span><span class="var">selected</span><span class="op">:=</span><span class="at">@item.id</span><span class="op">)</span> <span class="op">}</span>
+  <span class="op">}</span>
+<span class="op">}</span></code></pre>
+        </div>
+        <div class="rounded-xl border border-cyan-100 bg-cyan-50 p-5">
+          <p class="text-sm font-semibold text-cyan-800">Check yourself</p>
+          <div class="mt-2 text-cyan-900">
+            <div class="check">Can you add a filtered view (e.g. only "open" tasks) using directives instead of custom JS loops?</div>
+            <div class="check">Can you modify todo/chat examples without copy-pasting from docs?</div>
+            <div class="check">Can you debug expression errors at a glance?</div>
+          </div>
+          <p class="mt-3 text-xs text-cyan-700">Ready for <strong>Level 3</strong> when all three hold in a real project.</p>
+        </div>
+      </section>
+
+      <!-- ③ ADVANCED -->
+      <section id="advanced" class="rounded-2xl border border-edge bg-surface p-7 space-y-5">
+        <div class="flex items-center gap-2.5 pb-1 border-b border-edge">
+          <span class="lvl lvl3">Level 3</span>
+          <h2 class="text-xl font-bold tracking-tight">Advanced — integrate Units into your build flow</h2>
+        </div>
+        <p class="text-sm leading-relaxed text-dim max-w-2xl">
+          About team workflows: Vite integration, formatting/linting, and renderer choices.
+          Optimizing developer experience and long-term maintainability.
+        </p>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="rounded-xl border border-edge bg-ground p-4">
+            <h3 class="text-sm font-semibold">Integration points</h3>
+            <ul class="mt-2 space-y-2 text-sm text-dim">
+              <li class="flex gap-2"><span class="text-accent shrink-0 mt-0.5">◆</span>Import <code class="bg-edge rounded px-1 text-xs">.ui</code> directly with <code class="bg-edge rounded px-1 text-xs">@botfather/vite-plugin-units</code></li>
+              <li class="flex gap-2"><span class="text-accent shrink-0 mt-0.5">◆</span>Format/lint with <code class="bg-edge rounded px-1 text-xs">@botfather/units-tools</code></li>
+              <li class="flex gap-2"><span class="text-accent shrink-0 mt-0.5">◆</span>Author with the VS Code extension for stable syntax support</li>
+            </ul>
+          </div>
+          <div class="rounded-xl border border-edge bg-ground p-4">
+            <h3 class="text-sm font-semibold">Operational checks</h3>
+            <div class="mt-2 cw">
+              <div class="cw-bar"><span class="dr"></span><span class="dy"></span><span class="dg"></span></div>
+              <pre class="p-3 text-xs leading-loose font-mono"><code><span class="var">pnpm</span> <span class="op">--filter</span> <span class="str">units-learn-demo</span> <span class="kw">build</span>
+<span class="var">pnpm</span> <span class="op">--filter</span> <span class="str">units-todo-demo</span>  <span class="kw">lint:ui</span>
+<span class="var">pnpm</span> <span class="op">--filter</span> <span class="str">units-chat-demo</span>  <span class="kw">preview</span></code></pre>
+            </div>
+          </div>
+        </div>
+        <div class="rounded-xl border border-cyan-100 bg-cyan-50 p-5">
+          <p class="text-sm font-semibold text-cyan-800">Check yourself</p>
+          <div class="mt-2 text-cyan-900">
+            <div class="check">Can you explain where syntax validation, transformation, and rendering each happen?</div>
+            <div class="check">Can your team run a repeatable <code class="bg-white/60 rounded px-1 text-xs">.ui</code> workflow from both CI and local dev?</div>
+          </div>
+          <p class="mt-3 text-xs text-cyan-700">Ready for <strong>Level 4</strong> when both hold true in a production codebase.</p>
+        </div>
+      </section>
+
+      <!-- ④ EXPERT -->
+      <section id="expert" class="rounded-2xl p-7 space-y-5" style="background:#0d1b2e;border:2px solid #1e3a5f;">
+        <div class="flex items-center gap-2.5 pb-1" style="border-bottom:1px solid rgba(255,255,255,.1);">
+          <span class="lvl lvl4">Level 4</span>
+          <h2 class="text-xl font-bold tracking-tight text-white">Expert — systems, pipelines, and baselines</h2>
+        </div>
+        <p class="text-sm leading-relaxed max-w-2xl" style="color:rgba(255,255,255,.45);">
+          Work across representation layers: DOM snapshots, UI IR, compilation targets, and agent middleware.
+          Evaluate tradeoffs with benchmark suites.
+        </p>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="rounded-xl p-4" style="border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);">
+            <h3 class="text-sm font-semibold text-white">Expert packages</h3>
+            <ul class="mt-2 space-y-1.5 text-xs font-mono" style="color:rgba(255,255,255,.45);">
+              <li>@botfather/units-agent-middleware</li>
+              <li>@botfather/units-agent-plugin</li>
+              <li>@botfather/units-agent-service</li>
+              <li>@botfather/units-dom-snapshot</li>
+              <li>@botfather/units-ui-ir</li>
+              <li>@botfather/units-compiler</li>
+            </ul>
+          </div>
+          <div class="rounded-xl p-4" style="border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);">
+            <h3 class="text-sm font-semibold text-white">Benchmark workflow</h3>
+            <pre class="mt-2 text-xs leading-loose font-mono" style="color:rgba(255,255,255,.55);"><code>pnpm bench:dsl
 pnpm bench:llm
 pnpm bench:react-vs-dsl
-node --test
-node --test --experimental-test-coverage</code></pre>
-      </section>
-
-      <section class="card">
-        <p class="eyebrow">Primary documents</p>
-        <h2>Read in depth</h2>
-        <div class="mini-grid">
-          <a class="mini-tile" href="https://github.com/Botfather/units/blob/main/README.md">README</a>
-          <a class="mini-tile" href="https://github.com/Botfather/units/blob/main/DOCS.md">DOCS.md</a>
-          <a class="mini-tile" href="https://github.com/Botfather/units/blob/main/DOCS-LLM.md">DOCS-LLM.md</a>
-          <a class="mini-tile" href="https://github.com/Botfather/units/tree/main/test">Tests</a>
+pnpm bench:ui-ps
+node --test</code></pre>
+          </div>
+        </div>
+        <div class="rounded-xl p-5" style="border:1px solid rgba(99,102,241,.35);background:rgba(99,102,241,.08);">
+          <p class="text-sm font-semibold" style="color:#a5b4fc;">Check yourself</p>
+          <div class="mt-2 space-y-2 text-sm" style="color:rgba(199,210,254,.7);">
+            <div class="flex items-start gap-2.5"><span style="color:#818cf8;flex-shrink:0;margin-top:.05em;">□</span>Can you justify a pipeline decision using measurable outcomes — tokens, latency, or maintainability?</div>
+            <div class="flex items-start gap-2.5"><span style="color:#818cf8;flex-shrink:0;margin-top:.05em;">□</span>Can you design a custom renderer host from scratch?</div>
+            <div class="flex items-start gap-2.5"><span style="color:#818cf8;flex-shrink:0;margin-top:.05em;">□</span>Can you write agent middleware that safely rewrites UI trees?</div>
+          </div>
+          <p class="mt-3 text-xs" style="color:rgba(165,180,252,.4);">You are operating at expert level when benchmarks inform architecture decisions.</p>
         </div>
       </section>
+
+      <!-- GLOSSARY -->
+      <section id="glossary" class="rounded-2xl border border-edge bg-surface p-7 space-y-5">
+        <div class="pb-1 border-b border-edge">
+          <p class="text-xs font-bold uppercase tracking-widest text-dim">Reference</p>
+          <h2 class="mt-1 text-xl font-bold tracking-tight">Glossary + next actions</h2>
+        </div>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="rounded-xl border border-edge bg-ground p-5">
+            <h3 class="text-sm font-semibold">Core terms</h3>
+            <dl class="mt-3 space-y-3 text-sm">
+              <div><dt class="font-semibold">Template</dt><dd class="mt-0.5 text-dim">A <code class="bg-edge rounded px-1 text-xs">.ui</code> source file with structure and expressions.</dd></div>
+              <div><dt class="font-semibold">AST</dt><dd class="mt-0.5 text-dim">Parsed tree form used for transforms and rendering.</dd></div>
+              <div><dt class="font-semibold">IR</dt><dd class="mt-0.5 text-dim">Neutral representation for cross-tool operations.</dd></div>
+              <div><dt class="font-semibold">Middleware</dt><dd class="mt-0.5 text-dim">Layer that rewrites or normalizes UI structures before rendering.</dd></div>
+            </dl>
+          </div>
+          <div class="rounded-xl border border-edge bg-ground p-5">
+            <h3 class="text-sm font-semibold">Continue learning</h3>
+            <div class="mt-3 space-y-2">
+              <a href="./examples.html" class="flex items-center gap-2 rounded-lg border border-edge bg-surface px-4 py-3 text-sm font-semibold hover:shadow-sm transition-all no-underline">
+                <span class="text-accent">▶</span> Example walkthroughs
+              </a>
+              <a href="https://github.com/Botfather/units/blob/main/README.md" class="flex items-center gap-2 rounded-lg border border-edge bg-surface px-4 py-3 text-sm font-semibold hover:shadow-sm transition-all no-underline">
+                <span class="text-accent">▶</span> README — setup and package map
+              </a>
+              <a href="https://github.com/Botfather/units/blob/main/DOCS-LLM.md" class="flex items-center gap-2 rounded-lg border border-edge bg-surface px-4 py-3 text-sm font-semibold hover:shadow-sm transition-all no-underline">
+                <span class="text-accent">▶</span> DOCS-LLM — model-facing workflows
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </main>
-  </body>
+  </div><!-- /page-shell -->
+
+  <footer class="border-t border-edge bg-surface">
+    <div style="max-width:1160px;margin:0 auto;" class="flex flex-wrap items-center justify-between gap-3 px-5 py-4 text-xs text-dim">
+      <p>Units · GitHub Pages</p>
+      <div class="flex gap-5">
+        <a href="https://github.com/Botfather/units/blob/main/DOCS.md"     class="hover:text-ink transition-colors">DOCS.md</a>
+        <a href="https://github.com/Botfather/units/blob/main/DOCS-LLM.md" class="hover:text-ink transition-colors">DOCS-LLM.md</a>
+        <a href="https://github.com/Botfather/units/tree/main/bench"        class="hover:text-ink transition-colors">Benchmarks</a>
+        <a href="https://github.com/Botfather/units"                        class="hover:text-ink transition-colors">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
 </html>

@@ -4,109 +4,188 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Units Examples</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <meta
+      name="description"
+      content="Units examples aligned to the theory-first model: DSL basics, token-aware patterns, fit boundaries, and advanced experimentation."
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              navy: '#0b1220',
+              'navy-fg': '#f8fbfd',
+              dust: '#eef3f7',
+              panel: '#f8fbfd',
+              strong: '#e6edf5',
+              muted: '#4e6078',
+              wire: '#b8c5d4',
+              'cyan-wash': '#d8f8fd',
+              'blue-wash': '#dbe7ff',
+            },
+            fontFamily: {
+              sans: ['"Avenir Next"', '"IBM Plex Sans"', '"Segoe UI"', 'Helvetica', 'sans-serif'],
+            },
+          },
+        },
+      };
+    </script>
   </head>
-  <body>
-    <main class="container">
-      <nav class="nav">
-        <a class="brand" href="./index.html" aria-label="Units home">
-          <img src="./logo-units-mark.svg" alt="" />
-          <span>Units</span>
+  <body class="min-h-screen bg-dust text-navy font-sans antialiased">
+    <header class="sticky top-0 z-30 border-b border-wire bg-panel/90 backdrop-blur">
+      <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-x-5 gap-y-3 px-4 py-3">
+        <a href="./index.html" class="mr-auto flex items-center gap-2 text-navy no-underline">
+          <img src="./logo-units-mark.svg" class="h-8 w-8" alt="Units logo" />
+          <span class="text-sm font-bold tracking-wide">Units</span>
         </a>
-        <a href="./index.html">Home</a>
-        <a href="./docs.html">Documentation</a>
-        <a href="./examples.html">Examples</a>
-        <a href="https://github.com/Botfather/units/tree/main/examples">Examples directory</a>
-      </nav>
+        <a href="./docs.html#theory" class="text-sm text-muted transition-colors hover:text-navy">Theory</a>
+        <a href="./docs.html#dsl-eli5" class="text-sm text-muted transition-colors hover:text-navy">DSL ELI5</a>
+        <a href="./docs.html#tokens" class="text-sm text-muted transition-colors hover:text-navy">Tokens</a>
+        <a href="./docs.html#fit" class="text-sm text-muted transition-colors hover:text-navy">Fit</a>
+        <a href="./docs.html#grammar" class="text-sm text-muted transition-colors hover:text-navy">Grammar</a>
+        <a href="./docs.html#advanced" class="text-sm text-muted transition-colors hover:text-navy">Advanced</a>
+        <a href="https://github.com/Botfather/units" class="rounded bg-navy px-3 py-1.5 text-xs font-semibold text-navy-fg hover:opacity-90">GitHub</a>
+      </div>
+    </header>
 
-      <section class="card hero hero-compact">
-        <div>
-          <p class="eyebrow">Examples</p>
-          <h1>Reference apps for the language, tooling, and UI kit.</h1>
-          <p class="lead">
-            The example set is no longer just a single demo. The repo now carries focused apps for learning,
-            chat UIs, ShadCN-flavored composition, a todo workflow, and a portfolio-style header build.
-          </p>
-          <div class="actions">
-            <a class="btn" href="https://github.com/Botfather/units/tree/main/examples">Open examples</a>
-            <a class="btn secondary" href="./docs.html">Read docs first</a>
-          </div>
+    <main class="mx-auto max-w-6xl space-y-6 px-4 py-8 md:py-10">
+      <section class="rounded border border-wire bg-panel p-6 shadow-sm md:p-8">
+        <p class="text-xs font-bold uppercase tracking-[0.2em] text-muted">Examples In Context</p>
+        <h1 class="mt-2 text-4xl font-bold">Examples that match the theory-first model</h1>
+        <p class="mt-4 max-w-3xl text-sm leading-relaxed text-muted">
+          These examples are organized by conceptual goal, not just by app type. Use them to validate each stage of the
+          Units mental model: structure, control flow, token-aware authoring, and advanced composition.
+        </p>
+        <div class="mt-5 flex flex-wrap gap-3">
+          <a href="./docs.html" class="rounded bg-navy px-4 py-2 text-sm font-semibold text-navy-fg hover:opacity-90">Read docs first</a>
+          <a href="https://github.com/Botfather/units/tree/main/examples" class="rounded border border-wire px-4 py-2 text-sm font-semibold text-navy hover:bg-strong">Open examples directory</a>
         </div>
-
-        <aside class="hero-mark hero-mark-small" aria-hidden="true">
-          <img src="./logo-units-mark.svg" alt="" />
-        </aside>
       </section>
 
-      <section class="grid feature-grid">
-        <article class="card tone-dark">
-          <p class="eyebrow">units-learn-demo</p>
-          <h2>learn-vite</h2>
-          <p class="meta">Guided reference app for the DSL shape, sections, and benchmark-oriented teaching copy.</p>
-          <p><a href="https://github.com/Botfather/units/tree/main/examples/learn-vite">Open source directory</a></p>
-        </article>
-
-        <article class="card tone-cyan">
-          <p class="eyebrow">units-todo-demo</p>
-          <h2>todo-vite</h2>
-          <p class="meta">Task-list workflow demo using the core runtime, Vite plugin, tools package, and UI kit.</p>
-          <p><a href="https://github.com/Botfather/units/tree/main/examples/todo-vite">Open source directory</a></p>
-        </article>
-
-        <article class="card tone-blue">
-          <p class="eyebrow">units-chat-demo</p>
-          <h2>chat-vite</h2>
-          <p class="meta">Chat transcript interface showing more realistic nested UI and interaction structure.</p>
-          <p><a href="https://github.com/Botfather/units/tree/main/examples/chat-vite">Open source directory</a></p>
-        </article>
-
-        <article class="card">
-          <p class="eyebrow">units-shadcn-gallery</p>
-          <h2>shadcn-gallery-vite</h2>
-          <p class="meta">Gallery-style reference app for the ShadCN-inspired Units component layer.</p>
-          <p><a href="https://github.com/Botfather/units/tree/main/examples/shadcn-gallery-vite">Open source directory</a></p>
-        </article>
-
-        <article class="card">
-          <p class="eyebrow">portfolio-vite</p>
-          <h2>portfolio-vite</h2>
-          <p class="meta">Smaller composition example focused on branding, hero layout, and profile-header structure.</p>
-          <p><a href="https://github.com/Botfather/units/tree/main/examples/portfolio-vite">Open source directory</a></p>
-        </article>
+      <section class="rounded border border-wire bg-panel p-6 shadow-sm md:p-8">
+        <p class="text-xs font-bold uppercase tracking-[0.2em] text-muted">Concept Map</p>
+        <h2 class="mt-2 text-3xl font-bold">Use each example for a specific question</h2>
+        <div class="mt-5 grid gap-4 md:grid-cols-2">
+          <article class="rounded border border-wire bg-cyan-wash p-5">
+            <p class="text-xs font-bold uppercase tracking-widest text-muted">Question 1</p>
+            <h3 class="mt-2 text-xl font-bold">What does a Units UI tree look like?</h3>
+            <p class="mt-2 text-sm text-muted">Run `learn-vite` first and follow template shape from top to bottom.</p>
+            <pre class="mt-3 overflow-x-auto rounded bg-navy p-3 text-xs text-navy-fg"><code>pnpm --filter units-learn-demo dev</code></pre>
+          </article>
+          <article class="rounded border border-wire bg-blue-wash p-5">
+            <p class="text-xs font-bold uppercase tracking-widest text-muted">Question 2</p>
+            <h3 class="mt-2 text-xl font-bold">How do directives drive behavior?</h3>
+            <p class="mt-2 text-sm text-muted">Use `todo-vite` and `chat-vite` for loops, branches, and events.</p>
+            <pre class="mt-3 overflow-x-auto rounded bg-navy p-3 text-xs text-navy-fg"><code>pnpm --filter units-todo-demo dev
+pnpm --filter units-chat-demo dev</code></pre>
+          </article>
+          <article class="rounded border border-wire bg-strong p-5">
+            <p class="text-xs font-bold uppercase tracking-widest text-muted">Question 3</p>
+            <h3 class="mt-2 text-xl font-bold">How does reusable composition scale?</h3>
+            <p class="mt-2 text-sm text-muted">Use `shadcn-gallery-vite` to inspect higher-level component composition.</p>
+            <pre class="mt-3 overflow-x-auto rounded bg-navy p-3 text-xs text-navy-fg"><code>pnpm --filter units-shadcn-gallery dev</code></pre>
+          </article>
+          <article class="rounded border border-wire bg-panel p-5">
+            <p class="text-xs font-bold uppercase tracking-widest text-muted">Question 4</p>
+            <h3 class="mt-2 text-xl font-bold">Where are fit boundaries in practice?</h3>
+            <p class="mt-2 text-sm text-muted">Try one UI edit in DSL and one in JSX to compare readability and token shape.</p>
+            <a href="./docs.html#fit" class="mt-3 inline-block text-sm font-semibold text-navy underline hover:no-underline">Review fit criteria</a>
+          </article>
+        </div>
       </section>
 
-      <section class="grid two-up">
-        <article class="card">
-          <p class="eyebrow">Shared stack</p>
-          <h2>What each example uses</h2>
-          <ul>
-            <li>@botfather/units</li>
-            <li>@botfather/vite-plugin-units</li>
-            <li>@botfather/vite-plugin-units-tools</li>
-            <li>@botfather/units-tools</li>
-            <li>@botfather/units-uikit-shadcn</li>
+      <section id="examples" class="grid gap-4 lg:grid-cols-2">
+        <article class="rounded border border-wire bg-cyan-wash p-5 shadow-sm">
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-xs font-bold uppercase tracking-widest text-muted">Core shape</p>
+            <span class="rounded border border-wire bg-panel px-2 py-1 text-xs font-semibold">learn-vite</span>
+          </div>
+          <h2 class="mt-2 text-2xl font-bold">Template structure and expression basics</h2>
+          <ul class="mt-3 space-y-2 text-sm text-muted">
+            <li><strong>Teaches:</strong> tags, text nodes, props, expression placement.</li>
+            <li><strong>Does not teach:</strong> complex app-level architecture decisions.</li>
+            <li><strong>Source:</strong> `examples/learn-vite/src/learn.ui`</li>
           </ul>
+          <a href="https://github.com/Botfather/units/tree/main/examples/learn-vite" class="mt-4 inline-block text-sm font-semibold text-navy underline hover:no-underline">Open source</a>
         </article>
 
-        <article class="card">
-          <p class="eyebrow">Run locally</p>
-          <h2>Start any example with pnpm filter</h2>
-          <pre><code>pnpm install
-pnpm --filter units-learn-demo dev
-pnpm --filter units-todo-demo dev
-pnpm --filter units-chat-demo dev
-pnpm --filter units-shadcn-gallery dev</code></pre>
+        <article class="rounded border border-wire bg-blue-wash p-5 shadow-sm">
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-xs font-bold uppercase tracking-widest text-muted">Control flow</p>
+            <span class="rounded border border-wire bg-panel px-2 py-1 text-xs font-semibold">todo-vite</span>
+          </div>
+          <h2 class="mt-2 text-2xl font-bold">Conditions, lists, and events</h2>
+          <ul class="mt-3 space-y-2 text-sm text-muted">
+            <li><strong>Teaches:</strong> `#if`, `#for`, events, and predictable updates.</li>
+            <li><strong>Does not teach:</strong> full-system IR or compiler workflows.</li>
+            <li><strong>Source:</strong> `examples/todo-vite/src/todo.ui`</li>
+          </ul>
+          <a href="https://github.com/Botfather/units/tree/main/examples/todo-vite" class="mt-4 inline-block text-sm font-semibold text-navy underline hover:no-underline">Open source</a>
+        </article>
+
+        <article class="rounded border border-wire bg-panel p-5 shadow-sm">
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-xs font-bold uppercase tracking-widest text-muted">Nested UI</p>
+            <span class="rounded border border-wire bg-strong px-2 py-1 text-xs font-semibold">chat-vite</span>
+          </div>
+          <h2 class="mt-2 text-2xl font-bold">Transcript-like composition depth</h2>
+          <ul class="mt-3 space-y-2 text-sm text-muted">
+            <li><strong>Teaches:</strong> multi-level composition and branch-heavy display logic.</li>
+            <li><strong>Does not teach:</strong> token benchmarking by itself.</li>
+            <li><strong>Source:</strong> `examples/chat-vite/src/chat.ui`</li>
+          </ul>
+          <a href="https://github.com/Botfather/units/tree/main/examples/chat-vite" class="mt-4 inline-block text-sm font-semibold text-navy underline hover:no-underline">Open source</a>
+        </article>
+
+        <article class="rounded border border-wire bg-strong p-5 shadow-sm">
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-xs font-bold uppercase tracking-widest text-muted">Reusable layer</p>
+            <span class="rounded border border-wire bg-panel px-2 py-1 text-xs font-semibold">shadcn-gallery-vite</span>
+          </div>
+          <h2 class="mt-2 text-2xl font-bold">Higher-level component composition</h2>
+          <ul class="mt-3 space-y-2 text-sm text-muted">
+            <li><strong>Teaches:</strong> composing larger UI surfaces from reusable Units components.</li>
+            <li><strong>Does not teach:</strong> parser internals or agent middleware.</li>
+            <li><strong>Source:</strong> `examples/shadcn-gallery-vite/src/gallery.ui`</li>
+          </ul>
+          <a href="https://github.com/Botfather/units/tree/main/examples/shadcn-gallery-vite" class="mt-4 inline-block text-sm font-semibold text-navy underline hover:no-underline">Open source</a>
         </article>
       </section>
 
-      <section class="card">
-        <p class="eyebrow">Bench fixtures</p>
-        <h2>The benchmark corpus lives beside the examples</h2>
-        <p class="meta wide">
-          In addition to runnable apps, the repository keeps curated .ui and .jsx pairs under bench/cases plus a UI-PS
-          seed library. Those files are part of the practical example surface too, especially for token and transform evaluation.
+      <section class="rounded border border-wire bg-panel p-6 shadow-sm md:p-8">
+        <p class="text-xs font-bold uppercase tracking-[0.2em] text-muted">Token-Aware Practice</p>
+        <h2 class="mt-2 text-2xl font-bold">After editing an example, validate the token story</h2>
+        <pre class="mt-4 overflow-x-auto rounded bg-navy p-3 text-xs text-navy-fg"><code>pnpm bench:react-vs-dsl
+pnpm bench:llm</code></pre>
+        <p class="mt-3 text-sm text-muted">
+          The goal is to confirm your edits preserve readability while staying efficient for model context and generation costs.
         </p>
       </section>
+
+      <section id="advanced" class="rounded border border-wire bg-gradient-to-r from-strong via-panel to-blue-wash p-6 shadow-sm md:p-8">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.2em] text-muted">Next Step</p>
+            <h2 class="mt-2 text-2xl font-bold">Move from examples back to deeper docs and benchmarks.</h2>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <a href="./docs.html#grammar" class="rounded bg-navy px-4 py-2 text-sm font-semibold text-navy-fg hover:opacity-90">Grammar deep dive</a>
+            <a href="./docs.html#advanced" class="rounded border border-navy px-4 py-2 text-sm font-semibold text-navy hover:bg-strong">Advanced workflows</a>
+          </div>
+        </div>
+      </section>
     </main>
+
+    <footer class="border-t border-wire bg-panel">
+      <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-5 text-xs text-muted">
+        <p>Units GitHub Pages</p>
+        <div class="flex gap-4">
+          <a href="https://github.com/Botfather/units/blob/main/DOCS.md" class="underline hover:no-underline">DOCS.md</a>
+          <a href="https://github.com/Botfather/units/blob/main/DOCS-LLM.md" class="underline hover:no-underline">DOCS-LLM.md</a>
+          <a href="https://github.com/Botfather/units/tree/main/bench" class="underline hover:no-underline">Benchmarks</a>
+        </div>
+      </div>
+    </footer>
   </body>
 </html>

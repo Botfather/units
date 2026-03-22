@@ -1,185 +1,464 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Units</title>
-          <a class="brand" href="./index.html" aria-label="Units home">
-            <img src="./logo-units-mark.svg" alt="" />
-            <span>Units</span>
-          </a>
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body>
-    <main class="container">
-      <nav class="nav">
-        <span class="brand">Units</span>
-        <section class="card hero">
-          <div>
-            <p class="eyebrow">UI DSL · Tooling · Agent pipeline</p>
-            <h1>Small language. Broad surface area.</h1>
-            <p class="lead">
-              Units is a lightweight DSL for interactive UI, wrapped in a monorepo that now covers parsing,
-              rendering, Vite integration, editor support, agent-facing compression tools, DOM extraction,
-              IR compilation, and benchmark suites for both runtime and model workflows.
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Units — Token-Efficient UI DSL</title>
+  <meta name="description" content="Units is a minimal DSL for interactive UI trees. Compact, parseable, and designed for LLM workflows." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink:     '#0d1b2e',
+            'ink-2': '#1b3050',
+            surface: '#ffffff',
+            ground:  '#f3f5fb',
+            edge:    '#dde4f0',
+            dim:     '#7a90aa',
+            accent:  '#4f46e5',
+            acc2:    '#06b6d4',
+            code:    '#0f172a',
+          },
+          fontFamily: {
+            sans: ['"Inter"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'Menlo', 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    code, pre { font-family: 'JetBrains Mono', Menlo, monospace; }
+
+    /* ── two-column shell ── */
+    .page-shell {
+      display: grid;
+      grid-template-columns: 216px 1fr;
+      max-width: 1160px;
+      margin: 0 auto;
+      min-height: calc(100vh - 52px);
+    }
+    @media (max-width: 860px) {
+      .page-shell { grid-template-columns: 1fr; }
+      .left-rail  { display: none; }
+    }
+
+    /* ── sticky left rail ── */
+    .left-rail {
+      position: sticky;
+      top: 52px;
+      align-self: start;
+      height: calc(100vh - 52px);
+      overflow-y: auto;
+      padding: 1.5rem .875rem 1.5rem 1rem;
+      border-right: 1px solid #dde4f0;
+      background: #f9fafd;
+      display: flex;
+      flex-direction: column;
+      gap: .125rem;
+    }
+    .rail-group { margin-top: .875rem; padding: .25rem .5rem .125rem; font-size: .625rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #b0bece; }
+    .rail-link  { display: flex; align-items: center; gap: .5rem; padding: .35rem .5rem; border-radius: .375rem; font-size: .8rem; color: #7a90aa; text-decoration: none; transition: all .12s; }
+    .rail-link:hover { background: #eef1fb; color: #0d1b2e; }
+    .rail-dot   { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .45; flex-shrink: 0; }
+
+    /* ── code window chrome ── */
+    .cw { border-radius: .625rem; overflow: hidden; border: 1px solid rgba(255,255,255,.07); background: #0f172a; }
+    .cw-bar { display:flex; align-items:center; gap:.35rem; padding:.5rem .875rem; border-bottom:1px solid rgba(255,255,255,.07); }
+    .dr { width:9px;height:9px;border-radius:50%;background:#ff5f57; }
+    .dy { width:9px;height:9px;border-radius:50%;background:#febc2e; }
+    .dg { width:9px;height:9px;border-radius:50%;background:#28c840; }
+    .cf { margin-left:.375rem; font-size:.68rem; color:rgba(255,255,255,.22); }
+
+    /* ── comparison bar ── */
+    .cb { display:flex; align-items:center; justify-content:space-between; padding:.45rem .875rem; border-bottom:1px solid #dde4f0; }
+    .cb-lang { display:flex; align-items:center; gap:.45rem; font-size:.72rem; font-weight:700; color:#7a90aa; }
+    .pip { width:7px;height:7px;border-radius:50%; }
+
+    /* ── syntax ── */
+    .kw  { color:#e879f9; }
+    .tag { color:#38bdf8; }
+    .str { color:#86efac; }
+    .op  { color:#fbbf24; }
+    .var { color:#e2e8f0; }
+    .cm  { color:#4a5568; }
+    .at  { color:#fb923c; }
+  </style>
+</head>
+<body class="bg-ground text-ink antialiased">
+
+  <!-- NAV -->
+  <header class="sticky top-0 z-40 border-b border-edge bg-surface/90 backdrop-blur" style="height:52px;">
+    <div style="max-width:1160px; margin:0 auto;" class="flex h-full items-center gap-5 px-5">
+      <a href="./index.html" class="flex items-center gap-2 no-underline">
+        <img src="./logo-units-mark.svg" class="h-6 w-6" alt="Units" />
+        <span class="text-sm font-bold text-ink">Units</span>
+      </a>
+      <div class="ml-auto flex items-center gap-2">
+        <a href="./docs.html" class="rounded-md border border-edge px-3 py-1.5 text-xs font-semibold hover:bg-ground transition-colors">Docs</a>
+        <a href="https://github.com/Botfather/units" class="rounded-md bg-ink px-3 py-1.5 text-xs font-semibold text-white hover:bg-ink-2 transition-colors">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- PAGE SHELL: left rail + main -->
+  <div class="page-shell">
+
+    <!-- LEFT RAIL -->
+    <nav class="left-rail" aria-label="Page sections">
+      <div class="rail-group" style="margin-top:0">Overview</div>
+      <a href="#hero"       class="rail-link"><span class="rail-dot"></span>Introduction</a>
+      <a href="#motivation" class="rail-link"><span class="rail-dot"></span>What is Units</a>
+      <a href="#dsl"        class="rail-link"><span class="rail-dot"></span>DSL explained</a>
+      <div class="rail-group">Token model</div>
+      <a href="#tokens"     class="rail-link"><span class="rail-dot"></span>Why tokens matter</a>
+      <a href="#comparison" class="rail-link"><span class="rail-dot"></span>JSX vs Units</a>
+      <div class="rail-group">Reference</div>
+      <a href="#fit"        class="rail-link"><span class="rail-dot"></span>Where it fits</a>
+      <a href="#grammar"    class="rail-link"><span class="rail-dot"></span>Grammar</a>
+      <a href="#examples"   class="rail-link"><span class="rail-dot"></span>Examples</a>
+      <a href="#advanced"   class="rail-link"><span class="rail-dot"></span>Advanced</a>
+      <div class="mt-auto pt-4 border-t border-edge" style="margin-top:auto;">
+        <a href="./docs.html"     class="rail-link text-xs">↗ Docs</a>
+        <a href="./examples.html" class="rail-link text-xs">↗ Examples</a>
+        <a href="https://github.com/Botfather/units" class="rail-link text-xs">↗ GitHub</a>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="min-w-0 px-6 py-8 space-y-10 lg:px-10 lg:py-10">
+
+      <!-- HERO -->
+      <section id="hero" class="rounded-2xl overflow-hidden border border-edge"
+        style="background: radial-gradient(ellipse 90% 70% at 70% 50%, rgba(79,70,229,.09) 0%, transparent 65%), radial-gradient(ellipse 50% 50% at 90% 80%, rgba(6,182,212,.08) 0%, transparent 55%), #ffffff;">
+        <div class="grid lg:grid-cols-[1fr,auto]">
+          <div class="p-8 lg:p-10 space-y-5">
+            <span style="display:inline-flex;align-items:center;gap:6px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:9999px;padding:.2rem .8rem;font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#4338ca;">
+              ◆ LLM-Native UI DSL
+            </span>
+            <h1 class="text-4xl font-black tracking-tight leading-[1.1] lg:text-5xl">
+              Write UI.<br>
+              <span style="background:linear-gradient(90deg,#4f46e5,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Spend fewer tokens.</span>
+            </h1>
+            <p class="max-w-md text-sm leading-relaxed text-dim">
+              Units is a minimal DSL for interactive UI trees — compact, parseable,
+              designed for LLM-assisted generation with React or any custom renderer.
             </p>
-            <div class="actions">
-              <a class="btn" href="./docs.html">Read docs</a>
-              <a class="btn secondary" href="./examples.html">Browse examples</a>
-              <a class="btn secondary" href="https://github.com/Botfather/units">Open repo</a>
+            <div class="flex flex-wrap gap-3 pt-1">
+              <a href="#motivation"    class="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-opacity">What is Units?</a>
+              <a href="#tokens"        class="rounded-lg border border-edge px-4 py-2 text-sm font-semibold hover:bg-ground transition-colors">Token savings →</a>
+              <a href="./examples.html" class="rounded-lg border border-edge px-4 py-2 text-sm font-semibold hover:bg-ground transition-colors">Examples →</a>
             </div>
           </div>
+          <div class="hidden lg:flex items-center p-8">
+            <div class="cw w-[300px] shadow-xl">
+              <div class="cw-bar"><span class="dr"></span><span class="dy"></span><span class="dg"></span><span class="cf">todo.ui</span></div>
+              <pre class="p-5 text-xs leading-loose font-mono"><code><span class="tag">Section</span> <span class="op">(</span><span class="str">class:</span><span class="str">'panel'</span><span class="op">) {</span>
+  <span class="tag">H2</span> <span class="op">{</span> <span class="kw">text</span> <span class="str">'Tasks'</span> <span class="op">}</span>
+  <span class="tag">Ul</span> <span class="op">{</span>
+    <span class="kw">#for</span> <span class="op">(</span><span class="var">item</span> <span class="kw">in</span> <span class="at">@items</span><span class="op">) {</span>
+      <span class="kw">#key</span> <span class="op">(</span><span class="at">@item.id</span><span class="op">)</span>
+      <span class="tag">Li</span> <span class="op">{</span>
+        <span class="tag">Button</span> <span class="op">(!</span><span class="str">click</span> <span class="op">{</span>
+          <span class="var">onSelect</span><span class="op">(</span><span class="at">@item.id</span><span class="op">)</span>
+        <span class="op">}) {</span> <span class="at">@item.title</span> <span class="op">}</span>
+      <span class="op">}</span>
+    <span class="op">}</span>
+  <span class="op">}</span>
+<span class="op">}</span></code></pre>
+            </div>
+          </div>
+        </div>
+        <!-- stat strip -->
+        <div class="grid grid-cols-4 divide-x divide-edge border-t border-edge" style="background:rgba(243,245,251,.6);">
+          <div class="px-5 py-4 text-center"><p class="text-xl font-black">~30%</p><p class="text-[.68rem] text-dim mt-0.5 uppercase tracking-wider font-semibold">fewer tokens</p></div>
+          <div class="px-5 py-4 text-center"><p class="text-xl font-black">4</p><p class="text-[.68rem] text-dim mt-0.5 uppercase tracking-wider font-semibold">node types</p></div>
+          <div class="px-5 py-4 text-center"><p class="text-xl font-black">0</p><p class="text-[.68rem] text-dim mt-0.5 uppercase tracking-wider font-semibold">runtime deps</p></div>
+          <div class="px-5 py-4 text-center"><p class="text-xl font-black">Any</p><p class="text-[.68rem] text-dim mt-0.5 uppercase tracking-wider font-semibold">renderer</p></div>
+        </div>
+      </section>
 
-          <aside class="hero-mark" aria-hidden="true">
-            <img src="./logo-units.svg" alt="" />
-          </aside>
-        </section>
-
-        <section class="stats-grid" aria-label="Repository summary">
-          <article class="stat-card">
-            <strong>12</strong>
-            <span>published and workspace packages</span>
-          </article>
-          <article class="stat-card">
-            <strong>5</strong>
-            <span>Vite examples in the repo</span>
-          </article>
-          <article class="stat-card">
-            <strong>6</strong>
-            <span>benchmark families under active test</span>
-          </article>
-          <article class="stat-card">
-            <strong>1</strong>
-            <span>VS Code language extension for .ui files</span>
-          </article>
-          Units is a lightweight UI DSL with fast parsing, small syntax, and both React + custom renderer support.
-        </p>
-        <section class="card section-head">
-          <p class="eyebrow">What is in the repo now</p>
-          <h2>Current monorepo surface</h2>
-          <p class="meta wide">
-            The GitHub Pages entry point now reflects the broader repo instead of only the original runtime and
-            plugin packages.
-          </p>
-        </section>
-
-        <section class="grid feature-grid">
-          <article class="card tone-dark">
-            <p class="eyebrow">Core runtime</p>
-            <h3>Parse, print, render, incrementally update</h3>
-            <ul>
-              <li>@botfather/units: parser, printer, runtime, custom renderer, incremental sketch</li>
-              <li>React renderer plus host-agnostic createUnitsRenderer flow</li>
-              <li>Small grammar with raw JS expressions and directive support</li>
+      <!-- WHAT IS UNITS -->
+      <section id="motivation" class="space-y-4">
+        <header>
+          <p class="text-xs font-bold uppercase tracking-widest text-dim">First principles</p>
+          <h2 class="mt-1 text-2xl font-bold tracking-tight">What Units is and is not</h2>
+        </header>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="rounded-xl border border-edge bg-surface p-5">
+            <div class="mb-3 flex h-8 w-8 items-center justify-center rounded-lg bg-green-50 text-green-500 font-bold text-sm">✓</div>
+            <h3 class="font-semibold text-sm">Units is</h3>
+            <ul class="mt-3 space-y-2 text-sm text-dim">
+              <li class="flex gap-2"><span class="text-green-400 shrink-0 mt-0.5">◆</span>A minimal DSL for interactive UI trees</li>
+              <li class="flex gap-2"><span class="text-green-400 shrink-0 mt-0.5">◆</span>A parser + runtime with low syntax overhead</li>
+              <li class="flex gap-2"><span class="text-green-400 shrink-0 mt-0.5">◆</span>A compact notation for humans and LLMs alike</li>
+              <li class="flex gap-2"><span class="text-green-400 shrink-0 mt-0.5">◆</span>Compatible with React and custom renderer hosts</li>
             </ul>
-          </article>
-
-          <article class="card tone-cyan">
-            <p class="eyebrow">Build and authoring</p>
-            <h3>Vite, CLI, and editor tooling</h3>
-            <ul>
-              <li>@botfather/vite-plugin-units for .ui imports in Vite apps</li>
-              <li>@botfather/vite-plugin-units-tools for format, token, and highlight workflows</li>
-              <li>@botfather/units-tools plus the Units VS Code extension for .ui editing</li>
+          </div>
+          <div class="rounded-xl border border-edge bg-surface p-5">
+            <div class="mb-3 flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-400 font-bold text-sm">✗</div>
+            <h3 class="font-semibold text-sm">Units is not</h3>
+            <ul class="mt-3 space-y-2 text-sm text-dim">
+              <li class="flex gap-2"><span class="text-red-300 shrink-0 mt-0.5">◆</span>A replacement for all React patterns</li>
+              <li class="flex gap-2"><span class="text-red-300 shrink-0 mt-0.5">◆</span>A magical runtime optimizer</li>
+              <li class="flex gap-2"><span class="text-red-300 shrink-0 mt-0.5">◆</span>A sandbox for untrusted JS expressions</li>
+              <li class="flex gap-2"><span class="text-red-300 shrink-0 mt-0.5">◆</span>Right when teams want logic-dense inline JSX</li>
             </ul>
-          </article>
+          </div>
+        </div>
+      </section>
 
-          <article class="card tone-blue">
-            <p class="eyebrow">Agent pipeline</p>
-            <h3>Compression, DOM capture, IR, and compilation</h3>
-            <ul>
-              <li>@botfather/units-agent-middleware for agent-agnostic UI tree rewriting</li>
-              <li>@botfather/units-agent-plugin and @botfather/units-agent-service for compress-ui flows</li>
-              <li>@botfather/units-dom-snapshot, @botfather/units-ui-ir, @botfather/units-react-adapter, and @botfather/units-compiler</li>
+      <!-- DSL -->
+      <section id="dsl" class="space-y-4">
+        <header>
+          <p class="text-xs font-bold uppercase tracking-widest text-dim">DSL explained</p>
+          <h2 class="mt-1 text-2xl font-bold tracking-tight">A small language for one job</h2>
+          <p class="mt-2 max-w-xl text-sm leading-relaxed text-dim">Think of a DSL as instructions for building with blocks — focused on one domain with extra words stripped out so structure stays clear and repeatable.</p>
+        </header>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="rounded-xl border border-edge bg-surface p-5">
+            <h3 class="text-sm font-semibold">In plain terms</h3>
+            <p class="mt-2 text-sm text-dim">JSX is general JavaScript + UI syntax. Units is a smaller, UI-first notation — you trade generality for compactness when the job is "describe a UI tree."</p>
+          </div>
+          <div class="cw">
+            <div class="cw-bar"><span class="dr"></span><span class="dy"></span><span class="dg"></span><span class="cf">inbox.ui</span></div>
+            <pre class="p-4 text-xs leading-loose font-mono"><code><span class="tag">Card</span> <span class="op">{</span>
+  <span class="tag">Header</span> <span class="op">{</span> <span class="kw">text</span> <span class="str">'Inbox'</span> <span class="op">}</span>
+  <span class="tag">Body</span>   <span class="op">{</span> <span class="kw">text</span> <span class="at">@message.preview</span> <span class="op">}</span>
+<span class="op">}</span></code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- TOKENS -->
+      <section id="tokens" class="space-y-4">
+        <header>
+          <p class="text-xs font-bold uppercase tracking-widest text-dim">LLM token perspective</p>
+          <h2 class="mt-1 text-2xl font-bold tracking-tight">Why fewer tokens matters</h2>
+        </header>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="rounded-xl border border-edge bg-surface p-5">
+            <h3 class="text-sm font-semibold">What token count affects</h3>
+            <ul class="mt-3 space-y-2 text-sm text-dim">
+              <li class="flex gap-2"><span class="text-accent shrink-0 mt-0.5">◆</span>How much context fits in the model window</li>
+              <li class="flex gap-2"><span class="text-accent shrink-0 mt-0.5">◆</span>How expensive each generation step is</li>
+              <li class="flex gap-2"><span class="text-accent shrink-0 mt-0.5">◆</span>How noisy diffs become after small edits</li>
+              <li class="flex gap-2"><span class="text-accent shrink-0 mt-0.5">◆</span>How stable outputs are across retries</li>
             </ul>
-          </article>
+          </div>
+          <div class="rounded-xl border border-edge bg-surface p-5">
+            <h3 class="text-sm font-semibold">Why JSX can cost more</h3>
+            <p class="mt-2 text-sm text-dim">JSX repeats open/close tags, braces, callback wrappers, and attribute ceremony. Units compresses the same tree shape with fewer structural symbols.</p>
+            <p class="mt-3 text-xs text-dim">Run <code class="bg-ground rounded px-1 py-0.5 text-ink">pnpm bench:react-vs-dsl</code> for measured results.</p>
+          </div>
+        </div>
+      </section>
 
-          <article class="card">
-            <p class="eyebrow">UI kit and reference apps</p>
-            <h3>Examples that exercise the stack</h3>
-            <ul>
-              <li>@botfather/units-uikit-shadcn for a ShadCN-style component layer</li>
-              <li>todo-vite, chat-vite, shadcn-gallery-vite, learn-vite, and portfolio-vite</li>
-              <li>Bench fixtures and curated .ui/.jsx case pairs under bench/cases</li>
+      <!-- JSX vs UNITS -->
+      <section id="comparison" class="space-y-4">
+        <header>
+          <p class="text-xs font-bold uppercase tracking-widest text-dim">Side-by-side</p>
+          <h2 class="mt-1 text-2xl font-bold tracking-tight">JSX vs Units DSL</h2>
+        </header>
+        <div class="grid gap-4 lg:grid-cols-2">
+          <div class="rounded-xl border border-edge overflow-hidden">
+            <div class="cb bg-amber-50">
+              <div class="cb-lang"><span class="pip bg-amber-400"></span>JSX</div>
+              <span class="text-xs font-semibold text-red-500">↑ more tokens</span>
+            </div>
+            <div class="bg-code p-5 overflow-x-auto">
+              <pre class="text-xs leading-loose font-mono"><code><span class="kw">function</span> <span class="tag">TodoList</span><span class="op">({</span><span class="var">items</span>, <span class="var">onSelect</span><span class="op">}) {</span>
+  <span class="kw">return</span> <span class="op">(</span>
+    <span class="op">&lt;</span><span class="tag">section</span> <span class="str">className</span>=<span class="str">"panel"</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="tag">h2</span><span class="op">&gt;</span><span class="var">Tasks</span><span class="op">&lt;/</span><span class="tag">h2</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="tag">ul</span><span class="op">&gt;</span>
+        <span class="op">{</span><span class="var">items</span>.<span class="kw">map</span><span class="op">((</span><span class="var">item</span><span class="op">) =&gt; (</span>
+          <span class="op">&lt;</span><span class="tag">li</span> <span class="str">key</span>=<span class="op">{</span><span class="at">item</span>.<span class="var">id</span><span class="op">}&gt;</span>
+            <span class="op">&lt;</span><span class="tag">button</span>
+              <span class="str">onClick</span>=<span class="op">{()</span> <span class="op">=&gt;</span> <span class="var">onSelect</span><span class="op">(</span><span class="at">item</span>.<span class="var">id</span><span class="op">)}</span>
+            <span class="op">&gt;</span>
+              <span class="op">{</span><span class="at">item</span>.<span class="var">title</span><span class="op">}</span>
+            <span class="op">&lt;/</span><span class="tag">button</span><span class="op">&gt;</span>
+          <span class="op">&lt;/</span><span class="tag">li</span><span class="op">&gt;</span>
+        <span class="op">))}</span>
+      <span class="op">&lt;/</span><span class="tag">ul</span><span class="op">&gt;</span>
+    <span class="op">&lt;/</span><span class="tag">section</span><span class="op">&gt;</span>
+  <span class="op">);</span>
+<span class="op">}</span></code></pre>
+            </div>
+          </div>
+          <div class="rounded-xl border border-edge overflow-hidden">
+            <div class="cb bg-green-50">
+              <div class="cb-lang"><span class="pip bg-green-400"></span>Units DSL</div>
+              <span class="text-xs font-semibold text-green-600">↓ fewer tokens</span>
+            </div>
+            <div class="bg-code p-5 overflow-x-auto">
+              <pre class="text-xs leading-loose font-mono"><code><span class="tag">Section</span> <span class="op">(</span><span class="str">class:</span><span class="str">'panel'</span><span class="op">) {</span>
+  <span class="tag">H2</span> <span class="op">{</span> <span class="kw">text</span> <span class="str">'Tasks'</span> <span class="op">}</span>
+  <span class="tag">Ul</span> <span class="op">{</span>
+    <span class="kw">#for</span> <span class="op">(</span><span class="var">item</span> <span class="kw">in</span> <span class="at">@items</span><span class="op">) {</span>
+      <span class="kw">#key</span> <span class="op">(</span><span class="at">@item.id</span><span class="op">)</span>
+      <span class="tag">Li</span> <span class="op">{</span>
+        <span class="tag">Button</span>
+          <span class="op">(!</span><span class="str">click</span> <span class="op">{</span> <span class="var">onSelect</span><span class="op">(</span><span class="at">@item.id</span><span class="op">)</span> <span class="op">}) {</span>
+          <span class="at">@item.title</span>
+        <span class="op">}</span>
+      <span class="op">}</span>
+    <span class="op">}</span>
+  <span class="op">}</span>
+<span class="op">}</span></code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FIT -->
+      <section id="fit" class="space-y-4">
+        <header>
+          <p class="text-xs font-bold uppercase tracking-widest text-dim">Where Units fits</p>
+          <h2 class="mt-1 text-2xl font-bold tracking-tight">Choose by workflow, not hype</h2>
+        </header>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="rounded-xl border border-green-100 bg-green-50/60 p-5">
+            <h3 class="text-sm font-semibold text-green-900">Strong fit</h3>
+            <ul class="mt-3 space-y-2 text-sm" style="color:rgba(20,83,45,.7)">
+              <li class="flex gap-2"><span class="text-green-500 shrink-0 mt-0.5">◆</span>LLM-assisted UI generation where token budget matters</li>
+              <li class="flex gap-2"><span class="text-green-500 shrink-0 mt-0.5">◆</span>Template-heavy products with repeated structural patterns</li>
+              <li class="flex gap-2"><span class="text-green-500 shrink-0 mt-0.5">◆</span>Pipelines needing parseable UI representations</li>
+              <li class="flex gap-2"><span class="text-green-500 shrink-0 mt-0.5">◆</span>Teams valuing compact syntax and explicit control flow</li>
             </ul>
-          </article>
-        </section>
+          </div>
+          <div class="rounded-xl border border-edge bg-surface p-5">
+            <h3 class="text-sm font-semibold">Weak fit</h3>
+            <ul class="mt-3 space-y-2 text-sm text-dim">
+              <li class="flex gap-2"><span class="opacity-40 shrink-0 mt-0.5">◆</span>Apps with logic deeply coupled to arbitrary JSX code</li>
+              <li class="flex gap-2"><span class="opacity-40 shrink-0 mt-0.5">◆</span>Use cases requiring sandboxed expression execution</li>
+              <li class="flex gap-2"><span class="opacity-40 shrink-0 mt-0.5">◆</span>Teams that want zero extra language surface to learn</li>
+              <li class="flex gap-2"><span class="opacity-40 shrink-0 mt-0.5">◆</span>Projects where token cost is not a concern</li>
+            </ul>
+          </div>
+        </div>
+      </section>
 
-        <section class="card split-card">
+      <!-- GRAMMAR -->
+      <section id="grammar" class="space-y-4">
+        <header>
+          <p class="text-xs font-bold uppercase tracking-widest text-dim">Grammar reference</p>
+          <h2 class="mt-1 text-2xl font-bold tracking-tight">The complete grammar</h2>
+          <p class="mt-1 text-sm text-dim">Expressions are raw JS slices — not parsed by the DSL parser itself.</p>
+        </header>
+        <div class="cw">
+          <div class="cw-bar"><span class="dr"></span><span class="dy"></span><span class="dg"></span><span class="cf">grammar.ebnf</span></div>
+          <pre class="p-5 text-xs font-mono overflow-x-auto" style="line-height:2"><code><span class="tag">Document</span>  <span class="cm">:=</span> <span class="var">Node</span><span class="op">*</span>
+<span class="tag">Node</span>      <span class="cm">:=</span> <span class="var">TagNode</span> <span class="op">|</span> <span class="var">TextNode</span> <span class="op">|</span> <span class="var">ExprNode</span> <span class="op">|</span> <span class="var">Directive</span>
+<span class="tag">TagNode</span>   <span class="cm">:=</span> <span class="var">Ident</span> <span class="var">Props</span><span class="op">?</span> <span class="var">Children</span><span class="op">?</span>
+<span class="tag">Props</span>     <span class="cm">:=</span> <span class="str">"("</span> <span class="var">Prop</span> <span class="op">(</span><span class="str">","</span><span class="op">?</span> <span class="var">Prop</span><span class="op">)*</span> <span class="str">")"</span>
+<span class="tag">Prop</span>      <span class="cm">:=</span> <span class="var">Ident</span> <span class="op">(</span><span class="str">":"</span> <span class="var">Value</span> <span class="op">|</span> <span class="str">"="</span> <span class="var">Expr</span> <span class="op">|</span> <span class="str">"?="</span> <span class="var">Expr</span><span class="op">)</span> <span class="op">|</span> <span class="var">Event</span>
+<span class="tag">Event</span>     <span class="cm">:=</span> <span class="str">"!"</span> <span class="var">Ident</span> <span class="str">"{"</span> <span class="var">Expr</span> <span class="str">"}"</span>
+<span class="tag">Children</span>  <span class="cm">:=</span> <span class="str">"{"</span> <span class="var">Node</span><span class="op">*</span> <span class="str">"}"</span>
+<span class="tag">TextNode</span>  <span class="cm">:=</span> <span class="str">"text"</span> <span class="var">String</span> <span class="op">|</span> <span class="var">String</span>
+<span class="tag">ExprNode</span>  <span class="cm">:=</span> <span class="str">"@"</span> <span class="var">Expr</span>
+<span class="tag">Directive</span> <span class="cm">:=</span> <span class="str">"#"</span> <span class="var">Ident</span> <span class="op">((</span><span class="str">"("</span> <span class="var">Args</span> <span class="str">")"</span><span class="op">)</span> <span class="op">|</span> <span class="var">Args</span><span class="op">)?</span> <span class="var">Children</span><span class="op">?</span>
+<span class="tag">Value</span>     <span class="cm">:=</span> <span class="var">String</span> <span class="op">|</span> <span class="var">Number</span> <span class="op">|</span> <span class="kw">true</span> <span class="op">|</span> <span class="kw">false</span> <span class="op">|</span> <span class="kw">null</span>
+<span class="tag">Expr</span>      <span class="cm">:=</span> <span class="cm">Raw JS until delimiter</span></code></pre>
+        </div>
+      </section>
+
+      <!-- EXAMPLES -->
+      <section id="examples" class="space-y-4">
+        <div class="flex flex-wrap items-end justify-between gap-3">
+          <header>
+            <p class="text-xs font-bold uppercase tracking-widest text-dim">Examples</p>
+            <h2 class="mt-1 text-2xl font-bold tracking-tight">From basic to rich interaction</h2>
+          </header>
+          <a href="./examples.html" class="text-sm font-semibold text-accent hover:opacity-75 transition-opacity">Open walkthrough →</a>
+        </div>
+        <div class="grid gap-4 lg:grid-cols-2">
+          <div class="rounded-xl border border-edge overflow-hidden">
+            <div class="cb bg-ground"><div class="cb-lang"><span class="pip bg-slate-300"></span>Beginner</div><span class="text-xs text-dim">Minimal structure</span></div>
+            <div class="bg-code p-4"><pre class="text-xs leading-loose font-mono"><code><span class="tag">Card</span> <span class="op">{</span>
+  <span class="kw">text</span> <span class="str">'Hello @{user.name}'</span>
+<span class="op">}</span></code></pre></div>
+          </div>
+          <div class="rounded-xl border border-edge overflow-hidden">
+            <div class="cb bg-ground"><div class="cb-lang"><span class="pip bg-indigo-400"></span>Intermediate</div><span class="text-xs text-dim">Condition + loop + event</span></div>
+            <div class="bg-code p-4"><pre class="text-xs leading-loose font-mono"><code><span class="kw">#if</span> <span class="op">(</span><span class="at">@items.length</span> <span class="op">== 0) {</span>
+  <span class="kw">text</span> <span class="str">'Nothing yet'</span>
+<span class="op">}</span> <span class="kw">#else</span> <span class="op">{</span>
+  <span class="kw">#for</span> <span class="op">(</span><span class="var">item</span> <span class="kw">in</span> <span class="at">@items</span><span class="op">) {</span>
+    <span class="kw">#key</span> <span class="op">(</span><span class="at">@item.id</span><span class="op">)</span>
+    <span class="tag">Row</span> <span class="op">{</span>
+      <span class="at">@item.title</span>
+      <span class="tag">Button</span> <span class="op">(!</span><span class="str">click</span> <span class="op">{</span> <span class="var">select</span><span class="op">(</span><span class="at">@item.id</span><span class="op">)</span> <span class="op">})</span>
+    <span class="op">}</span>
+  <span class="op">}</span>
+<span class="op">}</span></code></pre></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ADVANCED -->
+      <section id="advanced" class="space-y-4">
+        <header>
+          <p class="text-xs font-bold uppercase tracking-widest text-dim">Advanced</p>
+          <h2 class="mt-1 text-2xl font-bold tracking-tight">Where expert workflows start</h2>
+        </header>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="rounded-xl border border-edge bg-surface p-5">
+            <h3 class="text-sm font-semibold">Architecture layer</h3>
+            <ul class="mt-3 space-y-2 text-sm text-dim">
+              <li class="flex gap-2"><span class="text-accent shrink-0 mt-0.5">◆</span>Custom renderer hosts for non-React targets</li>
+              <li class="flex gap-2"><span class="text-accent shrink-0 mt-0.5">◆</span>Agent middleware for UI tree rewriting</li>
+              <li class="flex gap-2"><span class="text-accent shrink-0 mt-0.5">◆</span>DOM snapshot and IR adapters for cross-system pipelines</li>
+              <li class="flex gap-2"><span class="text-accent shrink-0 mt-0.5">◆</span>Compiler paths from IR or UiNode into Units DSL</li>
+            </ul>
+          </div>
+          <div class="cw">
+            <div class="cw-bar"><span class="dr"></span><span class="dy"></span><span class="dg"></span><span class="cf">terminal</span></div>
+            <pre class="p-5 text-xs leading-loose font-mono"><code><span class="var">pnpm</span> <span class="str">bench:dsl</span>
+<span class="var">pnpm</span> <span class="str">bench:llm</span>
+<span class="var">pnpm</span> <span class="str">bench:react-vs-dsl</span>
+<span class="var">pnpm</span> <span class="str">bench:ui-ps</span>
+<span class="var">node</span> <span class="str">--test</span></code></pre>
+            <p class="px-5 pb-4 text-xs" style="color:rgba(255,255,255,.25)">Use benchmarks to decide, not intuition alone.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <section class="rounded-2xl p-8 text-white" style="background:linear-gradient(135deg,#0d1b2e 0%,#1b3050 60%,#0f2444 100%);">
+        <div class="flex flex-wrap items-center justify-between gap-5">
           <div>
-            <p class="eyebrow">Quick start</p>
-            <h2>Minimal runtime entry point</h2>
-            <p class="meta wide">
-              The baseline API is still intentionally small even though the repo around it has expanded.
-            </p>
+            <h2 class="text-xl font-bold">Ready to go deeper?</h2>
+            <p class="mt-1 text-sm" style="color:rgba(255,255,255,.45)">Follow the learning ladder in Docs or jump to examples.</p>
           </div>
-          <pre><code>import { parseUnits, renderUnits } from "@botfather/units";
-        </p>
+          <div class="flex flex-wrap gap-3">
+            <a href="./docs.html"      class="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-ink hover:opacity-90 transition-opacity">Read docs</a>
+            <a href="./examples.html"  class="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors" style="border:1px solid rgba(255,255,255,.25)">Run examples</a>
+          </div>
+        </div>
       </section>
 
-      <section class="card">
-        <h2>Quick Start</h2>
-        <section class="grid two-up">
-          <article class="card">
-            <p class="eyebrow">Benchmarks</p>
-            <h2>Evaluation is part of the repo surface</h2>
-        </ul>
-              <li>Parser throughput via bench.js</li>
-              <li>DSL suite for parsing, formatting, rendering, and incremental edits</li>
-              <li>System planning and execution runs for network or provider-backed workflows</li>
-              <li>LLM token and quality benchmarks driven by bench/llm-cases.json</li>
-              <li>React vs Units DSL token comparisons, including provider-tokenized runs</li>
-              <li>UI-PS baseline scoring with fixtures, verified seed library, and gates</li>
-            </ul>
-            <pre><code>pnpm bench:parser
-  pnpm bench:dsl
-  pnpm bench:llm
-  pnpm bench:react-vs-dsl
-  pnpm bench:ui-ps</code></pre>
-          </article>
-
-          <article class="card">
-            <p class="eyebrow">GitHub entry points</p>
-            <h2>Source-of-truth documents</h2>
-            <ul>
-              <li><a href="https://github.com/Botfather/units/blob/main/README.md">README</a></li>
-              <li><a href="https://github.com/Botfather/units/blob/main/DOCS.md">DOCS.md</a></li>
-              <li><a href="https://github.com/Botfather/units/blob/main/DOCS-LLM.md">DOCS-LLM.md</a></li>
-              <li><a href="https://github.com/Botfather/units/tree/main/vscode/units-vscode">VS Code extension</a></li>
-              <li><a href="https://github.com/Botfather/units/blob/main/CONTRIBUTING.md">Contributing Guide</a></li>
-              <li><a href="https://github.com/Botfather/units/releases">Releases / Changelog</a></li>
-            </ul>
-          </article>
-        </section>
-
-        <section class="card">
-          <p class="eyebrow">Open source essentials</p>
-          <h2>Project policies</h2>
-          <ul class="link-list">
-            <li><a href="https://github.com/Botfather/units/blob/main/LICENSE">License (MIT)</a></li>
-            <li><a href="https://github.com/Botfather/units/blob/main/CODE_OF_CONDUCT.md">Code of Conduct</a></li>
-            <li><a href="https://github.com/Botfather/units/blob/main/SECURITY.md">Security Policy</a></li>
-            <li><a href="https://github.com/Botfather/units/blob/main/SUPPORT.md">Support Policy</a></li>
-          </ul>
-        </section>
-
-        <section class="card section-foot">
-          <p class="eyebrow">Where to go next</p>
-          <h2>Start with the layer you need</h2>
-          <div class="mini-grid">
-            <a class="mini-tile" href="./docs.html">Language and runtime docs</a>
-            <a class="mini-tile" href="./examples.html">Examples and local run targets</a>
-            <a class="mini-tile" href="https://github.com/Botfather/units/tree/main/packages">Packages</a>
-            <a class="mini-tile" href="https://github.com/Botfather/units/tree/main/test">Tests</a>
-          </div>
-        </section>
-      </main>
-    </body>
-  </html>
-            <li><code>pnpm bench:react-vs-dsl</code></li>
-          </ul>
-        </article>
-      </section>
     </main>
-  </body>
+  </div><!-- /page-shell -->
+
+  <footer class="border-t border-edge bg-surface">
+    <div style="max-width:1160px;margin:0 auto;" class="flex flex-wrap items-center justify-between gap-3 px-5 py-4 text-xs text-dim">
+      <p>Units · GitHub Pages</p>
+      <div class="flex gap-5">
+        <a href="https://github.com/Botfather/units/blob/main/DOCS.md"     class="hover:text-ink transition-colors">DOCS.md</a>
+        <a href="https://github.com/Botfather/units/blob/main/DOCS-LLM.md" class="hover:text-ink transition-colors">DOCS-LLM.md</a>
+        <a href="https://github.com/Botfather/units/tree/main/bench"        class="hover:text-ink transition-colors">Benchmarks</a>
+        <a href="https://github.com/Botfather/units"                        class="hover:text-ink transition-colors">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
 </html>
