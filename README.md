@@ -250,6 +250,61 @@ OPENAI_API_KEY=... LLM_BENCH_MODELS=gpt-4.1-mini,gpt-4o-mini,gpt-5-2025-08-07 pn
 
 Config lives in `bench/llm-cases.json`, with case files under `bench/cases/`.
 
+## DSL Autoresearch (Mac ARM)
+For Apple Silicon machines, this repo includes an integration helper for a compatible Karpathy autoresearch fork.
+
+Setup:
+```
+pnpm dsl:autoresearch:setup
+```
+
+Verify environment:
+```
+pnpm dsl:autoresearch:doctor
+```
+
+This will pin `third_party/autoresearch-macos` and generate:
+- `third_party/autoresearch-macos/program.units-dsl.md`
+
+Use that program file with your coding agent to run autonomous DSL quality loops against this repo (`pnpm bench:llm:live` and `make verify-all` as keep criteria).
+
+Automated evaluation:
+```
+pnpm dsl:autoresearch:eval
+```
+
+Single automated trial (requires an agent command):
+```
+AUTORESEARCH_AGENT_CMD='your-agent --program {program} --repo {repo} --iteration {iteration}' pnpm dsl:autoresearch:trial
+```
+
+Multi-iteration loop:
+```
+AUTORESEARCH_AGENT_CMD='your-agent --program {program} --repo {repo} --iteration {iteration}' AUTORESEARCH_ITERATIONS=3 pnpm dsl:autoresearch:loop
+```
+
+Codex runtime (recommended here):
+```
+AUTORESEARCH_ITERATIONS=3 pnpm dsl:autoresearch:codex:loop
+```
+
+Single Codex trial:
+```
+pnpm dsl:autoresearch:codex:trial
+```
+
+Optional Codex model override:
+```
+CODEX_MODEL=gpt-5.4 AUTORESEARCH_ITERATIONS=3 pnpm dsl:autoresearch:codex:loop
+```
+
+The runner accepts/rejects each trial by:
+1. `pnpm bench:llm:live` must pass.
+2. `make verify-all` must pass.
+3. Candidate score must be >= current best score.
+
+Rejected trials are reverted automatically for tracked files.
+
 ## React vs DSL Benchmark (Token Usage)
 Run an exhaustive paired benchmark to compare direct React code vs Units DSL:
 ```

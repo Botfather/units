@@ -128,6 +128,10 @@ function escapeRegExp(value) {
   return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+const REQUIRED_SNIPPET_ALIASES = {
+  AlertList: ["AlertsSection", "AlertsList"],
+};
+
 function applyStrictPostGenerationFixes(value) {
   let src = String(value || "");
   const fixes = [];
@@ -399,6 +403,8 @@ function analyzeSource(source, requiredSnippets = []) {
     const snippet = String(snippetRaw || "");
     if (!snippet) return true;
     if (src.includes(snippet)) return true;
+    const aliases = REQUIRED_SNIPPET_ALIASES[snippet];
+    if (Array.isArray(aliases) && aliases.some((alias) => src.includes(String(alias)))) return true;
     // For event-flavored requirements (!toggle / !remove), accept explicit handler calls too.
     if (snippet.startsWith("!")) {
       const handlerName = snippet.slice(1).trim();
