@@ -1,15 +1,21 @@
 {
   "name": "units",
+  "private": true,
   "displayName": "Units",
   "description": "Syntax highlighting and snippets for the Units DSL (.ui).",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "units",
+  "icon": "media/icon.png",
   "main": "./extension.js",
-  "activationEvents": ["onLanguage:units"],
+  "activationEvents": [
+    "onLanguage:units"
+  ],
   "engines": {
     "vscode": "^1.85.0"
   },
-  "categories": ["Programming Languages"],
+  "categories": [
+    "Programming Languages"
+  ],
   "contributes": {
     "configuration": {
       "title": "Units",
@@ -21,11 +27,27 @@
         }
       }
     },
+    "iconThemes": [
+      {
+        "id": "units-icons",
+        "label": "Units Icons",
+        "path": "./icons/units-icon-theme.json"
+      }
+    ],
     "languages": [
       {
         "id": "units",
-        "aliases": ["Units", "units"],
-        "extensions": [".ui"],
+        "aliases": [
+          "Units",
+          "units"
+        ],
+        "extensions": [
+          ".ui"
+        ],
+        "icon": {
+          "light": "./icons/file-ui.svg",
+          "dark": "./icons/file-ui.svg"
+        },
         "configuration": "./language-configuration.json"
       }
     ],

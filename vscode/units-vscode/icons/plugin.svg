@@ -1,0 +1,35 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Units Plugin Icon</title>
+  <desc id="desc">Plugin badge derived from the Units neon module mark.</desc>
+
+  <defs>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="12" y="12" width="232" height="232" rx="48" fill="#0F172A"/>
+  <g filter="url(#glow)" fill="#22D3EE">
+    <rect x="52" y="54" width="30" height="30" rx="7"/>
+    <rect x="52" y="92" width="30" height="30" rx="7"/>
+    <rect x="52" y="130" width="30" height="30" rx="7"/>
+
+    <rect x="136" y="54" width="30" height="30" rx="7"/>
+    <rect x="136" y="92" width="30" height="30" rx="7"/>
+    <rect x="136" y="130" width="30" height="30" rx="7"/>
+
+    <rect x="90" y="146" width="30" height="30" rx="7"/>
+    <rect x="108" y="146" width="30" height="30" rx="7"/>
+  </g>
+
+  <g stroke="#E2E8F0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M174 84H192V102"/>
+    <path d="M192 84V116"/>
+    <path d="M192 154V172"/>
+    <path d="M174 172H192V154"/>
+  </g>
+</svg>

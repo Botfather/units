@@ -1,0 +1,48 @@
+<svg width="512" height="512" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Units Mark</title>
+  <desc id="desc">Square icon mark for Units composed from tile modules forming a U.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="320" y2="320" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B1220"/>
+      <stop offset="1" stop-color="#111D35"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="40" y1="40" x2="280" y2="280" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#3B82F6"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="24" y="24" width="272" height="272" rx="52" fill="url(#bg)"/>
+
+  <g opacity="0.2" stroke="#7DD3FC" stroke-width="1">
+    <path d="M80 56V264"/>
+    <path d="M128 56V264"/>
+    <path d="M176 56V264"/>
+    <path d="M224 56V264"/>
+    <path d="M56 80H264"/>
+    <path d="M56 128H264"/>
+    <path d="M56 176H264"/>
+    <path d="M56 224H264"/>
+  </g>
+
+  <g filter="url(#glow)">
+    <rect x="74" y="70" width="44" height="44" rx="10" fill="url(#accent)"/>
+    <rect x="74" y="122" width="44" height="44" rx="10" fill="url(#accent)"/>
+    <rect x="74" y="174" width="44" height="44" rx="10" fill="url(#accent)"/>
+
+    <rect x="202" y="70" width="44" height="44" rx="10" fill="url(#accent)"/>
+    <rect x="202" y="122" width="44" height="44" rx="10" fill="url(#accent)"/>
+    <rect x="202" y="174" width="44" height="44" rx="10" fill="url(#accent)"/>
+
+    <rect x="126" y="198" width="44" height="44" rx="10" fill="url(#accent)"/>
+    <rect x="154" y="198" width="44" height="44" rx="10" fill="url(#accent)"/>
+  </g>
+</svg>

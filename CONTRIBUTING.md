@@ -29,14 +29,15 @@ Thanks for your interest in contributing to Units.
 - Describe the problem and the fix
 - Include tests or repro steps where possible
 - Ensure `node --test` passes locally (CI runs the full suite).
+- Ensure `pnpm -s test:coverage:gate` passes locally (CI enforces coverage minimums).
 - Ensure `pnpm -C examples/todo-vite lint:ui` passes for the demo app
 
 ## Releases
 - Use Changesets for all package version bumps.
 - Run `pnpm changeset` and commit the generated file under `.changeset/`.
+- If a change does not affect publishable packages (for example docs/workflows/site only), run `pnpm changeset add --empty` and commit it so CI changeset checks pass.
 - On merge to `main`, GitHub Actions opens/updates a release PR with version updates.
-- Merging that release PR publishes to npm using `NPM_TOKEN`.
-- Required repo secret for CI publish: `NPM_TOKEN` (npm automation token for `@botfather` scope).
+- The VS Code extension package under `vscode/units-vscode` is intentionally private and not part of npm releases.
 
 ## Reporting issues
 Open a GitHub issue with:

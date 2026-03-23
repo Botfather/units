@@ -4,68 +4,178 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Units</title>
-    <meta name="description" content="Units: lightweight DSL for interactive UI" />
+          <a class="brand" href="./index.html" aria-label="Units home">
+            <img src="./logo-units-mark.svg" alt="" />
+            <span>Units</span>
+          </a>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <main class="container">
       <nav class="nav">
         <span class="brand">Units</span>
-        <a href="./index.html">Home</a>
-        <a href="./docs.html">Documentation</a>
-        <a href="./examples.html">Examples</a>
-        <a href="https://github.com/Botfather/units">GitHub</a>
-      </nav>
+        <section class="card hero">
+          <div>
+            <p class="eyebrow">UI DSL · Tooling · Agent pipeline</p>
+            <h1>Small language. Broad surface area.</h1>
+            <p class="lead">
+              Units is a lightweight DSL for interactive UI, wrapped in a monorepo that now covers parsing,
+              rendering, Vite integration, editor support, agent-facing compression tools, DOM extraction,
+              IR compilation, and benchmark suites for both runtime and model workflows.
+            </p>
+            <div class="actions">
+              <a class="btn" href="./docs.html">Read docs</a>
+              <a class="btn secondary" href="./examples.html">Browse examples</a>
+              <a class="btn secondary" href="https://github.com/Botfather/units">Open repo</a>
+            </div>
+          </div>
 
-      <section class="card">
-        <h1>Minimal DSL for interactive UI</h1>
-        <p>
+          <aside class="hero-mark" aria-hidden="true">
+            <img src="./logo-units.svg" alt="" />
+          </aside>
+        </section>
+
+        <section class="stats-grid" aria-label="Repository summary">
+          <article class="stat-card">
+            <strong>12</strong>
+            <span>published and workspace packages</span>
+          </article>
+          <article class="stat-card">
+            <strong>5</strong>
+            <span>Vite examples in the repo</span>
+          </article>
+          <article class="stat-card">
+            <strong>6</strong>
+            <span>benchmark families under active test</span>
+          </article>
+          <article class="stat-card">
+            <strong>1</strong>
+            <span>VS Code language extension for .ui files</span>
+          </article>
           Units is a lightweight UI DSL with fast parsing, small syntax, and both React + custom renderer support.
         </p>
-        <p>
-          <a class="btn" href="./docs.html">Read docs</a>
-          <a class="btn secondary" href="./examples.html">See examples</a>
+        <section class="card section-head">
+          <p class="eyebrow">What is in the repo now</p>
+          <h2>Current monorepo surface</h2>
+          <p class="meta wide">
+            The GitHub Pages entry point now reflects the broader repo instead of only the original runtime and
+            plugin packages.
+          </p>
+        </section>
+
+        <section class="grid feature-grid">
+          <article class="card tone-dark">
+            <p class="eyebrow">Core runtime</p>
+            <h3>Parse, print, render, incrementally update</h3>
+            <ul>
+              <li>@botfather/units: parser, printer, runtime, custom renderer, incremental sketch</li>
+              <li>React renderer plus host-agnostic createUnitsRenderer flow</li>
+              <li>Small grammar with raw JS expressions and directive support</li>
+            </ul>
+          </article>
+
+          <article class="card tone-cyan">
+            <p class="eyebrow">Build and authoring</p>
+            <h3>Vite, CLI, and editor tooling</h3>
+            <ul>
+              <li>@botfather/vite-plugin-units for .ui imports in Vite apps</li>
+              <li>@botfather/vite-plugin-units-tools for format, token, and highlight workflows</li>
+              <li>@botfather/units-tools plus the Units VS Code extension for .ui editing</li>
+            </ul>
+          </article>
+
+          <article class="card tone-blue">
+            <p class="eyebrow">Agent pipeline</p>
+            <h3>Compression, DOM capture, IR, and compilation</h3>
+            <ul>
+              <li>@botfather/units-agent-middleware for agent-agnostic UI tree rewriting</li>
+              <li>@botfather/units-agent-plugin and @botfather/units-agent-service for compress-ui flows</li>
+              <li>@botfather/units-dom-snapshot, @botfather/units-ui-ir, @botfather/units-react-adapter, and @botfather/units-compiler</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <p class="eyebrow">UI kit and reference apps</p>
+            <h3>Examples that exercise the stack</h3>
+            <ul>
+              <li>@botfather/units-uikit-shadcn for a ShadCN-style component layer</li>
+              <li>todo-vite, chat-vite, shadcn-gallery-vite, learn-vite, and portfolio-vite</li>
+              <li>Bench fixtures and curated .ui/.jsx case pairs under bench/cases</li>
+            </ul>
+          </article>
+        </section>
+
+        <section class="card split-card">
+          <div>
+            <p class="eyebrow">Quick start</p>
+            <h2>Minimal runtime entry point</h2>
+            <p class="meta wide">
+              The baseline API is still intentionally small even though the repo around it has expanded.
+            </p>
+          </div>
+          <pre><code>import { parseUnits, renderUnits } from "@botfather/units";
         </p>
       </section>
 
       <section class="card">
         <h2>Quick Start</h2>
-        <pre><code>import { parseUnits, renderUnits } from "@botfather/units";
-
-const ast = parseUnits("Card { text 'Hello Units' }");
-const node = renderUnits(ast, { user: { name: "Ada" } });</code></pre>
-      </section>
-
-      <section class="card">
-        <h2>Open Source Essentials</h2>
-        <p class="meta">Core project policies and contribution docs.</p>
-        <ul>
-          <li><a href="https://github.com/Botfather/units/blob/main/README.md">README</a></li>
-          <li><a href="https://github.com/Botfather/units/blob/main/LICENSE">License (MIT)</a></li>
-          <li><a href="https://github.com/Botfather/units/blob/main/CONTRIBUTING.md">Contributing Guide</a></li>
-          <li><a href="https://github.com/Botfather/units/blob/main/CODE_OF_CONDUCT.md">Code of Conduct</a></li>
-          <li><a href="https://github.com/Botfather/units/blob/main/SECURITY.md">Security Policy</a></li>
-          <li><a href="https://github.com/Botfather/units/blob/main/SUPPORT.md">Support Policy</a></li>
-          <li><a href="https://github.com/Botfather/units/releases">Releases / Changelog</a></li>
+        <section class="grid two-up">
+          <article class="card">
+            <p class="eyebrow">Benchmarks</p>
+            <h2>Evaluation is part of the repo surface</h2>
         </ul>
-      </section>
+              <li>Parser throughput via bench.js</li>
+              <li>DSL suite for parsing, formatting, rendering, and incremental edits</li>
+              <li>System planning and execution runs for network or provider-backed workflows</li>
+              <li>LLM token and quality benchmarks driven by bench/llm-cases.json</li>
+              <li>React vs Units DSL token comparisons, including provider-tokenized runs</li>
+              <li>UI-PS baseline scoring with fixtures, verified seed library, and gates</li>
+            </ul>
+            <pre><code>pnpm bench:parser
+  pnpm bench:dsl
+  pnpm bench:llm
+  pnpm bench:react-vs-dsl
+  pnpm bench:ui-ps</code></pre>
+          </article>
 
-      <section class="card grid">
-        <article>
-          <h3>Packages</h3>
-          <ul>
-            <li>@botfather/units</li>
-            <li>@botfather/vite-plugin-units</li>
-            <li>@botfather/vite-plugin-units-tools</li>
-            <li>@botfather/units-tools</li>
-            <li>@botfather/units-uikit-shadcn</li>
+          <article class="card">
+            <p class="eyebrow">GitHub entry points</p>
+            <h2>Source-of-truth documents</h2>
+            <ul>
+              <li><a href="https://github.com/Botfather/units/blob/main/README.md">README</a></li>
+              <li><a href="https://github.com/Botfather/units/blob/main/DOCS.md">DOCS.md</a></li>
+              <li><a href="https://github.com/Botfather/units/blob/main/DOCS-LLM.md">DOCS-LLM.md</a></li>
+              <li><a href="https://github.com/Botfather/units/tree/main/vscode/units-vscode">VS Code extension</a></li>
+              <li><a href="https://github.com/Botfather/units/blob/main/CONTRIBUTING.md">Contributing Guide</a></li>
+              <li><a href="https://github.com/Botfather/units/releases">Releases / Changelog</a></li>
+            </ul>
+          </article>
+        </section>
+
+        <section class="card">
+          <p class="eyebrow">Open source essentials</p>
+          <h2>Project policies</h2>
+          <ul class="link-list">
+            <li><a href="https://github.com/Botfather/units/blob/main/LICENSE">License (MIT)</a></li>
+            <li><a href="https://github.com/Botfather/units/blob/main/CODE_OF_CONDUCT.md">Code of Conduct</a></li>
+            <li><a href="https://github.com/Botfather/units/blob/main/SECURITY.md">Security Policy</a></li>
+            <li><a href="https://github.com/Botfather/units/blob/main/SUPPORT.md">Support Policy</a></li>
           </ul>
-        </article>
-        <article>
-          <h3>Benchmarks</h3>
-          <ul>
-            <li><code>pnpm bench:parser</code></li>
-            <li><code>pnpm bench:llm</code></li>
+        </section>
+
+        <section class="card section-foot">
+          <p class="eyebrow">Where to go next</p>
+          <h2>Start with the layer you need</h2>
+          <div class="mini-grid">
+            <a class="mini-tile" href="./docs.html">Language and runtime docs</a>
+            <a class="mini-tile" href="./examples.html">Examples and local run targets</a>
+            <a class="mini-tile" href="https://github.com/Botfather/units/tree/main/packages">Packages</a>
+            <a class="mini-tile" href="https://github.com/Botfather/units/tree/main/test">Tests</a>
+          </div>
+        </section>
+      </main>
+    </body>
+  </html>
             <li><code>pnpm bench:react-vs-dsl</code></li>
           </ul>
         </article>

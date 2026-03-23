@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Units DOM to .ui</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <h1>Units DOM to .ui</h1>
+      <p class="hint">Capture the active tab and export a `.ui` DSL snapshot.</p>
+
+      <div class="actions">
+        <button id="capture" class="primary">Capture Current Tab</button>
+        <button id="copy" disabled>Copy</button>
+        <button id="download" disabled>Download</button>
+      </div>
+
+      <p id="status" class="status">Idle</p>
+      <textarea id="output" spellcheck="false" placeholder="Captured .ui code will appear here"></textarea>
+    </main>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

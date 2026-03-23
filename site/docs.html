@@ -9,51 +9,124 @@
   <body>
     <main class="container">
       <nav class="nav">
-        <span class="brand">Units</span>
+        <a class="brand" href="./index.html" aria-label="Units home">
+          <img src="./logo-units-mark.svg" alt="" />
+          <span>Units</span>
+        </a>
         <a href="./index.html">Home</a>
         <a href="./docs.html">Documentation</a>
         <a href="./examples.html">Examples</a>
+        <a href="https://github.com/Botfather/units/blob/main/DOCS.md">Full docs</a>
       </nav>
 
-      <section class="card">
-        <h1>Documentation</h1>
-        <p>
-          Full technical docs are maintained in the repository and remain the source of truth.
-        </p>
-        <p>
-          <a class="btn" href="https://github.com/Botfather/units/blob/main/DOCS.md">Open full DOCS.md</a>
-          <a class="btn secondary" href="https://github.com/Botfather/units/blob/main/DOCS-LLM.md">Open DOCS-LLM.md</a>
-        </p>
+      <section class="card hero hero-compact">
+        <div>
+          <p class="eyebrow">Documentation hub</p>
+          <h1>Repository docs, condensed for the Pages entry point.</h1>
+          <p class="lead">
+            Full technical detail still lives in the repository. This page is the short map: language shape,
+            runtime model, tooling layers, and the newer agent and evaluation packages that now sit beside the core DSL.
+          </p>
+          <div class="actions">
+            <a class="btn" href="https://github.com/Botfather/units/blob/main/DOCS.md">Open DOCS.md</a>
+            <a class="btn secondary" href="https://github.com/Botfather/units/blob/main/DOCS-LLM.md">Open DOCS-LLM.md</a>
+          </div>
+        </div>
+
+        <aside class="hero-mark hero-mark-small" aria-hidden="true">
+          <img src="./logo-units-mark.svg" alt="" />
+        </aside>
       </section>
 
-      <section class="card">
-        <h2>Syntax Snapshot</h2>
-        <pre><code>Tag ( props ) { children }
+      <section class="grid two-up">
+        <article class="card">
+          <p class="eyebrow">Syntax snapshot</p>
+          <h2>Core surface</h2>
+          <pre><code>Tag ( props ) { children }
 text 'literal'
 @expr
 
 #if (@cond) { ... }
 #for (item, i in @items) { ... }
 #slot (name)</code></pre>
+        </article>
+
+        <article class="card">
+          <p class="eyebrow">Props and events</p>
+          <h2>Minimal but expressive</h2>
+          <pre><code>key:value
+key=@expr
+key?=@expr
+!click { set(selected:=@item.id) }
+on:click={ doThing(@item) }</code></pre>
+        </article>
       </section>
 
-      <section class="card grid">
-        <article>
-          <h3>Runtime</h3>
+      <section class="grid feature-grid">
+        <article class="card tone-dark">
+          <p class="eyebrow">Runtime</p>
+          <h3>Execution model</h3>
           <ul>
             <li>React renderer with scoped evaluation</li>
             <li>Custom host renderer API</li>
             <li>Inline event and expression support</li>
+            <li>Directive flow for if, elif, else, for, slot, and key</li>
           </ul>
         </article>
-        <article>
-          <h3>Tooling</h3>
+
+        <article class="card tone-cyan">
+          <p class="eyebrow">Tooling</p>
+          <h3>Authoring and build path</h3>
           <ul>
             <li>Vite plugin for .ui imports</li>
             <li>Format/lint/token/highlight tools</li>
             <li>CLI utilities for .ui workflows</li>
+            <li>VS Code language support with snippets, grammar, and icon theme</li>
           </ul>
         </article>
+
+        <article class="card tone-blue">
+          <p class="eyebrow">Agent additions</p>
+          <h3>Compression and neutral IR layers</h3>
+          <ul>
+            <li>units-agent-middleware for structural UI rewrites</li>
+            <li>units-agent-plugin and units-agent-service for compress-ui delivery</li>
+            <li>units-dom-snapshot, units-ui-ir, units-react-adapter, and units-compiler for extraction and compile flows</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <p class="eyebrow">Verification</p>
+          <h3>Benchmarks and tests</h3>
+          <ul>
+            <li>Parser, DSL, system, LLM, React-vs-DSL, and UI-PS benchmark families</li>
+            <li>Node test coverage across runtime, tools, compiler, DOM snapshot, adapters, and plugins</li>
+            <li>Machine-readable reports written under bench/results</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="card split-card">
+        <div>
+          <p class="eyebrow">Common commands</p>
+          <h2>Typical repository entry points</h2>
+        </div>
+        <pre><code>pnpm bench:dsl
+pnpm bench:llm
+pnpm bench:react-vs-dsl
+node --test
+node --test --experimental-test-coverage</code></pre>
+      </section>
+
+      <section class="card">
+        <p class="eyebrow">Primary documents</p>
+        <h2>Read in depth</h2>
+        <div class="mini-grid">
+          <a class="mini-tile" href="https://github.com/Botfather/units/blob/main/README.md">README</a>
+          <a class="mini-tile" href="https://github.com/Botfather/units/blob/main/DOCS.md">DOCS.md</a>
+          <a class="mini-tile" href="https://github.com/Botfather/units/blob/main/DOCS-LLM.md">DOCS-LLM.md</a>
+          <a class="mini-tile" href="https://github.com/Botfather/units/tree/main/test">Tests</a>
+        </div>
       </section>
     </main>
   </body>

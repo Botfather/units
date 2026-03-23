@@ -1,0 +1,26 @@
+{
+  "name": "units-dom-to-ui-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt --browser firefox",
+    "build": "wxt build",
+    "build:chrome": "wxt build --browser chrome",
+    "build:firefox": "wxt build --browser firefox",
+    "build:edge": "wxt build --browser edge",
+    "build:all": "pnpm run build:chrome && pnpm run build:firefox && pnpm run build:edge",
+    "zip": "wxt zip",
+    "zip:chrome": "wxt zip --browser chrome",
+    "zip:firefox": "wxt zip --browser firefox",
+    "zip:edge": "wxt zip --browser edge",
+    "zip:all": "pnpm run zip:chrome && pnpm run zip:firefox && pnpm run zip:edge"
+  },
+  "dependencies": {
+    "@botfather/units-dom-snapshot": "workspace:*"
+  },
+  "devDependencies": {
+    "wxt": "^0.20.6"
+  }
+}

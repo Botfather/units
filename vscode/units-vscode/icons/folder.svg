@@ -1,0 +1,7 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Units Folder Icon</title>
+  <desc id="desc">Closed folder icon for Units file icon theme.</desc>
+
+  <path d="M10 34C10 28.477 14.477 24 20 24H44L54 36H108C113.523 36 118 40.477 118 46V96C118 101.523 113.523 106 108 106H20C14.477 106 10 101.523 10 96V34Z" fill="#1E293B"/>
+  <path d="M10 50C10 44.477 14.477 40 20 40H108C113.523 40 118 44.477 118 50V96C118 101.523 113.523 106 108 106H20C14.477 106 10 101.523 10 96V50Z" fill="#0F172A"/>
+</svg>

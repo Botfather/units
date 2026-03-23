@@ -1,0 +1,51 @@
+<svg width="960" height="520" viewBox="0 0 960 520" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Units Project Logo</title>
+  <desc id="desc">A geometric U-shaped mark built from modular tiles with the Units wordmark.</desc>
+
+  <defs>
+    <linearGradient id="unitsAccent" x1="40" y1="40" x2="280" y2="280" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#3B82F6"/>
+    </linearGradient>
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <g transform="translate(320 16)">
+  <rect x="24" y="24" width="272" height="272" rx="52" fill="#0B1220"/>
+
+  <!-- Modular grid accents -->
+  <g opacity="0.2" stroke="#7DD3FC" stroke-width="1">
+    <path d="M80 56V264"/>
+    <path d="M128 56V264"/>
+    <path d="M176 56V264"/>
+    <path d="M224 56V264"/>
+    <path d="M56 80H264"/>
+    <path d="M56 128H264"/>
+    <path d="M56 176H264"/>
+    <path d="M56 224H264"/>
+  </g>
+
+  <!-- U mark built from discrete units -->
+  <g filter="url(#softGlow)">
+    <rect x="74" y="70" width="44" height="44" rx="10" fill="url(#unitsAccent)"/>
+    <rect x="74" y="122" width="44" height="44" rx="10" fill="url(#unitsAccent)"/>
+    <rect x="74" y="174" width="44" height="44" rx="10" fill="url(#unitsAccent)"/>
+
+    <rect x="202" y="70" width="44" height="44" rx="10" fill="url(#unitsAccent)"/>
+    <rect x="202" y="122" width="44" height="44" rx="10" fill="url(#unitsAccent)"/>
+    <rect x="202" y="174" width="44" height="44" rx="10" fill="url(#unitsAccent)"/>
+
+    <rect x="126" y="198" width="44" height="44" rx="10" fill="url(#unitsAccent)"/>
+    <rect x="154" y="198" width="44" height="44" rx="10" fill="url(#unitsAccent)"/>
+  </g>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="480" y="450" text-anchor="middle" filter="url(#softGlow)" fill="#7DD3FC" font-family="'Avenir Next', 'Segoe UI', sans-serif" font-size="124" font-weight="700" letter-spacing="2">Units</text>
+</svg>

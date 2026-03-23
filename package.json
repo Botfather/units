@@ -13,7 +13,8 @@
   },
   "workspaces": [
     "packages/*",
-    "examples/*"
+    "examples/*",
+    "vscode/*"
   ],
   "scripts": {
     "bench:parser": "node ./bench.js",
@@ -44,6 +45,10 @@
     "test:units-dom-snapshot": "node --test ./test/units-dom-snapshot.test.mjs",
     "test:units-transform": "node --test ./test/units-transform.test.mjs",
     "test:system-bench": "node --test ./test/system-bench.test.mjs",
+    "test:coverage:gate": "node ./tools/coverage-gate.mjs",
+    "ext:dom-to-ui:build": "pnpm --filter units-dom-to-ui-extension build:all",
+    "ext:dom-to-ui:zip": "pnpm --filter units-dom-to-ui-extension zip:all",
+    "ext:dom-to-ui:bundle": "pnpm run ext:dom-to-ui:build && pnpm run ext:dom-to-ui:zip",
     "changeset": "changeset",
     "changeset:version": "changeset version",
     "changeset:status": "changeset status --verbose",
