@@ -124,6 +124,10 @@ function escapeForSingleQuotedText(value) {
   return String(value || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
 
+function escapeRegExp(value) {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function applyStrictPostGenerationFixes(value) {
   let src = String(value || "");
   const fixes = [];
@@ -268,6 +272,58 @@ function applyStrictPostGenerationFixes(value) {
     (_m, lead, key, expr) => `${lead}${key}:@${expr}`,
   );
 
+  // Normalize prop expressions emitted as key:(expr) into key:@expr.
+  // Example: style:(textDecoration:@x ? 'a' : 'b') => style:@textDecoration:@x ? 'a' : 'b'
+  replaceCounted(
+    "prop_colon_paren_expr",
+    /([,(]\s*[A-Za-z_$][\w:.-]*)\s*:\s*\(([^()\n]+)\)/g,
+    (_m, keyLead, exprRaw) => {
+      const expr = String(exprRaw || "").trim().replace(/^@+/, "");
+      return `${keyLead}:@${expr}`;
+    },
+  );
+
+  // Merge adjacent prop groups on the same tag:
+  //   Input (a:1) (b:2) => Input (a:1, b:2)
+  {
+    const propGroupPattern = /([A-Za-z_][\w:.-]*)\s*\(([^()]*)\)\s*\(([^()]*)\)/g;
+    let mergeCount = 0;
+    let prev;
+    do {
+      prev = src;
+      src = src.replace(propGroupPattern, (_m, tag, leftRaw, rightRaw) => {
+        mergeCount++;
+        const left = String(leftRaw || "").trim();
+        const right = String(rightRaw || "").trim();
+        if (!left) return `${tag} (${right})`;
+        if (!right) return `${tag} (${left})`;
+        return `${tag} (${left}, ${right})`;
+      });
+    } while (src !== prev);
+    if (mergeCount > 0) fixes.push({ name: "merge_adjacent_prop_groups", count: mergeCount });
+  }
+
+  // Fallback merge for model outputs with nested parens in props/events:
+  //   Input (... !input { fn(@event) }) (!enter { ... }) => Input (... !input { ... }, !enter { ... })
+  {
+    const lines = src.split("\n");
+    let mergedLineCount = 0;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (!/^[ \t]*[A-Za-z_][\w:.-]*\s*\(/.test(line)) continue;
+      if (!/\)\s+\(/.test(line)) continue;
+      const next = line.replace(/\)\s+\(/g, ", ");
+      if (next !== line) {
+        lines[i] = next;
+        mergedLineCount++;
+      }
+    }
+    if (mergedLineCount > 0) {
+      fixes.push({ name: "merge_adjacent_prop_groups_fallback", count: mergedLineCount });
+      src = lines.join("\n");
+    }
+  }
+
   // Bare text expression form: text @value => text '@{value}'
   replaceCounted(
     "text_bare_expr",
@@ -286,23 +342,25 @@ function applyStrictPostGenerationFixes(value) {
   //   text message.content
   //   text @message.content
   //   text message?.value ?? 'fallback'
+  // and inline forms:
+  //   Tag { text message.content }
   // into:
   //   text '@{...}'
   replaceCounted(
     "text_non_string_rhs",
-    /^([ \t]*)text[ \t]+(.+?)([ \t]*)$/gm,
-    (_m, indent, rhsRaw, tailWs) => {
+    /\btext\s+(.+?)(?=\s*(?:\}|$))/gm,
+    (_m, rhsRaw) => {
       const rhs = String(rhsRaw || "").trim();
-      if (!rhs) return `${indent}text ''${tailWs || ""}`;
-      if (rhs.startsWith("'")) return `${indent}text ${rhs}${tailWs || ""}`;
+      if (!rhs) return "text ''";
+      if (rhs.startsWith("'")) return `text ${rhs}`;
       if (rhs.startsWith("@{") && rhs.endsWith("}")) {
-        return `${indent}text '${escapeForSingleQuotedText(rhs)}'${tailWs || ""}`;
+        return `text '${escapeForSingleQuotedText(rhs)}'`;
       }
       if (rhs.startsWith("@")) {
         const expr = rhs.slice(1).trim();
-        return `${indent}text '@{${escapeForSingleQuotedText(expr)}}'${tailWs || ""}`;
+        return `text '@{${escapeForSingleQuotedText(expr)}}'`;
       }
-      return `${indent}text '@{${escapeForSingleQuotedText(rhs)}}'${tailWs || ""}`;
+      return `text '@{${escapeForSingleQuotedText(rhs)}}'`;
     },
   );
 
@@ -337,7 +395,20 @@ function analyzeSource(source, requiredSnippets = []) {
   const chars = src.length;
   const estimatedTokens = estimateTokens(src);
   const required = Array.isArray(requiredSnippets) ? requiredSnippets : [];
-  const requiredMatched = required.filter((snippet) => src.includes(String(snippet)));
+  const requiredMatched = required.filter((snippetRaw) => {
+    const snippet = String(snippetRaw || "");
+    if (!snippet) return true;
+    if (src.includes(snippet)) return true;
+    // For event-flavored requirements (!toggle / !remove), accept explicit handler calls too.
+    if (snippet.startsWith("!")) {
+      const handlerName = snippet.slice(1).trim();
+      if (handlerName) {
+        const handlerPattern = new RegExp(`\\b${escapeRegExp(handlerName)}\\w*\\s*\\(`);
+        if (handlerPattern.test(src)) return true;
+      }
+    }
+    return false;
+  });
   const requiredPass = requiredMatched.length === required.length;
   let parseOk = false;
   let parseError = null;
@@ -592,19 +663,42 @@ function mergeUsage(a, b) {
   };
 }
 
+function requiredSnippetHint(snippetRaw) {
+  const snippet = String(snippetRaw || "").trim();
+  if (!snippet) return "- (empty)";
+  if (!snippet.startsWith("!")) return `- ${snippet}`;
+  const eventName = snippet.slice(1).trim();
+  if (!eventName) return `- ${snippet}`;
+  return `- ${snippet} (or handler call like ${eventName}(...) / ${eventName}Task(...))`;
+}
+
 function buildRepairPrompt({ prompt, generated, parseError, requiredSnippets }) {
   const required = Array.isArray(requiredSnippets) && requiredSnippets.length > 0
-    ? requiredSnippets.map((snippet) => `- ${snippet}`).join("\n")
+    ? requiredSnippets.map(requiredSnippetHint).join("\n")
     : "- (none)";
+  const parse = String(parseError || "(none)").trim();
+  const parseContext = parse.includes("...")
+    ? parse.slice(Math.max(0, parse.indexOf("...") - 80), Math.min(parse.length, parse.lastIndexOf("...") + 3))
+    : parse;
   return [
-    "Your previous answer was invalid or incomplete Units DSL.",
+    "Your previous answer did not pass validation.",
+    "Regenerate the FULL DSL from scratch, not a diff and not partial output.",
     `Original task: ${prompt}`,
-    `Parser error: ${parseError || "(none)"} `,
-    "Required snippets to include:",
-    required,
+    `Parser error: ${parse}`,
+    `Parser context: ${parseContext || "(none)"}`,
     "",
-    "Fix and return only valid Units DSL.",
-    "Do not output any explanation.",
+    "Hard syntax rules (must follow):",
+    "- Output only Units DSL. No markdown, no prose.",
+    "- Exactly one props group per tag: Tag (a:1, b:2) { ... }",
+    "- text must be a single-quoted string; expressions must use text '@{expr}'",
+    "- Events must be explicit: !event { handler(@event) }",
+    "- Use #for loops with #key.",
+    "",
+    "Required structures to include:",
+    required,
+    "Use the required literals exactly at least once when possible.",
+    "",
+    "Return only valid Units DSL.",
     "Previous output:",
     generated,
   ].join("\n");
