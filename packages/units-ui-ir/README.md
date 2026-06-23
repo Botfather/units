@@ -31,7 +31,7 @@ const compact = serializeCompactUiTree(ir, {
 
 Slack Block Kit payloads may be passed as a full message (`{ blocks: [...] }`), a `blocks` array, a single block, a Slack text object, or a raw `mrkdwn` string. `mrkdwn` text is normalized into IR roles for styles, links, mentions, channels, user groups, special mentions, dates, quotes, and code spans.
 
-For token efficiency, compact serialization deduplicates redundant `name`/`text` pairs and omits role-implicit actions (for example `button -> click`) by default. Set `includeRedundantNameText: true` and/or `includeImplicitActions: true` to preserve them.
+For token efficiency, compact serialization deduplicates redundant `name`/`text` pairs, omits role-implicit actions (for example `button -> click`), drops empty text leaf nodes, and omits text-node ids by default. Set `includeRedundantNameText: true`, `includeImplicitActions: true`, and/or `includeTextIds: true` to preserve extra fields when needed.
 
 ## Exports
 

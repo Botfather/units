@@ -14,6 +14,7 @@ export type CompactSerializeOptions = {
   includeProps?: boolean;
   includeMeta?: boolean;
   includeIds?: boolean;
+  includeTextIds?: boolean;
   includeState?: boolean;
   includeRedundantNameText?: boolean;
   includeImplicitActions?: boolean;

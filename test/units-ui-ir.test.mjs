@@ -147,6 +147,40 @@ test("serializeCompactUiTree deduplicates redundant name/text by default", () =>
   assert.deepEqual(explicit.actions, ["click"]);
 });
 
+test("serializeCompactUiTree drops empty text leaves", () => {
+  const ir = normalizeUiNode({
+    id: "root",
+    role: "container",
+    children: [
+      { id: "empty", role: "text", text: "" },
+      { id: "value", role: "text", text: "Hello" },
+    ],
+  });
+
+  const compact = serializeCompactUiTree(ir, { includeIds: false });
+  assert.equal(compact.children.length, 1);
+  assert.equal(compact.children[0].text, "Hello");
+});
+
+test("serializeCompactUiTree omits text node ids by default", () => {
+  const ir = normalizeUiNode({
+    id: "root",
+    role: "container",
+    children: [
+      { id: "txt", role: "text", text: "Hello" },
+      { id: "btn", role: "button", name: "Save", text: "Save", actions: ["click"] },
+    ],
+  });
+
+  const compact = serializeCompactUiTree(ir);
+  const [textNode, buttonNode] = compact.children;
+  assert.ok(!("id" in textNode));
+  assert.equal(buttonNode.id, "btn");
+
+  const explicit = serializeCompactUiTree(ir, { includeTextIds: true });
+  assert.equal(explicit.children[0].id, "txt");
+});
+
 test("parseSlackMrkdwn recognizes Block Kit markdown entities", () => {
   const nodes = parseSlackMrkdwn(
     "Hello *bold* _em_ ~old~ `x * y` <https://example.com|site> <@U012AB3CD> <#C123ABC456|ops> <!date^1392734382^{date_short}|Feb 18, 2014> &lt;safe&gt;",

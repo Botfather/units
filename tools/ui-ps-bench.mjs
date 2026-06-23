@@ -354,10 +354,12 @@ export async function runBench(options = {}) {
       ? round((legacyTransformedDslTokens - transformedDslTokens) / legacyTransformedDslTokens)
       : 0;
     const legacyAgentTree = serializeAgentTree(outputTree, {
+      includeTextIds: true,
       includeRedundantNameText: true,
       includeImplicitActions: true,
     });
     const transformedAgentTree = serializeAgentTree(outputTree, {
+      includeTextIds: false,
       includeRedundantNameText: false,
       includeImplicitActions: false,
     });

@@ -172,7 +172,7 @@ test("compileUiToUnits emits #for loops for repeated leaf siblings", () => {
 
   assert.match(result.dsl, /#for /);
   assert.match(result.dsl, /in @\(\[/);
-  assert.match(result.dsl, /#for item1,i1 in @\(\[\{name:'Add milk',text:'Add milk'/);
+  assert.match(result.dsl, /#for item1 in @\(\[\{name:'Add milk',text:'Add milk'/);
   assert.doesNotMatch(result.dsl, /\{ name:/);
 
   const reparsed = parseUnits(result.dsl);

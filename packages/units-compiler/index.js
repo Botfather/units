@@ -557,7 +557,6 @@ function emitLoopGroup(group, indent, config, state) {
   state.loopCounter = sequence;
 
   const loopVar = `item${sequence}`;
-  const idxVar = `i${sequence}`;
   const dynamicFields = new Set(group.dynamicFields);
 
   const pad = "  ".repeat(indent);
@@ -572,7 +571,7 @@ function emitLoopGroup(group, indent, config, state) {
   if (templateLines.length === 0) return [];
 
   return [
-    `${pad}#for (${loopVar},${idxVar} in @(${listExpr})) {`,
+    `${pad}#for (${loopVar} in @(${listExpr})) {`,
     ...templateLines,
     `${pad}}`,
   ];
