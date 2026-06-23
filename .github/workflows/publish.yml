@@ -33,25 +33,6 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      - name: Validate npm publish auth
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "::error::Missing NPM_TOKEN secret. Add an npm automation token with publish rights for the @botfather scope."
-            exit 1
-          fi
-
-          if ! npm whoami >/dev/null 2>&1; then
-            echo "::error::NPM_TOKEN is invalid for registry.npmjs.org."
-            exit 1
-          fi
-
-          if ! npm access ls-packages @botfather >/dev/null 2>&1; then
-            echo "::error::NPM_TOKEN cannot access the @botfather scope. Ensure the scope exists in npm and the token has publish permissions."
-            exit 1
-          fi
-
       - name: Validate UI-PS quality gates
         run: |
           pnpm -s test:units-tools-transform-verify
@@ -70,5 +51,4 @@ jobs:
           title: "ci: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_PAT || secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
