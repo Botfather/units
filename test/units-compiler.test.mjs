@@ -70,6 +70,49 @@ test("compileUiToUnits compiles IR trees into parseable Units DSL/AST", () => {
   assert.equal(reparsed.type, "document");
 });
 
+test("compileUiToUnits omits redundant root container unless explicitly requested", () => {
+  const uiTree = {
+    id: "root",
+    role: "container",
+    name: "",
+    text: "",
+    props: {},
+    state: {},
+    actions: [],
+    meta: {},
+    children: [
+      {
+        id: "primary",
+        role: "button",
+        name: "Buy now",
+        text: "Buy now",
+        props: {},
+        state: {},
+        actions: ["click"],
+        meta: {},
+        children: [],
+      },
+    ],
+  };
+
+  const optimized = compileUiToUnits(uiTree, {
+    sourceType: "ir",
+    enableLoopHeuristic: false,
+  });
+  assert.doesNotMatch(optimized.dsl, /^\s*Container\b/m);
+  assert.match(optimized.dsl, /^\s*Button\b/m);
+
+  const explicit = compileUiToUnits(uiTree, {
+    sourceType: "ir",
+    enableLoopHeuristic: false,
+    includeRootContainer: true,
+  });
+  assert.match(explicit.dsl, /^\s*Container\b/m);
+
+  const reparsed = parseUnits(optimized.dsl);
+  assert.equal(reparsed.type, "document");
+});
+
 test("compileUiToUnits applies transform program before emitting DSL", () => {
   const uiTree = {
     id: "root",
@@ -172,8 +215,10 @@ test("compileUiToUnits emits #for loops for repeated leaf siblings", () => {
 
   assert.match(result.dsl, /#for /);
   assert.match(result.dsl, /in @\(\[/);
-  assert.match(result.dsl, /#for item1 in @\(\[\{name:'Add milk',text:'Add milk'/);
+  assert.match(result.dsl, /#for item1 in @\(\[\{name:'Add milk'\},\{name:'Add eggs'\},\{name:'Add bread'\}\]\)/);
   assert.doesNotMatch(result.dsl, /\{ name:/);
+  assert.doesNotMatch(result.dsl, /text:'Add milk'/);
+  assert.doesNotMatch(result.dsl, /@\{item1\.text\}/);
 
   const reparsed = parseUnits(result.dsl);
   assert.equal(reparsed.type, "document");

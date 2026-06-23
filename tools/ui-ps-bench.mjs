@@ -331,6 +331,7 @@ export async function runBench(options = {}) {
       includeImplicitActions: false,
       includeRedundantName: false,
       includeRedundantLeafText: false,
+      includeRootContainer: false,
       includeState: true,
       includeRoleProp: false,
       includeHidden: false,
@@ -343,6 +344,7 @@ export async function runBench(options = {}) {
       includeImplicitActions: true,
       includeRedundantName: true,
       includeRedundantLeafText: true,
+      includeRootContainer: true,
     };
     const baselineCompile = compileUiToUnits(inputTree, compileOptions);
     const legacyTransformedCompile = compileUiToUnits(outputTree, legacyCompileOptions);

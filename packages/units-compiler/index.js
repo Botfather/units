@@ -336,6 +336,13 @@ function findLoopGroup(children, start, config) {
   const dynamicFields = [];
   if (new Set(names).size > 1) dynamicFields.push("name");
   if (new Set(texts).size > 1) dynamicFields.push("text");
+  const textFromName = dynamicFields.includes("name")
+    && dynamicFields.includes("text")
+    && names.every((name, index) => name && name === texts[index]);
+  if (textFromName) {
+    const textIndex = dynamicFields.indexOf("text");
+    if (textIndex !== -1) dynamicFields.splice(textIndex, 1);
+  }
 
   if (dynamicFields.length === 0) return null;
 
@@ -351,8 +358,68 @@ function findLoopGroup(children, start, config) {
     length: group.length,
     template: group[0],
     dynamicFields,
+    textFromName,
     items,
   };
+}
+
+function shouldEmitRootContainer(node, config) {
+  if (!isObject(node)) return true;
+  if (config.includeRootContainer === true) return true;
+
+  const role = cleanText(node.role).toLowerCase();
+  if (role !== "container") return true;
+
+  const children = asArray(node.children).filter((child) => isObject(child));
+  if (children.length === 0) return true;
+
+  if (cleanText(node.name) || cleanText(node.text)) return true;
+
+  const state = isObject(node.state) ? node.state : {};
+  const meaningfulState = Object.entries(state).some(([key, value]) => {
+    if (key === "hidden") return value === true;
+    if (key === "if" || key === "when") return cleanText(value).length > 0;
+    if (typeof value === "boolean") return value === true;
+    if (typeof value === "number") return Number.isFinite(value) && value !== 0;
+    return cleanText(value).length > 0;
+  });
+  if (meaningfulState) return true;
+
+  const actions = asArray(node.actions).map((value) => cleanText(value)).filter(Boolean);
+  if (actions.length > 0) return true;
+
+  const sourceProps = isObject(node.props) ? node.props : {};
+  const meaningfulPropKeys = [
+    "placeholder",
+    "href",
+    "type",
+    "value",
+    "title",
+    "alt",
+    "aria-label",
+    "ariaLabel",
+    "src",
+    "blockId",
+    "actionId",
+    "style",
+    "channelId",
+    "userId",
+    "groupId",
+    "special",
+    "timestamp",
+    "format",
+    "fallback",
+  ];
+  const hasMeaningfulProps = meaningfulPropKeys.some((key) => {
+    if (!(key in sourceProps)) return false;
+    const value = sourceProps[key];
+    if (typeof value === "boolean") return value === true;
+    if (typeof value === "number") return Number.isFinite(value);
+    return cleanText(value).length > 0;
+  });
+  if (hasMeaningfulProps) return true;
+
+  return false;
 }
 
 function printValueProp(key, value) {
@@ -504,6 +571,8 @@ function emitNode(node, indent, config, state, ctx = {}) {
     const preserveWhitespace = node?.meta?.preserveWhitespace === true;
     const value = ctx.dynamicFields?.has("text")
       ? `@{${ctx.loopVar}.text}`
+      : (ctx.textFromName === true && ctx.dynamicFields?.has("name"))
+        ? `@{${ctx.loopVar}.name}`
       : preserveWhitespace
         ? String(node.text || node.name || "")
         : cleanText(node.text || node.name);
@@ -516,17 +585,26 @@ function emitNode(node, indent, config, state, ctx = {}) {
 
   const children = asArray(node.children)
     .filter((child) => isObject(child));
+  const hasDynamicText = ctx.dynamicFields?.has("text") === true;
+  const hasDynamicName = ctx.dynamicFields?.has("name") === true;
   const leafText = children.length === 0
-    ? (ctx.dynamicFields?.has("text")
+    ? (hasDynamicText
       ? `@{${ctx.loopVar}.text}`
-      : cleanText(node.text))
+      : (ctx.textFromName === true && hasDynamicName)
+        ? `@{${ctx.loopVar}.name}`
+        : cleanText(node.text))
     : "";
+  const leafTextFromDynamicName = children.length === 0
+    && !hasDynamicText
+    && hasDynamicName
+    && ctx.textFromName === true;
   const omitLeafText = children.length === 0
-    && !ctx.dynamicFields?.has("text")
+    && !hasDynamicText
     && config.includeRedundantLeafText !== true
-    && cleanText(node.name)
-    && leafText
-    && cleanText(node.name) === leafText;
+    && (leafTextFromDynamicName
+      || (cleanText(node.name)
+        && leafText
+        && cleanText(node.name) === leafText));
   const props = buildNodeProps(node, tagInfo, ctx, config, { leafText, omitLeafText });
 
   let childLines = emitChildren(children, indent + 1, config, state);
@@ -565,6 +643,7 @@ function emitLoopGroup(group, indent, config, state) {
   const templateLines = emitNode(group.template, indent + 1, config, state, {
     loopVar,
     dynamicFields,
+    textFromName: group.textFromName === true,
     ignoreCondition: true,
   });
 
@@ -607,6 +686,7 @@ function normalizeCompileArgs(programOrOptions, maybeOptions) {
       || "includeImplicitActions" in programOrOptions
       || "includeRedundantName" in programOrOptions
       || "includeRedundantLeafText" in programOrOptions
+      || "includeRootContainer" in programOrOptions
       || "includeState" in programOrOptions
       || "includeRoleProp" in programOrOptions
       || "includeHidden" in programOrOptions
@@ -637,6 +717,7 @@ export function compileUiToUnits(uiRoot, programOrOptions = null, maybeOptions =
     includeImplicitActions: false,
     includeRedundantName: false,
     includeRedundantLeafText: false,
+    includeRootContainer: false,
     includeState: true,
     includeRoleProp: false,
     includeHidden: false,
@@ -663,7 +744,9 @@ export function compileUiToUnits(uiRoot, programOrOptions = null, maybeOptions =
     loopCounter: 0,
   };
 
-  const lines = emitNode(transformedTree, 0, config, state);
+  const lines = shouldEmitRootContainer(transformedTree, config)
+    ? emitNode(transformedTree, 0, config, state)
+    : emitChildren(asArray(transformedTree.children), 0, config, state);
   const source = lines.length > 0
     ? `${lines.join("\n")}\n`
     : `${config.emptyRootTag}\n`;
