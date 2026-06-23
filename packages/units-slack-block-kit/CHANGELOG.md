@@ -1,0 +1,7 @@
+# @botfather/units-slack-block-kit
+
+## 0.1.0
+
+### Minor Changes
+
+- [#36](https://github.com/Botfather/units/pull/36) [`24bdd10`](https://github.com/Botfather/units/commit/24bdd107c54c9ac316185ce2421d59a477676b54) Thanks [@Botfather](https://github.com/Botfather)! - Add a Slack Block Kit emitter for Units DSL, AST, and rendered Units trees.
