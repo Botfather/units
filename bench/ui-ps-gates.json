@@ -5,9 +5,9 @@
   "min_gate_pass_count": 18,
   "min_semantic_loss_gate_pass_count": 5,
   "min_avg_action_recall": 1.0,
-  "min_avg_token_reduction": 0.06,
-  "min_avg_compiled_token_reduction": 0.12,
-  "min_avg_agent_tree_token_reduction": 0.1,
+  "min_avg_token_reduction": 0.08,
+  "min_avg_compiled_token_reduction": 0.14,
+  "min_avg_agent_tree_token_reduction": 0.12,
   "min_avg_total_score": 1.0,
   "min_avg_delta_from_baseline": 0.04,
   "required_program_ids": [

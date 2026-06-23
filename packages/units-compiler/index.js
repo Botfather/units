@@ -142,7 +142,7 @@ function toJsLiteral(value) {
   if (typeof value === "string") return `'${escapeJsString(value)}'`;
 
   if (Array.isArray(value)) {
-    return `[${value.map((item) => toJsLiteral(item)).join(", ")}]`;
+    return `[${value.map((item) => toJsLiteral(item)).join(",")}]`;
   }
 
   if (isObject(value)) {
@@ -150,9 +150,9 @@ function toJsLiteral(value) {
       const prop = isIdentifier(key)
         ? key
         : `'${escapeJsString(key)}'`;
-      return `${prop}: ${toJsLiteral(oneValue)}`;
+      return `${prop}:${toJsLiteral(oneValue)}`;
     });
-    return `{ ${entries.join(", ")} }`;
+    return `{${entries.join(",")}}`;
   }
 
   return "null";
@@ -538,7 +538,7 @@ function emitNode(node, indent, config, state, ctx = {}) {
   }
 
   const header = props.length > 0
-    ? `${pad}${tagInfo.tag} (${props.join(", ")})`
+    ? `${pad}${tagInfo.tag} (${props.join(",")})`
     : `${pad}${tagInfo.tag}`;
 
   if (childLines.length === 0) {
@@ -572,7 +572,7 @@ function emitLoopGroup(group, indent, config, state) {
   if (templateLines.length === 0) return [];
 
   return [
-    `${pad}#for (${loopVar}, ${idxVar} in @(${listExpr})) {`,
+    `${pad}#for (${loopVar},${idxVar} in @(${listExpr})) {`,
     ...templateLines,
     `${pad}}`,
   ];
