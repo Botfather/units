@@ -48,6 +48,9 @@ const { formatUnits } = printMod;
 const normalizeDomTree = uiIrMod.normalizeDomTree || uiIrMod.normalizeDomUiTree;
 const normalizeA11yTree = uiIrMod.normalizeA11yTree || uiIrMod.normalizeA11yUiTree;
 const normalizeIrNode = uiIrMod.normalizeIrNode || uiIrMod.normalizeUiNode;
+const normalizeSlackBlockKitTree = uiIrMod.normalizeSlackBlockKitTree
+  || uiIrMod.normalizeSlackTree
+  || ((input) => normalizeIrNode(input));
 const normalizeReactTree = reactAdapterMod.normalizeReactTree || ((input) => normalizeIrNode(input));
 const { runTransformProgram } = transformMod;
 
@@ -73,6 +76,22 @@ const ROLE_TAG_MAP = {
   checkbox: "Checkbox",
   radio: "Radio",
   switch: "Switch",
+  section: "Section",
+  context: "Context",
+  group: "Group",
+  separator: "Separator",
+  strong: "Strong",
+  emphasis: "Emphasis",
+  strike: "Strike",
+  code: "Code",
+  preformatted: "Pre",
+  blockquote: "Blockquote",
+  mention: "Mention",
+  channel: "Channel",
+  usergroup: "UserGroup",
+  special: "SpecialMention",
+  date: "Date",
+  field: "Field",
 };
 
 function isObject(value) {
@@ -150,13 +169,32 @@ function detectSourceType(input, preferred) {
   const root = isObject(input) ? input : {};
 
   const sourceMeta = normalizeSourceType(root?.meta?.source, "");
-  if (sourceMeta === "dom" || sourceMeta === "a11y" || sourceMeta === "ir" || sourceMeta === "react") {
+  if (sourceMeta === "dom" || sourceMeta === "a11y" || sourceMeta === "ir" || sourceMeta === "react" || sourceMeta === "slack") {
     return sourceMeta;
   }
 
   const hasReactShape = (root.$$typeof != null && "type" in root)
     || ("type" in root && "props" in root && !("tagName" in root) && !("attributes" in root));
   if (hasReactShape) return "react";
+
+  const slackTypes = new Set([
+    "actions",
+    "button",
+    "context",
+    "divider",
+    "header",
+    "image",
+    "input",
+    "markdown",
+    "mrkdwn",
+    "plain_text",
+    "rich_text",
+    "section",
+  ]);
+  const hasSlackShape = Array.isArray(root.blocks)
+    || (typeof root.type === "string" && slackTypes.has(root.type.toLowerCase()))
+    || (isObject(root.text) && typeof root.text.type === "string" && slackTypes.has(root.text.type.toLowerCase()));
+  if (hasSlackShape) return "slack";
 
   const hasIrShape = "role" in root && ("props" in root || "state" in root || "actions" in root || "meta" in root);
   if (hasIrShape) return "ir";
@@ -177,6 +215,9 @@ function detectSourceType(input, preferred) {
 function normalizeInputTree(tree, sourceType) {
   const normalizedSourceType = normalizeSourceType(sourceType, "ir");
   if (normalizedSourceType === "react") return normalizeReactTree(tree);
+  if (normalizedSourceType === "slack" || normalizedSourceType === "block-kit" || normalizedSourceType === "blockkit") {
+    return normalizeSlackBlockKitTree(tree);
+  }
   if (normalizedSourceType === "dom") return normalizeDomTree(tree);
   if (normalizedSourceType === "a11y") return normalizeA11yTree(tree);
   return normalizeIrNode(tree);
@@ -187,6 +228,7 @@ function normalizeSourceType(sourceType, fallback = "ir") {
   if (!normalized) return fallback;
   if (normalized === "accessibility" || normalized === "ax") return "a11y";
   if (normalized === "jsx") return "react";
+  if (normalized === "block-kit" || normalized === "blockkit" || normalized === "mrkdwn") return "slack";
   return normalized;
 }
 
@@ -374,7 +416,27 @@ function buildNodeProps(node, tagInfo, ctx, config) {
   }
 
   const sourceProps = isObject(node.props) ? node.props : {};
-  const allowedPropKeys = ["placeholder", "href", "type", "value", "title", "alt", "aria-label", "ariaLabel"];
+  const allowedPropKeys = [
+    "placeholder",
+    "href",
+    "type",
+    "value",
+    "title",
+    "alt",
+    "aria-label",
+    "ariaLabel",
+    "src",
+    "blockId",
+    "actionId",
+    "style",
+    "channelId",
+    "userId",
+    "groupId",
+    "special",
+    "timestamp",
+    "format",
+    "fallback",
+  ];
   for (const key of allowedPropKeys) {
     if (!(key in sourceProps)) continue;
     const value = sourceProps[key];
@@ -418,9 +480,12 @@ function emitNode(node, indent, config, state, ctx = {}) {
   const role = cleanText(node.role).toLowerCase();
 
   if (role === "text") {
+    const preserveWhitespace = node?.meta?.preserveWhitespace === true;
     const value = ctx.dynamicFields?.has("text")
       ? `@{${ctx.loopVar}.text}`
-      : cleanText(node.text || node.name);
+      : preserveWhitespace
+        ? String(node.text || node.name || "")
+        : cleanText(node.text || node.name);
 
     if (!value) return [];
     return [`${pad}'${escapeUnitsString(value)}'`];

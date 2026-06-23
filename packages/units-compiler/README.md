@@ -23,10 +23,12 @@ console.log(result.ast);
 ```
 
 `compileUiToUnits` pipeline:
-- Detect/normalize host tree into Units IR (`dom`, `a11y`, `react`, or `ir`)
+- Detect/normalize host tree into Units IR (`dom`, `a11y`, `react`, `slack`, or `ir`)
 - Optionally run a Units transform program
 - Emit Units DSL (with small structural heuristics like `#for` on repeated leaf siblings)
 - Parse DSL back into Units AST
+
+Slack Block Kit payloads can be compiled with `sourceType: "slack"`. Text objects using `type: "mrkdwn"` are normalized into regular IR nodes for Slack styles, links, mentions, channels, special mentions, dates, quotes, and code spans without changing the Units grammar.
 
 ## Exports
 

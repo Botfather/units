@@ -14,12 +14,14 @@ npm install @botfather/units-ui-ir
 import {
   normalizeDomUiTree,
   normalizeA11yUiTree,
+  normalizeSlackBlockKitTree,
   normalizeUiNode,
   serializeCompactUiTree,
 } from "@botfather/units-ui-ir";
 
 const domIr = normalizeDomUiTree(domSnapshot);
 const a11yIr = normalizeA11yUiTree(axTree);
+const slackIr = normalizeSlackBlockKitTree(blockKitPayload);
 const ir = normalizeUiNode(rawIrLikeTree);
 
 const compact = serializeCompactUiTree(ir, {
@@ -33,6 +35,8 @@ const compact = serializeCompactUiTree(ir, {
 - `normalizeUiNode(node, defaults?)`
 - `normalizeDomUiTree(input)`
 - `normalizeA11yUiTree(input)`
+- `normalizeSlackBlockKitTree(input, options?)`
+- `parseSlackMrkdwn(text, options?)`
 - `normalizeUiTree(input, sourceType?)`
 - `serializeCompactUiTree(uiTree, options?)`
-- Alias exports: `normalizeIrNode`, `normalizeDomTree`, `normalizeA11yTree`, `serializeAgentTree`
+- Alias exports: `normalizeIrNode`, `normalizeDomTree`, `normalizeA11yTree`, `normalizeSlackTree`, `serializeAgentTree`

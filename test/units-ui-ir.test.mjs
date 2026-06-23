@@ -6,10 +6,25 @@ import {
   normalizeA11yUiTree,
   normalizeUiNode,
   normalizeUiTree,
+  normalizeSlackBlockKitTree,
+  parseSlackMrkdwn,
   serializeCompactUiTree,
   normalizeDomTree,
+  normalizeSlackTree,
   serializeAgentTree,
 } from "../packages/units-ui-ir/index.js";
+
+function flattenNodes(nodeOrNodes) {
+  const out = [];
+  const stack = Array.isArray(nodeOrNodes) ? [...nodeOrNodes] : [nodeOrNodes];
+  while (stack.length > 0) {
+    const node = stack.shift();
+    if (!node || typeof node !== "object") continue;
+    out.push(node);
+    stack.unshift(...(node.children || []));
+  }
+  return out;
+}
 
 test("normalizeDomUiTree infers roles/actions from DOM-like input", () => {
   const dom = {
@@ -103,4 +118,91 @@ test("normalizeUiNode + compact serializer produce deterministic agent payloads"
 
   const aliasDom = normalizeDomTree({ tagName: "a", attributes: { href: "/home" } });
   assert.equal(aliasDom.role, "link");
+});
+
+test("parseSlackMrkdwn recognizes Block Kit markdown entities", () => {
+  const nodes = parseSlackMrkdwn(
+    "Hello *bold* _em_ ~old~ `x * y` <https://example.com|site> <@U012AB3CD> <#C123ABC456|ops> <!date^1392734382^{date_short}|Feb 18, 2014> &lt;safe&gt;",
+  );
+  const flat = flattenNodes(nodes);
+
+  assert.ok(flat.some((node) => node.role === "strong" && node.text === "bold"));
+  assert.ok(flat.some((node) => node.role === "emphasis" && node.text === "em"));
+  assert.ok(flat.some((node) => node.role === "strike" && node.text === "old"));
+  assert.ok(flat.some((node) => node.role === "code" && node.text === "x * y"));
+
+  const link = flat.find((node) => node.role === "link");
+  assert.equal(link.props.href, "https://example.com");
+  assert.equal(link.text, "site");
+
+  const mention = flat.find((node) => node.role === "mention");
+  assert.equal(mention.props.userId, "U012AB3CD");
+
+  const channel = flat.find((node) => node.role === "channel");
+  assert.equal(channel.props.channelId, "C123ABC456");
+  assert.equal(channel.text, "#ops");
+
+  const date = flat.find((node) => node.role === "date");
+  assert.equal(date.props.timestamp, "1392734382");
+  assert.equal(date.props.format, "{date_short}");
+  assert.equal(date.props.fallback, "Feb 18, 2014");
+
+  assert.ok(flat.some((node) => node.role === "text" && node.text.includes("<safe>")));
+});
+
+test("normalizeSlackBlockKitTree preserves mrkdwn structure in Block Kit payloads", () => {
+  const payload = {
+    channel: "C123ABC456",
+    text: "Release request",
+    blocks: [
+      {
+        type: "section",
+        block_id: "summary",
+        text: {
+          type: "mrkdwn",
+          text: "*Release:* <https://example.com/release|View request>\nAssigned to <@U012AB3CD>",
+        },
+        fields: [
+          {
+            type: "mrkdwn",
+            text: "*Status:*\nReady",
+          },
+        ],
+      },
+      {
+        type: "actions",
+        elements: [
+          {
+            type: "button",
+            action_id: "approve",
+            style: "primary",
+            text: {
+              type: "plain_text",
+              text: "Approve",
+            },
+          },
+        ],
+      },
+      {
+        type: "markdown",
+        text: "See <https://example.com/docs|docs>",
+      },
+    ],
+  };
+
+  const tree = normalizeSlackBlockKitTree(payload);
+  const aliasTree = normalizeSlackTree(payload);
+  const genericTree = normalizeUiTree(payload, "slack");
+  const flat = flattenNodes(tree);
+
+  assert.equal(tree.meta.source, "slack");
+  assert.equal(aliasTree.meta.source, "slack");
+  assert.equal(genericTree.meta.source, "slack");
+  assert.ok(flat.some((node) => node.role === "section" && node.props.blockId === "summary"));
+  assert.ok(flat.some((node) => node.role === "strong" && node.text === "Release:"));
+  assert.ok(flat.some((node) => node.role === "link" && node.props.href === "https://example.com/release"));
+  assert.ok(flat.some((node) => node.role === "mention" && node.props.userId === "U012AB3CD"));
+  assert.ok(flat.some((node) => node.role === "field"));
+  assert.ok(flat.some((node) => node.role === "button" && node.props.actionId === "approve"));
+  assert.ok(flat.some((node) => node.role === "link" && node.text === "docs"));
 });

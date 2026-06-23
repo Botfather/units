@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { parseUnits } from "../packages/units/index.js";
+import { parseUnits } from "../packages/units/units-parser.js";
 import { compileUiToUnits } from "../packages/units-compiler/index.js";
 
 const REACT_ELEMENT_TYPE = Symbol.for("react.element");
@@ -195,6 +195,60 @@ test("compileUiToUnits accepts sourceType react and normalizes JSX-style trees",
   assert.match(result.dsl, /Container/);
   assert.match(result.dsl, /Button/);
   assert.match(result.dsl, /Submit order/);
+
+  const reparsed = parseUnits(result.dsl);
+  assert.equal(reparsed.type, "document");
+});
+
+test("compileUiToUnits accepts Slack Block Kit mrkdwn payloads", () => {
+  const slackPayload = {
+    channel: "C123ABC456",
+    text: "Release request",
+    blocks: [
+      {
+        type: "section",
+        block_id: "summary",
+        text: {
+          type: "mrkdwn",
+          text: "*Release:* <https://example.com/release|View request>\nAssigned to <@U012AB3CD> in <#C999|deploys>",
+        },
+        fields: [
+          {
+            type: "mrkdwn",
+            text: "*When:*\n<!date^1392734382^{date_short} at {time}|Feb 18, 2014 at 6:39 AM>",
+          },
+        ],
+      },
+      {
+        type: "actions",
+        elements: [
+          {
+            type: "button",
+            action_id: "approve",
+            style: "primary",
+            text: {
+              type: "plain_text",
+              text: "Approve",
+            },
+          },
+        ],
+      },
+    ],
+  };
+
+  const result = compileUiToUnits(slackPayload, {
+    sourceType: "slack",
+    enableLoopHeuristic: false,
+  });
+
+  assert.equal(result.source_type, "slack");
+  assert.match(result.dsl, /Section/);
+  assert.match(result.dsl, /Strong/);
+  assert.match(result.dsl, /Link \([^)]*href:'https:\/\/example.com\/release'/s);
+  assert.match(result.dsl, /Mention \([^)]*userId:'U012AB3CD'/s);
+  assert.match(result.dsl, /Channel \([^)]*channelId:'C999'/s);
+  assert.match(result.dsl, /Date \(/);
+  assert.match(result.dsl, /Button \([^)]*actionId:'approve'/s);
 
   const reparsed = parseUnits(result.dsl);
   assert.equal(reparsed.type, "document");

@@ -22,6 +22,8 @@ export function inferRoleFromTag(tagName: any, explicitRole?: any): string;
 export function normalizeUiNode(node: any, defaults?: Partial<UiNode>): UiNode;
 export function normalizeDomUiTree(input: any): UiNode;
 export function normalizeA11yUiTree(input: any): UiNode;
+export function normalizeSlackBlockKitTree(input: any, options?: { id?: string }): UiNode;
+export function parseSlackMrkdwn(text: any, options?: { path?: any[] }): UiNode[];
 export function normalizeUiTree(input: any, sourceType?: string): UiNode;
 
 export function serializeCompactUiTree(uiTree: any, options?: CompactSerializeOptions): any;
@@ -29,4 +31,5 @@ export function serializeCompactUiTree(uiTree: any, options?: CompactSerializeOp
 export { normalizeUiNode as normalizeIrNode };
 export { normalizeDomUiTree as normalizeDomTree };
 export { normalizeA11yUiTree as normalizeA11yTree };
+export { normalizeSlackBlockKitTree as normalizeSlackTree };
 export { serializeCompactUiTree as serializeAgentTree };
