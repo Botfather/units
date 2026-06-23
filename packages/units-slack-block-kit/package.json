@@ -1,6 +1,6 @@
 {
   "name": "@botfather/units-slack-block-kit",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "Convert Units DSL or AST into Slack Block Kit payloads.",
   "license": "MIT",
   "type": "module",
