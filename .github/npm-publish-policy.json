@@ -10,5 +10,9 @@
   },
   "packageScope": "@botfather",
   "verifyOidcExchange": true,
-  "publishAllowedPackages": []
+  "publishAllowedPackages": [
+    "@botfather/units-tools",
+    "@botfather/vite-plugin-units",
+    "@botfather/vite-plugin-units-tools"
+  ]
 }

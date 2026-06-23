@@ -56,6 +56,10 @@ function isGitHubActions() {
   return process.env.GITHUB_ACTIONS === "true";
 }
 
+function releaseRequiresGitHubActions() {
+  return process.env.UNITS_RELEASE_REQUIRE_GITHUB_ACTIONS === "true";
+}
+
 function expectedRepository(policy) {
   const trustedPublisher = policy.trustedPublisher || {};
   if (!trustedPublisher.owner || !trustedPublisher.repository) return null;
@@ -292,6 +296,14 @@ async function main() {
       "npm publish guard found release configuration errors:",
       "",
       ...validationErrors.map((error) => `  - ${error}`),
+    ].join("\n"));
+    return;
+  }
+
+  if (releaseRequiresGitHubActions() && !isGitHubActions()) {
+    fail([
+      "Refusing to run the trusted-publishing release outside GitHub Actions.",
+      "Use `pnpm release:guard` for local preflight checks; `pnpm release` is CI-only.",
     ].join("\n"));
     return;
   }
