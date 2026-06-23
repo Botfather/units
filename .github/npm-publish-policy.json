@@ -13,8 +13,13 @@
   "publishAllowedPackages": [
     "@botfather/units",
     "@botfather/units-tools",
+    "@botfather/units-compiler",
     "@botfather/vite-plugin-units",
+    "@botfather/units-uikit-shadcn",
+    "@botfather/units-agent-plugin",
+    "@botfather/units-agent-service",
     "@botfather/units-slack-block-kit",
+    "@botfather/units-agent-middleware",
     "@botfather/vite-plugin-units-tools"
   ]
 }
