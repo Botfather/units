@@ -86,20 +86,56 @@ Inline mrkdwn tags:
 
 Camel-case Slack props are converted to Slack snake-case fields where useful, for example `blockId -> block_id`, `actionId -> action_id`, `src -> image_url`, and `alt -> alt_text`.
 
-## LLM Prompt Shape
+## LLM Structured Output
 
-For model-generated messages, constrain output to Units DSL and validate by conversion:
-
-```txt
-Return only valid Units DSL for a Slack Block Kit message.
-Use SlackMessage, Section, Context, Actions, Button, Field, Strong, Link, Mention, and Date tags.
-Use single-quoted strings. Do not output markdown fences or JSON.
-```
-
-Then:
+For model-generated messages, prefer schema-constrained structured output over free-form DSL. The emitter can only render valid input; it cannot make a model produce valid `.ui` syntax.
 
 ```js
-const { payload, warnings } = compileUnitsToSlackBlockKit(modelOutput, {
+import {
+  SLACK_UNITS_STRUCTURED_OUTPUT_SCHEMA,
+  compileStructuredSlackToBlockKit,
+} from "@botfather/units-slack-block-kit";
+
+// Pass SLACK_UNITS_STRUCTURED_OUTPUT_SCHEMA to your model provider as the
+// required JSON schema. Then validate and render the returned object.
+const result = compileStructuredSlackToBlockKit(modelJson, {
+  strict: true,
+});
+
+console.log(result.payload);
+```
+
+Structured output shape:
+
+```json
+{
+  "type": "SlackMessage",
+  "channel": "C123",
+  "text": "Release request",
+  "blocks": [
+    {
+      "type": "Section",
+      "blockId": "summary",
+      "children": [
+        { "type": "Strong", "text": "Release:" },
+        " ready for approval by ",
+        { "type": "Mention", "userId": "U012AB3CD" }
+      ],
+      "accessory": {
+        "type": "Button",
+        "name": "Open request",
+        "actionId": "open",
+        "href": "https://example.com/release"
+      }
+    }
+  ]
+}
+```
+
+Use `validateStructuredSlack(modelJson)` if you want validation without rendering. Keep `compileUnitsToSlackBlockKit(source, { strict: true })` for human-authored DSL, migrations, tests, or fallback repair flows:
+
+```js
+const { payload, warnings } = compileUnitsToSlackBlockKit(source, {
   strict: true,
 });
 ```

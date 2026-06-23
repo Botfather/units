@@ -3,10 +3,15 @@ import fs from "node:fs/promises";
 import test from "node:test";
 
 import {
+  SLACK_UNITS_STRUCTURED_OUTPUT_SCHEMA,
   compileUnitsToSlackBlockKit,
+  compileStructuredSlackToBlockKit,
   serializeSlackMrkdwn,
+  structuredSlackToBlockKit,
+  structuredSlackToUnitsTree,
   unitsAstToSlackBlockKit,
   unitsToSlackBlockKit,
+  validateStructuredSlack,
 } from "../packages/units-slack-block-kit/index.js";
 import { parseUnits } from "../packages/units/units-parser.js";
 
@@ -282,4 +287,134 @@ test("serializes existing Slack benchmark Units fixture", async () => {
 
 test("serializeSlackMrkdwn escapes raw text", () => {
   assert.equal(serializeSlackMrkdwn("a < b && c > d"), "a &lt; b &amp;&amp; c &gt; d");
+});
+
+test("converts schema-constrained structured Slack output into Block Kit", () => {
+  const structured = {
+    type: "SlackMessage",
+    channel: "C123",
+    text: "Release request",
+    blocks: [
+      {
+        type: "Section",
+        blockId: "summary",
+        children: [
+          { type: "Strong", text: "Release:" },
+          " ready for approval by ",
+          { type: "Mention", userId: "U012AB3CD" },
+        ],
+        fields: [
+          {
+            type: "Field",
+            children: [
+              { type: "Strong", text: "Status:" },
+              "\nReady",
+            ],
+          },
+        ],
+        accessory: {
+          type: "Button",
+          name: "Open request",
+          actionId: "open",
+          href: "https://example.com/release",
+        },
+      },
+      {
+        type: "Actions",
+        elements: [
+          { type: "Button", name: "Approve", actionId: "approve", style: "primary" },
+          { type: "Button", name: "Reject", actionId: "reject", style: "danger" },
+        ],
+      },
+    ],
+  };
+
+  const validation = validateStructuredSlack(structured);
+  assert.equal(validation.ok, true);
+
+  const tree = structuredSlackToUnitsTree(structured);
+  assert.equal(tree.name, "SlackMessage");
+  assert.equal(tree.children[0].name, "Section");
+
+  const result = compileStructuredSlackToBlockKit(structured, { strict: true });
+  assert.equal(result.validation.ok, true);
+  assert.equal(result.warnings.length, 0);
+  assert.deepEqual(result.payload.blocks, [
+    {
+      type: "section",
+      block_id: "summary",
+      text: {
+        type: "mrkdwn",
+        text: "*Release:* ready for approval by <@U012AB3CD>",
+      },
+      fields: [
+        {
+          type: "mrkdwn",
+          text: "*Status:*\nReady",
+        },
+      ],
+      accessory: {
+        type: "button",
+        text: {
+          type: "plain_text",
+          text: "Open request",
+        },
+        action_id: "open",
+        url: "https://example.com/release",
+      },
+    },
+    {
+      type: "actions",
+      elements: [
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Approve",
+          },
+          action_id: "approve",
+          style: "primary",
+        },
+        {
+          type: "button",
+          text: {
+            type: "plain_text",
+            text: "Reject",
+          },
+          action_id: "reject",
+          style: "danger",
+        },
+      ],
+    },
+  ]);
+
+  assert.deepEqual(structuredSlackToBlockKit(structured), result.payload);
+});
+
+test("validates structured output before emitting Block Kit", () => {
+  const invalid = {
+    type: "SlackMessage",
+    blocks: [
+      { type: "Mention" },
+      { type: "MysteryBlock" },
+    ],
+  };
+
+  const validation = validateStructuredSlack(invalid);
+  assert.equal(validation.ok, false);
+  assert.ok(validation.errors.some((error) => error.message === "Mention requires userId."));
+  assert.ok(validation.errors.some((error) => error.message === "Unsupported structured Slack node type: MysteryBlock."));
+
+  assert.throws(
+    () => compileStructuredSlackToBlockKit(invalid, { strict: true }),
+    /Invalid structured Slack output/,
+  );
+});
+
+test("exports a schema for structured model outputs", () => {
+  assert.equal(SLACK_UNITS_STRUCTURED_OUTPUT_SCHEMA.name, "slack_units_message");
+  assert.equal(SLACK_UNITS_STRUCTURED_OUTPUT_SCHEMA.strict, true);
+  assert.equal(SLACK_UNITS_STRUCTURED_OUTPUT_SCHEMA.schema.properties.type.const, "SlackMessage");
+  assert.ok(SLACK_UNITS_STRUCTURED_OUTPUT_SCHEMA.schema.$defs.node.properties.type.enum.includes("Section"));
+  assert.ok(SLACK_UNITS_STRUCTURED_OUTPUT_SCHEMA.schema.$defs.node.properties.type.enum.includes("Button"));
 });
