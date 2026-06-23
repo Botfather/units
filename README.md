@@ -359,7 +359,7 @@ Outputs:
 - Gate thresholds: `bench/ui-ps-gates.json`
 - Fixture corpus: `bench/ui-ps-fixtures.json` (expanded tricky patterns, Slack Block Kit cases, and explicit `semantic-loss` probes)
 
-UI-PS now reports compile-stage token efficiency (`avg_compiled_dsl_tokens`, `avg_compiled_token_reduction`) by comparing optimized compiler output against a legacy mode that always emits implicit actions.
+UI-PS now reports compile-stage token efficiency (`avg_compiled_dsl_tokens`, `avg_compiled_token_reduction`) by comparing optimized compiler output against a legacy mode that always emits implicit actions and redundant leaf `name` props.
 
 ## UI-PS Tricky-Pattern Roadmap
 Goal: keep compression wins honest by expanding tricky fixture coverage while preserving action/name/text semantics.

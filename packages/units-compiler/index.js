@@ -370,7 +370,7 @@ function printExprProp(key, rawExpr) {
   return `${key}=@${expr}`;
 }
 
-function buildNodeProps(node, tagInfo, ctx, config) {
+function buildNodeProps(node, tagInfo, ctx, config, emission = {}) {
   const props = [];
 
   const dynamicFields = ctx.dynamicFields || new Set();
@@ -392,9 +392,15 @@ function buildNodeProps(node, tagInfo, ctx, config) {
   }
 
   const name = cleanText(node.name);
+  const leafText = cleanText(emission.leafText);
+  const omitRedundantName = config.includeRedundantName !== true
+    && !dynamicFields.has("name")
+    && name
+    && leafText
+    && name === leafText;
   if (dynamicFields.has("name")) {
     addExpr("name", `${loopVar}.name`);
-  } else if (name) {
+  } else if (name && !omitRedundantName) {
     addValue("name", name);
   }
 
@@ -506,18 +512,19 @@ function emitNode(node, indent, config, state, ctx = {}) {
   }
 
   const tagInfo = resolveTag(role || "container");
-  const props = buildNodeProps(node, tagInfo, ctx, config);
 
   const children = asArray(node.children)
     .filter((child) => isObject(child));
+  const leafText = children.length === 0
+    ? (ctx.dynamicFields?.has("text")
+      ? `@{${ctx.loopVar}.text}`
+      : cleanText(node.text))
+    : "";
+  const props = buildNodeProps(node, tagInfo, ctx, config, { leafText });
 
   let childLines = emitChildren(children, indent + 1, config, state);
 
   if (childLines.length === 0) {
-    const leafText = ctx.dynamicFields?.has("text")
-      ? `@{${ctx.loopVar}.text}`
-      : cleanText(node.text);
-
     if (leafText) {
       childLines = [`${"  ".repeat(indent + 1)}'${escapeUnitsString(leafText)}'`];
     }
@@ -589,8 +596,17 @@ function normalizeCompileArgs(programOrOptions, maybeOptions) {
     && !programOrOptions.rules
     && ("program" in programOrOptions
       || "sourceType" in programOrOptions
+      || "includeId" in programOrOptions
+      || "includeActions" in programOrOptions
+      || "includeImplicitActions" in programOrOptions
+      || "includeRedundantName" in programOrOptions
+      || "includeState" in programOrOptions
+      || "includeRoleProp" in programOrOptions
+      || "includeHidden" in programOrOptions
       || "enableLoopHeuristic" in programOrOptions
       || "minLoopGroupSize" in programOrOptions
+      || "enableIfHeuristic" in programOrOptions
+      || "emptyRootTag" in programOrOptions
       || "context" in programOrOptions)) {
     return {
       program: programOrOptions.program || null,
@@ -612,6 +628,7 @@ export function compileUiToUnits(uiRoot, programOrOptions = null, maybeOptions =
     includeId: false,
     includeActions: true,
     includeImplicitActions: false,
+    includeRedundantName: false,
     includeState: true,
     includeRoleProp: false,
     includeHidden: false,

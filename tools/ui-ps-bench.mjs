@@ -313,6 +313,7 @@ export async function runBench(options = {}) {
       includeId: false,
       includeActions: true,
       includeImplicitActions: false,
+      includeRedundantName: false,
       includeState: true,
       includeRoleProp: false,
       includeHidden: false,
@@ -323,6 +324,7 @@ export async function runBench(options = {}) {
     const legacyCompileOptions = {
       ...compileOptions,
       includeImplicitActions: true,
+      includeRedundantName: true,
     };
     const baselineCompile = compileUiToUnits(inputTree, compileOptions);
     const legacyTransformedCompile = compileUiToUnits(outputTree, legacyCompileOptions);

@@ -240,15 +240,58 @@ test("compileUiToUnits omits implicit role actions unless explicitly requested",
     sourceType: "ir",
     enableLoopHeuristic: false,
   });
-  assert.doesNotMatch(optimized.dsl, /Button \([^)]*name:'Save'[^)]*actions:'click'/s);
-  assert.match(optimized.dsl, /Button \([^)]*name:'Escalate'[^)]*actions:'click\|longpress'/s);
+  assert.doesNotMatch(optimized.dsl, /Button \([^)]*actions:'click'/s);
+  assert.match(optimized.dsl, /Button \([^)]*actions:'click\|longpress'/s);
 
   const explicit = compileUiToUnits(uiTree, {
     sourceType: "ir",
     enableLoopHeuristic: false,
     includeImplicitActions: true,
+    includeRedundantName: true,
   });
   assert.match(explicit.dsl, /Button \([^)]*name:'Save'[^)]*actions:'click'/s);
+});
+
+test("compileUiToUnits omits redundant leaf name props unless explicitly requested", () => {
+  const uiTree = {
+    id: "root",
+    role: "container",
+    name: "",
+    text: "",
+    props: {},
+    state: {},
+    actions: [],
+    meta: {},
+    children: [
+      {
+        id: "save",
+        role: "button",
+        name: "Save",
+        text: "Save",
+        props: {},
+        state: {},
+        actions: ["click"],
+        meta: {},
+        children: [],
+      },
+    ],
+  };
+
+  const optimized = compileUiToUnits(uiTree, {
+    sourceType: "ir",
+    enableLoopHeuristic: false,
+  });
+
+  assert.doesNotMatch(optimized.dsl, /Button \([^)]*name:'Save'/s);
+  assert.match(optimized.dsl, /Button[^{]*\{\s*'Save'/s);
+
+  const explicit = compileUiToUnits(uiTree, {
+    sourceType: "ir",
+    enableLoopHeuristic: false,
+    includeRedundantName: true,
+  });
+
+  assert.match(explicit.dsl, /Button \([^)]*name:'Save'/s);
 });
 
 test("compileUiToUnits accepts Slack Block Kit mrkdwn payloads", () => {
