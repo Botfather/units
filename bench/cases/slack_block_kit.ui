@@ -1,0 +1,40 @@
+SlackMessage (name:'Release request') {
+  Section (blockId:'summary') {
+    Strong {
+      'Release:'
+    }
+    ' '
+    Link (name:'View request', actions:'click', href:'https://example.com/release') {
+      'View request'
+    }
+    ' assigned to '
+    Mention (name:'@U012AB3CD', userId:'U012AB3CD') {
+      '@U012AB3CD'
+    }
+    ' in '
+    Channel (name:'#deploys', channelId:'C999') {
+      '#deploys'
+    }
+  }
+  Context {
+    Date (
+      name:'Feb 18, 2014 at 6:39 AM',
+      timestamp:'1392734382',
+      format:'{date_short} at {time}',
+      fallback:'Feb 18, 2014 at 6:39 AM'
+    ) {
+      'Feb 18, 2014 at 6:39 AM'
+    }
+    Code {
+      'deploy --prod'
+    }
+  }
+  Blockquote {
+    'Ship only after QA signs off.'
+  }
+  Group {
+    Button (name:'Approve', actions:'click', actionId:'approve', style:'primary') {
+      'Approve'
+    }
+  }
+}

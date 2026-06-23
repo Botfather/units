@@ -10,13 +10,13 @@
   <a href="./DOCS-LLM.md"><img alt="LLM Docs" src="https://img.shields.io/badge/docs-DOCS--LLM.md-3B82F6?style=flat-square&labelColor=0B1220"></a>
 </p>
 
-Units is a lightweight DSL for interactive UI. The monorepo covers the language runtime, Vite and CLI tooling, VS Code support, agent-facing UI compression, DOM and IR adapters, compilation, reference apps, and benchmark suites for both runtime and model workflows.
+Units is a lightweight DSL for interactive UI. The monorepo covers the language runtime, Vite and CLI tooling, VS Code support, agent-facing UI compression, DOM, Slack Block Kit, and IR adapters, compilation, reference apps, and benchmark suites for both runtime and model workflows.
 
 ## Repo At A Glance
 
 - `@botfather/units` is the core parser, printer, runtime, and custom renderer entry point.
 - Vite, CLI, and editor tooling live in `@botfather/vite-plugin-units`, `@botfather/vite-plugin-units-tools`, `@botfather/units-tools`, and `vscode/units-vscode`.
-- The agent pipeline spans compression, DOM capture, IR normalization, React adaptation, and DSL compilation.
+- The agent pipeline spans compression, DOM capture, IR normalization, Slack Block Kit normalization, React adaptation, and DSL compilation.
 - `examples/*`, `bench/*`, and `test/*` provide reference apps, benchmark corpora, and verification coverage.
 
 ## Package Matrix
@@ -31,7 +31,7 @@ Units is a lightweight DSL for interactive UI. The monorepo covers the language 
 | `@botfather/units-agent-plugin` | Agent API | `compressUiForAgent` DSL and AST output |
 | `@botfather/units-agent-service` | HTTP wrapper | `/compress-ui` service for arbitrary agents |
 | `@botfather/units-dom-snapshot` | DOM extraction | Neutral snapshot capture from pages and browser automation flows |
-| `@botfather/units-ui-ir` | Neutral IR | `UiNode` schema and DOM or accessibility adapters |
+| `@botfather/units-ui-ir` | Neutral IR | `UiNode` schema plus DOM, accessibility, and Slack Block Kit adapters |
 | `@botfather/units-react-adapter` | React adapter | React or JSX element tree to `UiNode` IR |
 | `@botfather/units-compiler` | Compiler | `UiNode` or IR to Units AST and DSL |
 | `@botfather/units-uikit-shadcn` | UI kit | ShadCN-style component layer authored in Units |
@@ -43,6 +43,7 @@ Units is a lightweight DSL for interactive UI. The monorepo covers the language 
 - `examples/chat-vite/` - chat transcript demo
 - `examples/shadcn-gallery-vite/` - ShadCN-style gallery demo
 - `examples/portfolio-vite/` - portfolio header demo
+- `examples/dom-to-ui-extension-wxt/` - WXT extension that converts the current page DOM to `.ui` DSL
 
 ## Key Repository Docs
 
@@ -231,6 +232,8 @@ Outputs:
 - JSON metrics: `bench/results/dsl-bench.json`
 - Markdown report: `bench/results/dsl-bench.md`
 
+The curated DSL benchmark includes a Slack Block Kit-derived Units case (`bench/cases/slack_block_kit.ui`) so parser, formatter, renderer, and plugin paths see the tags emitted by Slack normalization.
+
 ## LLM Benchmark (Token + Quality)
 Offline reference run (estimated tokens):
 ```
@@ -248,6 +251,61 @@ OPENAI_API_KEY=... LLM_BENCH_MODELS=gpt-4.1-mini,gpt-4o-mini,gpt-5-2025-08-07 pn
 ```
 
 Config lives in `bench/llm-cases.json`, with case files under `bench/cases/`.
+
+## DSL Autoresearch (Mac ARM)
+For Apple Silicon machines, this repo includes an integration helper for a compatible Karpathy autoresearch fork.
+
+Setup:
+```
+pnpm dsl:autoresearch:setup
+```
+
+Verify environment:
+```
+pnpm dsl:autoresearch:doctor
+```
+
+This will pin `third_party/autoresearch-macos` and generate:
+- `third_party/autoresearch-macos/program.units-dsl.md`
+
+Use that program file with your coding agent to run autonomous DSL quality loops against this repo (`pnpm bench:llm:live` and `make verify-all` as keep criteria).
+
+Automated evaluation:
+```
+pnpm dsl:autoresearch:eval
+```
+
+Single automated trial (requires an agent command):
+```
+AUTORESEARCH_AGENT_CMD='your-agent --program {program} --repo {repo} --iteration {iteration}' pnpm dsl:autoresearch:trial
+```
+
+Multi-iteration loop:
+```
+AUTORESEARCH_AGENT_CMD='your-agent --program {program} --repo {repo} --iteration {iteration}' AUTORESEARCH_ITERATIONS=3 pnpm dsl:autoresearch:loop
+```
+
+Codex runtime (recommended here):
+```
+AUTORESEARCH_ITERATIONS=3 pnpm dsl:autoresearch:codex:loop
+```
+
+Single Codex trial:
+```
+pnpm dsl:autoresearch:codex:trial
+```
+
+Optional Codex model override:
+```
+CODEX_MODEL=gpt-5.4 AUTORESEARCH_ITERATIONS=3 pnpm dsl:autoresearch:codex:loop
+```
+
+The runner accepts/rejects each trial by:
+1. `pnpm bench:llm:live` must pass.
+2. `make verify-all` must pass.
+3. Candidate score must be >= current best score.
+
+Rejected trials are reverted automatically for tracked files.
 
 ## React vs DSL Benchmark (Token Usage)
 Run an exhaustive paired benchmark to compare direct React code vs Units DSL:
@@ -299,7 +357,9 @@ Outputs:
 - JSON metrics + per-case candidate scoring: `bench/results/ui-ps-bench.json`
 - Markdown report: `bench/results/ui-ps-bench.md`
 - Gate thresholds: `bench/ui-ps-gates.json`
-- Fixture corpus: `bench/ui-ps-fixtures.json` (expanded tricky patterns + explicit `semantic-loss` probes)
+- Fixture corpus: `bench/ui-ps-fixtures.json` (expanded tricky patterns, Slack Block Kit cases, and explicit `semantic-loss` probes)
+
+UI-PS now reports compile-stage token efficiency (`avg_compiled_dsl_tokens`, `avg_compiled_token_reduction`) and compact agent-tree efficiency (`avg_agent_tree_tokens`, `avg_agent_tree_token_reduction`) by comparing optimized output against a legacy mode that always emits implicit actions, redundant `name`/text duplicates, root container wrappers, text-node ids, and non-compact/duplicate-heavy inline loop literals.
 
 ## UI-PS Tricky-Pattern Roadmap
 Goal: keep compression wins honest by expanding tricky fixture coverage while preserving action/name/text semantics.

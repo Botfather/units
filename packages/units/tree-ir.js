@@ -39,6 +39,13 @@ function inferDomRole(node) {
   return "container";
 }
 
+function implicitActionsForRole(role) {
+  if (role === "button" || role === "link") return ["click"];
+  if (role === "input") return ["input"];
+  if (role === "checkbox" || role === "radio" || role === "switch") return ["toggle"];
+  return [];
+}
+
 function inferActions(role, inputActions) {
   const explicit = asArray(inputActions)
     .map((item) => (typeof item === "string" ? item : item?.name))
@@ -47,10 +54,7 @@ function inferActions(role, inputActions) {
 
   if (explicit.length > 0) return [...new Set(explicit)];
 
-  if (role === "button" || role === "link") return ["click"];
-  if (role === "input") return ["input"];
-  if (role === "checkbox" || role === "radio" || role === "switch") return ["toggle"];
-  return [];
+  return implicitActionsForRole(role);
 }
 
 function inferDomName(node, tagName) {
@@ -185,21 +189,54 @@ function compactNode(node, options) {
   const includeProps = options.includeProps === true;
   const includeMeta = options.includeMeta === true;
   const includeIds = options.includeIds !== false;
+  const includeTextIds = options.includeTextIds === true;
   const includeState = options.includeState !== false;
+  const includeRedundantNameText = options.includeRedundantNameText === true;
+  const includeImplicitActions = options.includeImplicitActions === true;
 
   const out = {
     role: node.role,
   };
 
-  if (includeIds && node.id) out.id = node.id;
-  if (node.name) out.name = node.name;
-  if (node.text) out.text = node.text;
+  if (includeIds && node.id && (includeTextIds || node.role !== "text")) out.id = node.id;
+  const hasName = typeof node.name === "string" && node.name.length > 0;
+  const hasText = typeof node.text === "string" && node.text.length > 0;
+  const sameNameText = hasName && hasText && node.name === node.text;
+  if (sameNameText && !includeRedundantNameText) {
+    if (node.role === "text") out.text = node.text;
+    else out.name = node.name;
+  } else {
+    if (hasName) out.name = node.name;
+    if (hasText) out.text = node.text;
+  }
   if (includeState && node.state && Object.keys(node.state).length > 0) out.state = node.state;
-  if (node.actions && node.actions.length > 0) out.actions = node.actions;
+  if (node.actions && node.actions.length > 0) {
+    const actions = [...new Set(node.actions.map((value) => cleanText(value)).filter(Boolean))];
+    const implicit = implicitActionsForRole(cleanText(node.role).toLowerCase());
+    const allImplicit = actions.length > 0
+      && implicit.length > 0
+      && actions.every((action) => implicit.includes(action));
+    if (actions.length > 0 && (!allImplicit || includeImplicitActions)) {
+      out.actions = actions;
+    }
+  }
   if (includeProps && node.props && Object.keys(node.props).length > 0) out.props = node.props;
   if (includeMeta && node.meta && Object.keys(node.meta).length > 0) out.meta = node.meta;
 
-  const children = (node.children || []).map((child) => compactNode(child, options));
+  const children = (node.children || [])
+    .map((child) => compactNode(child, options))
+    .filter((child) => {
+      if (!child || typeof child !== "object") return false;
+      if (child.role !== "text") return true;
+      if (Array.isArray(child.children) && child.children.length > 0) return true;
+      if (typeof child.text === "string" && child.text.length > 0) return true;
+      if (typeof child.name === "string" && child.name.length > 0) return true;
+      if (Array.isArray(child.actions) && child.actions.length > 0) return true;
+      if (child.state && typeof child.state === "object" && Object.keys(child.state).length > 0) return true;
+      if (child.props && typeof child.props === "object" && Object.keys(child.props).length > 0) return true;
+      if (child.meta && typeof child.meta === "object" && Object.keys(child.meta).length > 0) return true;
+      return false;
+    });
   if (children.length > 0) out.children = children;
 
   return out;

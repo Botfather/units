@@ -150,8 +150,8 @@ units-transform --program transforms/dom-default.ui --input fixtures/dom-tree.js
 Optional outputs:
 - `--trace-out trace.json`
 - `--agent-out compact-agent-tree.json`
-- `--source` supports `dom`, `a11y`, `react`, and `ir` (React input is normalized through `UiNode` IR first)
-- Output payload includes both `source_type` and `normalized_source_type` (for `react`, normalized source is `ir`)
+- `--source` supports `dom`, `a11y`, `react`, `slack`, and `ir` (React input is normalized through `UiNode` IR first)
+- Output payload includes both `source_type` and `normalized_source_type` (for `react`, normalized source is `ir`; Slack aliases `block-kit`, `blockkit`, and `mrkdwn` normalize to `slack`)
 
 ---
 
@@ -169,7 +169,7 @@ Custom gates:
 - `--gate-action-recall`
 - `--gate-name-recall`
 - `--gate-text-f1`
-- `--source` supports `dom`, `a11y`, `react`, and `ir`
+- `--source` supports `dom`, `a11y`, `react`, `slack`, and `ir`
 - Output payload includes both `source_type` and `normalized_source_type`
 
 ---

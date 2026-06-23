@@ -29,4 +29,8 @@ const result = await middleware.rewrite({
 });
 ```
 
+Supported `sourceType` values include `dom`, `a11y`, `ir`, `react`, and `slack`. Slack Block Kit payloads are normalized through `@botfather/units-ui-ir`; aliases `block-kit`, `blockkit`, and `mrkdwn` also route to `slack`.
+
 `rewrite` returns transformed tree output, trace metadata, chosen program metadata, and fallback pass-through output when no verified program passes gates.
+
+Returned `agent_tree` payloads use compact serialization defaults optimized for token usage (including redundant `name`/`text` dedupe, implicit-action omission, empty text leaf pruning, and text-id omission). Pass `serializerOptions: { includeRedundantNameText: true, includeImplicitActions: true, includeTextIds: true }` to preserve both fields, role-implicit actions, and text ids when needed.

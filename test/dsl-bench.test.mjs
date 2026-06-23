@@ -13,7 +13,8 @@ const execFileAsync = promisify(execFile);
 test("dsl bench config loads curated cases and corpora", async () => {
   const config = await loadConfig("bench/dsl-bench.config.json");
   assert.equal(config.name, "units-dsl-bench-v1");
-  assert.ok(config.cases.length >= 4);
+  assert.ok(config.cases.length >= 5);
+  assert.ok(config.cases.some((one) => one.id === "slack_block_kit"));
   assert.ok(config.corpora.length >= 3);
 });
 
@@ -80,7 +81,8 @@ test("dsl bench CLI quick run writes plugin metrics", async () => {
   const report = await fs.readFile(reportPath, "utf-8");
 
   assert.equal(payload.mode, "quick");
-  assert.ok(payload.cases.length >= 4);
+  assert.ok(payload.cases.length >= 5);
+  assert.ok(payload.cases.some((one) => one.id === "slack_block_kit"));
   assert.ok(payload.corpora.length >= 3);
   assert.ok(payload.cases[0].plugins.astLoad.metrics.avgMs >= 0);
   assert.ok(payload.cases[0].plugins.highlightLoad.outputBytes > 0);

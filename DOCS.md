@@ -158,14 +158,39 @@ Add custom directives at the renderer layer without modifying the parser. Exampl
 #animate (@config) { ... }
 ```
 
-## 8) Performance Notes
+## 8) Host-Tree Compilation
+
+Host-tree adapters normalize external UI formats into `UiNode` IR before transform programs or DSL emission run. Slack Block Kit payloads use the `slack` source type:
+
+```js
+import { compileUiToUnits } from "@botfather/units-compiler";
+
+const result = compileUiToUnits({
+  text: "Release request",
+  blocks: [
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: "*Release:* <https://example.com/release|View request> for <@U012AB3CD>",
+      },
+    },
+  ],
+}, {
+  sourceType: "slack",
+});
+```
+
+Slack `mrkdwn` and `markdown` blocks normalize into ordinary Units roles such as `Strong`, `Emphasis`, `Link`, `Mention`, `Channel`, `Date`, `Code`, `Blockquote`, and `Button`. This is an adapter/compiler feature; the Units grammar remains unchanged.
+
+## 9) Performance Notes
 
 - Parsing is linear time O(n).
 - Expressions are not parsed; only sliced.
 - AST nodes include `start/end` offsets for caching or incremental parsing.
 - If rendering frequently, memoize parsed ASTs and only update `scope`.
 
-## 9) Incremental Parsing Sketch
+## 10) Incremental Parsing Sketch
 
 See `incremental.js` for a reference strategy:
 
@@ -176,7 +201,7 @@ See `incremental.js` for a reference strategy:
 
 A safe fallback is to reparse the whole document.
 
-## 10) Security and Sandbox Considerations
+## 11) Security and Sandbox Considerations
 
 Expressions are raw JS evaluated with `Function` and `with`. This is powerful but not sandboxed. For untrusted input:
 
@@ -184,24 +209,24 @@ Expressions are raw JS evaluated with `Function` and `with`. This is powerful bu
 - Avoid `with` and use a small expression parser instead.
 - Run evaluation in a sandboxed environment.
 
-## 11) Error Handling
+## 12) Error Handling
 
 The parser throws an error with a character offset and a snippet of context. You can wrap `parseUnits` and surface friendly errors.
 
-## 12) Demo App
+## 13) Demo App
 
 - Vite: `examples/todo-vite`
 
 This demo renders a todo list using only `.ui` files for UI structure.
 
-## 13) Best Practices
+## 14) Best Practices
 
 - Keep expressions short and focused.
 - Prefer `#for` + `#key` to keep list rendering stable.
 - Memoize `parseUnits` results.
 - Provide a controlled `set` function.
 
-## 14) FAQ
+## 15) FAQ
 
 **Why not parse expressions?**
 Speed and extensibility. The DSL stays small and delegates semantics to the renderer.

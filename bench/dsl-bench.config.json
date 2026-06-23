@@ -34,6 +34,15 @@
       ]
     },
     {
+      "id": "slack_block_kit",
+      "title": "Slack Block Kit Message",
+      "file": "bench/cases/slack_block_kit.ui",
+      "scopePreset": "slack",
+      "renderScenarios": [
+        { "id": "base", "size": 1 }
+      ]
+    },
+    {
       "id": "gallery",
       "title": "ShadCN Gallery",
       "file": "examples/shadcn-gallery-vite/src/gallery.ui",

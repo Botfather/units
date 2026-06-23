@@ -1,0 +1,85 @@
+:root {
+  font-family: "Inter", "Segoe UI", sans-serif;
+  color: #0f172a;
+  background: #f6f8fb;
+}
+
+body {
+  margin: 0;
+  width: 460px;
+  min-height: 520px;
+  background: radial-gradient(circle at 20% 10%, #ffffff, #eef3f9 60%, #e3ebf5);
+}
+
+.popup {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: #334155;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+button {
+  border: 1px solid #c5d1e0;
+  background: #ffffff;
+  color: #0f172a;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+button.primary {
+  border-color: #0369a1;
+  background: #0ea5e9;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.status {
+  margin: 0;
+  font-size: 12px;
+  color: #334155;
+}
+
+.status[data-kind="error"] {
+  color: #b91c1c;
+}
+
+.status[data-kind="success"] {
+  color: #166534;
+}
+
+textarea {
+  width: 100%;
+  min-height: 360px;
+  resize: vertical;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 10px;
+  font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 11px;
+  line-height: 1.35;
+  box-sizing: border-box;
+}

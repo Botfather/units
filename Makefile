@@ -71,6 +71,7 @@ test-all:
 		"$(PNPM) test:units-ui-ir" \
 		"$(PNPM) test:units-react-adapter" \
 		"$(PNPM) test:dsl-bench" \
+		"$(PNPM) test:dsl-autoresearch-runner" \
 		"$(PNPM) test:vite-plugin-units-tools-agent" \
 		"$(PNPM) test:units-dom-snapshot" \
 		"$(PNPM) test:units-transform" \

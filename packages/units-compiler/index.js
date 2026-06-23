@@ -48,6 +48,9 @@ const { formatUnits } = printMod;
 const normalizeDomTree = uiIrMod.normalizeDomTree || uiIrMod.normalizeDomUiTree;
 const normalizeA11yTree = uiIrMod.normalizeA11yTree || uiIrMod.normalizeA11yUiTree;
 const normalizeIrNode = uiIrMod.normalizeIrNode || uiIrMod.normalizeUiNode;
+const normalizeSlackBlockKitTree = uiIrMod.normalizeSlackBlockKitTree
+  || uiIrMod.normalizeSlackTree
+  || ((input) => normalizeIrNode(input));
 const normalizeReactTree = reactAdapterMod.normalizeReactTree || ((input) => normalizeIrNode(input));
 const { runTransformProgram } = transformMod;
 
@@ -73,6 +76,22 @@ const ROLE_TAG_MAP = {
   checkbox: "Checkbox",
   radio: "Radio",
   switch: "Switch",
+  section: "Section",
+  context: "Context",
+  group: "Group",
+  separator: "Separator",
+  strong: "Strong",
+  emphasis: "Emphasis",
+  strike: "Strike",
+  code: "Code",
+  preformatted: "Pre",
+  blockquote: "Blockquote",
+  mention: "Mention",
+  channel: "Channel",
+  usergroup: "UserGroup",
+  special: "SpecialMention",
+  date: "Date",
+  field: "Field",
 };
 
 function isObject(value) {
@@ -87,6 +106,14 @@ function asArray(value) {
 
 function cleanText(value) {
   return String(value ?? "").trim();
+}
+
+function implicitActionsForRole(role) {
+  const normalized = cleanText(role).toLowerCase();
+  if (normalized === "button" || normalized === "link") return ["click"];
+  if (normalized === "input" || normalized === "textbox") return ["input"];
+  if (normalized === "checkbox" || normalized === "radio" || normalized === "switch") return ["toggle"];
+  return [];
 }
 
 function escapeUnitsString(value) {
@@ -115,7 +142,7 @@ function toJsLiteral(value) {
   if (typeof value === "string") return `'${escapeJsString(value)}'`;
 
   if (Array.isArray(value)) {
-    return `[${value.map((item) => toJsLiteral(item)).join(", ")}]`;
+    return `[${value.map((item) => toJsLiteral(item)).join(",")}]`;
   }
 
   if (isObject(value)) {
@@ -123,9 +150,9 @@ function toJsLiteral(value) {
       const prop = isIdentifier(key)
         ? key
         : `'${escapeJsString(key)}'`;
-      return `${prop}: ${toJsLiteral(oneValue)}`;
+      return `${prop}:${toJsLiteral(oneValue)}`;
     });
-    return `{ ${entries.join(", ")} }`;
+    return `{${entries.join(",")}}`;
   }
 
   return "null";
@@ -150,13 +177,32 @@ function detectSourceType(input, preferred) {
   const root = isObject(input) ? input : {};
 
   const sourceMeta = normalizeSourceType(root?.meta?.source, "");
-  if (sourceMeta === "dom" || sourceMeta === "a11y" || sourceMeta === "ir" || sourceMeta === "react") {
+  if (sourceMeta === "dom" || sourceMeta === "a11y" || sourceMeta === "ir" || sourceMeta === "react" || sourceMeta === "slack") {
     return sourceMeta;
   }
 
   const hasReactShape = (root.$$typeof != null && "type" in root)
     || ("type" in root && "props" in root && !("tagName" in root) && !("attributes" in root));
   if (hasReactShape) return "react";
+
+  const slackTypes = new Set([
+    "actions",
+    "button",
+    "context",
+    "divider",
+    "header",
+    "image",
+    "input",
+    "markdown",
+    "mrkdwn",
+    "plain_text",
+    "rich_text",
+    "section",
+  ]);
+  const hasSlackShape = Array.isArray(root.blocks)
+    || (typeof root.type === "string" && slackTypes.has(root.type.toLowerCase()))
+    || (isObject(root.text) && typeof root.text.type === "string" && slackTypes.has(root.text.type.toLowerCase()));
+  if (hasSlackShape) return "slack";
 
   const hasIrShape = "role" in root && ("props" in root || "state" in root || "actions" in root || "meta" in root);
   if (hasIrShape) return "ir";
@@ -177,6 +223,9 @@ function detectSourceType(input, preferred) {
 function normalizeInputTree(tree, sourceType) {
   const normalizedSourceType = normalizeSourceType(sourceType, "ir");
   if (normalizedSourceType === "react") return normalizeReactTree(tree);
+  if (normalizedSourceType === "slack" || normalizedSourceType === "block-kit" || normalizedSourceType === "blockkit") {
+    return normalizeSlackBlockKitTree(tree);
+  }
   if (normalizedSourceType === "dom") return normalizeDomTree(tree);
   if (normalizedSourceType === "a11y") return normalizeA11yTree(tree);
   return normalizeIrNode(tree);
@@ -187,6 +236,7 @@ function normalizeSourceType(sourceType, fallback = "ir") {
   if (!normalized) return fallback;
   if (normalized === "accessibility" || normalized === "ax") return "a11y";
   if (normalized === "jsx") return "react";
+  if (normalized === "block-kit" || normalized === "blockkit" || normalized === "mrkdwn") return "slack";
   return normalized;
 }
 
@@ -286,6 +336,13 @@ function findLoopGroup(children, start, config) {
   const dynamicFields = [];
   if (new Set(names).size > 1) dynamicFields.push("name");
   if (new Set(texts).size > 1) dynamicFields.push("text");
+  const textFromName = dynamicFields.includes("name")
+    && dynamicFields.includes("text")
+    && names.every((name, index) => name && name === texts[index]);
+  if (textFromName) {
+    const textIndex = dynamicFields.indexOf("text");
+    if (textIndex !== -1) dynamicFields.splice(textIndex, 1);
+  }
 
   if (dynamicFields.length === 0) return null;
 
@@ -301,8 +358,68 @@ function findLoopGroup(children, start, config) {
     length: group.length,
     template: group[0],
     dynamicFields,
+    textFromName,
     items,
   };
+}
+
+function shouldEmitRootContainer(node, config) {
+  if (!isObject(node)) return true;
+  if (config.includeRootContainer === true) return true;
+
+  const role = cleanText(node.role).toLowerCase();
+  if (role !== "container") return true;
+
+  const children = asArray(node.children).filter((child) => isObject(child));
+  if (children.length === 0) return true;
+
+  if (cleanText(node.name) || cleanText(node.text)) return true;
+
+  const state = isObject(node.state) ? node.state : {};
+  const meaningfulState = Object.entries(state).some(([key, value]) => {
+    if (key === "hidden") return value === true;
+    if (key === "if" || key === "when") return cleanText(value).length > 0;
+    if (typeof value === "boolean") return value === true;
+    if (typeof value === "number") return Number.isFinite(value) && value !== 0;
+    return cleanText(value).length > 0;
+  });
+  if (meaningfulState) return true;
+
+  const actions = asArray(node.actions).map((value) => cleanText(value)).filter(Boolean);
+  if (actions.length > 0) return true;
+
+  const sourceProps = isObject(node.props) ? node.props : {};
+  const meaningfulPropKeys = [
+    "placeholder",
+    "href",
+    "type",
+    "value",
+    "title",
+    "alt",
+    "aria-label",
+    "ariaLabel",
+    "src",
+    "blockId",
+    "actionId",
+    "style",
+    "channelId",
+    "userId",
+    "groupId",
+    "special",
+    "timestamp",
+    "format",
+    "fallback",
+  ];
+  const hasMeaningfulProps = meaningfulPropKeys.some((key) => {
+    if (!(key in sourceProps)) return false;
+    const value = sourceProps[key];
+    if (typeof value === "boolean") return value === true;
+    if (typeof value === "number") return Number.isFinite(value);
+    return cleanText(value).length > 0;
+  });
+  if (hasMeaningfulProps) return true;
+
+  return false;
 }
 
 function printValueProp(key, value) {
@@ -320,7 +437,7 @@ function printExprProp(key, rawExpr) {
   return `${key}=@${expr}`;
 }
 
-function buildNodeProps(node, tagInfo, ctx, config) {
+function buildNodeProps(node, tagInfo, ctx, config, emission = {}) {
   const props = [];
 
   const dynamicFields = ctx.dynamicFields || new Set();
@@ -342,15 +459,28 @@ function buildNodeProps(node, tagInfo, ctx, config) {
   }
 
   const name = cleanText(node.name);
+  const leafText = cleanText(emission.leafText);
+  const omitRedundantName = config.includeRedundantName !== true
+    && emission.omitLeafText !== true
+    && !dynamicFields.has("name")
+    && name
+    && leafText
+    && name === leafText;
   if (dynamicFields.has("name")) {
     addExpr("name", `${loopVar}.name`);
-  } else if (name) {
+  } else if (name && !omitRedundantName) {
     addValue("name", name);
   }
 
   if (config.includeActions) {
-    const actions = asArray(node.actions).map((value) => cleanText(value)).filter(Boolean);
-    if (actions.length > 0) addValue("actions", actions.join("|"));
+    const actions = [...new Set(asArray(node.actions).map((value) => cleanText(value)).filter(Boolean))];
+    const implicit = implicitActionsForRole(node.role);
+    const allImplicit = actions.length > 0
+      && implicit.length > 0
+      && actions.every((action) => implicit.includes(action));
+    if (actions.length > 0 && (!allImplicit || config.includeImplicitActions === true)) {
+      addValue("actions", actions.join("|"));
+    }
   }
 
   if (config.includeState) {
@@ -374,7 +504,27 @@ function buildNodeProps(node, tagInfo, ctx, config) {
   }
 
   const sourceProps = isObject(node.props) ? node.props : {};
-  const allowedPropKeys = ["placeholder", "href", "type", "value", "title", "alt", "aria-label", "ariaLabel"];
+  const allowedPropKeys = [
+    "placeholder",
+    "href",
+    "type",
+    "value",
+    "title",
+    "alt",
+    "aria-label",
+    "ariaLabel",
+    "src",
+    "blockId",
+    "actionId",
+    "style",
+    "channelId",
+    "userId",
+    "groupId",
+    "special",
+    "timestamp",
+    "format",
+    "fallback",
+  ];
   for (const key of allowedPropKeys) {
     if (!(key in sourceProps)) continue;
     const value = sourceProps[key];
@@ -418,34 +568,55 @@ function emitNode(node, indent, config, state, ctx = {}) {
   const role = cleanText(node.role).toLowerCase();
 
   if (role === "text") {
+    const preserveWhitespace = node?.meta?.preserveWhitespace === true;
     const value = ctx.dynamicFields?.has("text")
       ? `@{${ctx.loopVar}.text}`
-      : cleanText(node.text || node.name);
+      : (ctx.textFromName === true && ctx.dynamicFields?.has("name"))
+        ? `@{${ctx.loopVar}.name}`
+      : preserveWhitespace
+        ? String(node.text || node.name || "")
+        : cleanText(node.text || node.name);
 
     if (!value) return [];
     return [`${pad}'${escapeUnitsString(value)}'`];
   }
 
   const tagInfo = resolveTag(role || "container");
-  const props = buildNodeProps(node, tagInfo, ctx, config);
 
   const children = asArray(node.children)
     .filter((child) => isObject(child));
+  const hasDynamicText = ctx.dynamicFields?.has("text") === true;
+  const hasDynamicName = ctx.dynamicFields?.has("name") === true;
+  const leafText = children.length === 0
+    ? (hasDynamicText
+      ? `@{${ctx.loopVar}.text}`
+      : (ctx.textFromName === true && hasDynamicName)
+        ? `@{${ctx.loopVar}.name}`
+        : cleanText(node.text))
+    : "";
+  const leafTextFromDynamicName = children.length === 0
+    && !hasDynamicText
+    && hasDynamicName
+    && ctx.textFromName === true;
+  const omitLeafText = children.length === 0
+    && !hasDynamicText
+    && config.includeRedundantLeafText !== true
+    && (leafTextFromDynamicName
+      || (cleanText(node.name)
+        && leafText
+        && cleanText(node.name) === leafText));
+  const props = buildNodeProps(node, tagInfo, ctx, config, { leafText, omitLeafText });
 
   let childLines = emitChildren(children, indent + 1, config, state);
 
-  if (childLines.length === 0) {
-    const leafText = ctx.dynamicFields?.has("text")
-      ? `@{${ctx.loopVar}.text}`
-      : cleanText(node.text);
-
+  if (childLines.length === 0 && !omitLeafText) {
     if (leafText) {
       childLines = [`${"  ".repeat(indent + 1)}'${escapeUnitsString(leafText)}'`];
     }
   }
 
   const header = props.length > 0
-    ? `${pad}${tagInfo.tag} (${props.join(", ")})`
+    ? `${pad}${tagInfo.tag} (${props.join(",")})`
     : `${pad}${tagInfo.tag}`;
 
   if (childLines.length === 0) {
@@ -464,7 +635,6 @@ function emitLoopGroup(group, indent, config, state) {
   state.loopCounter = sequence;
 
   const loopVar = `item${sequence}`;
-  const idxVar = `i${sequence}`;
   const dynamicFields = new Set(group.dynamicFields);
 
   const pad = "  ".repeat(indent);
@@ -473,13 +643,14 @@ function emitLoopGroup(group, indent, config, state) {
   const templateLines = emitNode(group.template, indent + 1, config, state, {
     loopVar,
     dynamicFields,
+    textFromName: group.textFromName === true,
     ignoreCondition: true,
   });
 
   if (templateLines.length === 0) return [];
 
   return [
-    `${pad}#for (${loopVar}, ${idxVar} in @(${listExpr})) {`,
+    `${pad}#for (${loopVar} in @(${listExpr})) {`,
     ...templateLines,
     `${pad}}`,
   ];
@@ -510,8 +681,19 @@ function normalizeCompileArgs(programOrOptions, maybeOptions) {
     && !programOrOptions.rules
     && ("program" in programOrOptions
       || "sourceType" in programOrOptions
+      || "includeId" in programOrOptions
+      || "includeActions" in programOrOptions
+      || "includeImplicitActions" in programOrOptions
+      || "includeRedundantName" in programOrOptions
+      || "includeRedundantLeafText" in programOrOptions
+      || "includeRootContainer" in programOrOptions
+      || "includeState" in programOrOptions
+      || "includeRoleProp" in programOrOptions
+      || "includeHidden" in programOrOptions
       || "enableLoopHeuristic" in programOrOptions
       || "minLoopGroupSize" in programOrOptions
+      || "enableIfHeuristic" in programOrOptions
+      || "emptyRootTag" in programOrOptions
       || "context" in programOrOptions)) {
     return {
       program: programOrOptions.program || null,
@@ -532,6 +714,10 @@ export function compileUiToUnits(uiRoot, programOrOptions = null, maybeOptions =
     sourceType: "auto",
     includeId: false,
     includeActions: true,
+    includeImplicitActions: false,
+    includeRedundantName: false,
+    includeRedundantLeafText: false,
+    includeRootContainer: false,
     includeState: true,
     includeRoleProp: false,
     includeHidden: false,
@@ -558,7 +744,9 @@ export function compileUiToUnits(uiRoot, programOrOptions = null, maybeOptions =
     loopCounter: 0,
   };
 
-  const lines = emitNode(transformedTree, 0, config, state);
+  const lines = shouldEmitRootContainer(transformedTree, config)
+    ? emitNode(transformedTree, 0, config, state)
+    : emitChildren(asArray(transformedTree.children), 0, config, state);
   const source = lines.length > 0
     ? `${lines.join("\n")}\n`
     : `${config.emptyRootTag}\n`;

@@ -23,10 +23,26 @@ console.log(result.ast);
 ```
 
 `compileUiToUnits` pipeline:
-- Detect/normalize host tree into Units IR (`dom`, `a11y`, `react`, or `ir`)
+- Detect/normalize host tree into Units IR (`dom`, `a11y`, `react`, `slack`, or `ir`)
 - Optionally run a Units transform program
 - Emit Units DSL (with small structural heuristics like `#for` on repeated leaf siblings)
 - Parse DSL back into Units AST
+
+Slack Block Kit payloads can be compiled with `sourceType: "slack"`. Text objects using `type: "mrkdwn"` are normalized into regular IR nodes for Slack styles, links, mentions, channels, special mentions, dates, quotes, and code spans without changing the Units grammar.
+
+```js
+const slackResult = compileUiToUnits(blockKitPayload, {
+  sourceType: "slack",
+});
+```
+
+For token efficiency, implicit actions are omitted by default (`button -> click`, `input -> input`, etc). Set `includeImplicitActions: true` to always emit explicit action props.
+
+The compiler also compacts redundant leaf `name`/text duplication by default. When a leaf node has identical `name` and text, it emits a single compact form (`Button (name:'Save')`) instead of both representations. Set `includeRedundantName: true` and/or `includeRedundantLeafText: true` to keep explicit duplicates.
+
+When loop heuristics emit inline JS list literals, the compiler prints them in compact form and deduplicates loop item fields when `name` and `text` move together.
+
+Redundant root containers are omitted by default when they do not carry meaningful metadata, state, actions, or visible text. Set `includeRootContainer: true` to always emit the top-level container node.
 
 ## Exports
 

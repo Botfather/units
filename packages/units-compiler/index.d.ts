@@ -14,10 +14,14 @@ export type UiNode = {
 
 export type CompileUiOptions = {
   program?: any;
-  sourceType?: "auto" | "dom" | "a11y" | "ir" | "react" | string;
+  sourceType?: "auto" | "dom" | "a11y" | "ir" | "react" | "slack" | string;
   context?: Record<string, any>;
   includeId?: boolean;
   includeActions?: boolean;
+  includeImplicitActions?: boolean;
+  includeRedundantName?: boolean;
+  includeRedundantLeafText?: boolean;
+  includeRootContainer?: boolean;
   includeState?: boolean;
   includeRoleProp?: boolean;
   includeHidden?: boolean;

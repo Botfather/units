@@ -1,17 +1,20 @@
 let transformMod;
 let treeIrMod;
+let uiIrMod;
 let rewardMod;
 let libraryMod;
 
 try {
   transformMod = await import("@botfather/units/transform");
   treeIrMod = await import("@botfather/units/tree-ir");
+  uiIrMod = await import("@botfather/units-ui-ir");
   rewardMod = await import("@botfather/units/reward");
   libraryMod = await import("@botfather/units/library");
 } catch {
   // Monorepo fallback for direct node execution without workspace linking.
   transformMod = await import("../units/transform.js");
   treeIrMod = await import("../units/tree-ir.js");
+  uiIrMod = await import("../units-ui-ir/index.js");
   rewardMod = await import("../units/reward.js");
   libraryMod = await import("../units/transform-library.js");
 }
@@ -27,6 +30,10 @@ const {
   normalizeIrNode,
   serializeAgentTree,
 } = treeIrMod;
+
+const normalizeSlackBlockKitTree = uiIrMod.normalizeSlackBlockKitTree
+  || uiIrMod.normalizeSlackTree
+  || ((tree) => normalizeIrNode(tree));
 
 const {
   scoreProgram,
@@ -47,12 +54,14 @@ function normalizeSourceType(sourceType) {
   const value = String(sourceType || "dom").toLowerCase();
   if (value === "accessibility") return "a11y";
   if (value === "ax") return "a11y";
+  if (value === "block-kit" || value === "blockkit" || value === "mrkdwn") return "slack";
   return value;
 }
 
 function normalizeInputTree(tree, sourceType) {
   if (sourceType === "dom") return normalizeDomTree(tree);
   if (sourceType === "a11y") return normalizeA11yTree(tree);
+  if (sourceType === "slack") return normalizeSlackBlockKitTree(tree);
   return normalizeIrNode(tree);
 }
 

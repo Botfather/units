@@ -303,7 +303,6 @@ test("golden transform output stays stable", () => {
     children: [
       {
         role: "text",
-        id: "t1",
         text: "alpha beta",
       },
     ],

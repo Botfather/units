@@ -629,6 +629,94 @@
         "expectedNames": ["Activity", "Open logs", "Re-run job"],
         "expectedText": "build succeeded Open logs Re run"
       }
+    },
+    {
+      "id": "slack_release_approval",
+      "title": "Slack Block Kit release approval message",
+      "sourceType": "slack",
+      "tags": ["slack", "block-kit", "mrkdwn"],
+      "tree": {
+        "channel": "C123ABC456",
+        "text": "Release request",
+        "blocks": [
+          {
+            "type": "section",
+            "block_id": "summary",
+            "text": {
+              "type": "mrkdwn",
+              "text": "*Release:* <https://example.com/release|View request>\nAssigned to <@U012AB3CD> in <#C999|deploys>"
+            },
+            "fields": [
+              {
+                "type": "mrkdwn",
+                "text": "*When:*\n<!date^1392734382^{date_short} at {time}|Feb 18, 2014 at 6:39 AM>"
+              }
+            ]
+          },
+          {
+            "type": "actions",
+            "elements": [
+              {
+                "type": "button",
+                "action_id": "approve",
+                "style": "primary",
+                "text": {
+                  "type": "plain_text",
+                  "text": "Approve"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["click"],
+        "expectedNames": ["Release request", "View request", "@U012AB3CD", "#deploys", "Feb 18, 2014 at 6:39 AM", "Approve"]
+      }
+    },
+    {
+      "id": "slack_semantic_loss_dual_actions",
+      "title": "Semantic-loss probe: Slack message with adjacent decision buttons",
+      "sourceType": "slack",
+      "tags": ["semantic-loss", "slack", "block-kit", "actions"],
+      "tree": {
+        "channel": "C999",
+        "text": "Incident decision",
+        "blocks": [
+          {
+            "type": "markdown",
+            "text": "> <!channel> needs a decision on <https://example.com/incidents/42|incident 42>\n`sev2` escalation is still active."
+          },
+          {
+            "type": "actions",
+            "block_id": "decision_actions",
+            "elements": [
+              {
+                "type": "button",
+                "action_id": "approve_incident",
+                "style": "primary",
+                "text": {
+                  "type": "plain_text",
+                  "text": "Approve incident"
+                }
+              },
+              {
+                "type": "button",
+                "action_id": "reject_incident",
+                "style": "danger",
+                "text": {
+                  "type": "plain_text",
+                  "text": "Reject incident"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "expectations": {
+        "expectedActions": ["click"],
+        "expectedNames": ["Incident decision", "@channel", "incident 42", "Approve incident", "Reject incident"]
+      }
     }
   ]
 }

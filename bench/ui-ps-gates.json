@@ -1,16 +1,19 @@
 {
-  "min_case_count": 18,
-  "min_transformed_count": 16,
-  "min_semantic_loss_case_count": 4,
-  "min_gate_pass_count": 16,
-  "min_semantic_loss_gate_pass_count": 4,
+  "min_case_count": 20,
+  "min_transformed_count": 18,
+  "min_semantic_loss_case_count": 5,
+  "min_gate_pass_count": 18,
+  "min_semantic_loss_gate_pass_count": 5,
   "min_avg_action_recall": 1.0,
-  "min_avg_token_reduction": 0.06,
+  "min_avg_token_reduction": 0.07,
+  "min_avg_compiled_token_reduction": 0.16,
+  "min_avg_agent_tree_token_reduction": 0.16,
   "min_avg_total_score": 1.0,
   "min_avg_delta_from_baseline": 0.04,
   "required_program_ids": [
     "dom-drop-hidden-merge-v1",
     "a11y-compact-dialog-v1",
-    "ir-compact-default-v1"
+    "ir-compact-default-v1",
+    "slack-compact-block-kit-v1"
   ]
 }

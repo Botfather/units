@@ -156,6 +156,8 @@ const a11yIr = normalizeA11yTree(rawAccessibilityTree);
 const compact = serializeAgentTree(domIr);
 ```
 
+`serializeAgentTree` applies token-oriented defaults (dedupes redundant `name`/`text` pairs, omits role-implicit actions like `click` on buttons, prunes empty text leaves, and omits text-node ids). Pass options such as `includeRedundantNameText: true`, `includeImplicitActions: true`, or `includeTextIds: true` to keep those fields.
+
 ### Transform programs
 
 ```js

@@ -1,0 +1,18 @@
+{
+  "program_id": "slack-compact-block-kit-v1",
+  "fingerprint": "seed-slack-compact-block-kit-v1",
+  "source_type": "slack",
+  "scores": {
+    "total": 1.08,
+    "R_completeness": 1.0,
+    "R_efficiency": 0.08,
+    "metrics": {}
+  },
+  "constraints_passed": true,
+  "created_at": "2026-06-23T00:00:00.000Z",
+  "active": true,
+  "provenance": {
+    "source": "seed",
+    "dataset": "bench/ui-ps-fixtures.json"
+  }
+}

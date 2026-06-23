@@ -1,6 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
-import { parseUnits } from "@botfather/units/parser";
+
+let parserMod;
+try {
+  parserMod = await import("@botfather/units/parser");
+} catch {
+  // Monorepo fallback for direct node execution without workspace linking.
+  parserMod = await import("../units/units-parser.js");
+}
+
+const { parseUnits } = parserMod;
 
 function endsWithUi(id) {
   return id.endsWith(".ui");

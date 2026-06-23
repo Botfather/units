@@ -2,18 +2,31 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import {
-  compileTransformProgram,
-  runTransformProgram,
-} from "@botfather/units/transform";
-import {
-  scoreProgram,
-  verifyProgram,
-} from "@botfather/units/reward";
-import {
   normalizeSourceType,
   normalizeUiInputTree,
   runtimeSourceType,
 } from "./ui-normalize.mjs";
+
+let transformMod;
+let rewardMod;
+try {
+  transformMod = await import("@botfather/units/transform");
+  rewardMod = await import("@botfather/units/reward");
+} catch {
+  // Monorepo fallback for direct node execution without workspace linking.
+  transformMod = await import("../units/transform.js");
+  rewardMod = await import("../units/reward.js");
+}
+
+const {
+  compileTransformProgram,
+  runTransformProgram,
+} = transformMod;
+
+const {
+  scoreProgram,
+  verifyProgram,
+} = rewardMod;
 
 function parseArgs(argv) {
   const out = {
@@ -38,7 +51,7 @@ function parseArgs(argv) {
 }
 
 function usage() {
-  return `\nUsage:\n  units-verify --program <program.ui> --input <tree.json> [--source dom|a11y|react|ir]\n  units-verify --before <before.json> --after <after.json> [--source dom|a11y|react|ir]\n\nOptional:\n  --context <context.json>\n  --expectations <expectations.json>\n  --gate-action-recall <num>\n  --gate-name-recall <num>\n  --gate-text-f1 <num>\n  --out <result.json>\n`;
+  return `\nUsage:\n  units-verify --program <program.ui> --input <tree.json> [--source dom|a11y|react|slack|ir]\n  units-verify --before <before.json> --after <after.json> [--source dom|a11y|react|slack|ir]\n\nOptional:\n  --context <context.json>\n  --expectations <expectations.json>\n  --gate-action-recall <num>\n  --gate-name-recall <num>\n  --gate-text-f1 <num>\n  --out <result.json>\n`;
 }
 
 async function readJson(file) {
