@@ -13,6 +13,7 @@
   "publishAllowedPackages": [
     "@botfather/units-tools",
     "@botfather/vite-plugin-units",
+    "@botfather/units-slack-block-kit",
     "@botfather/vite-plugin-units-tools"
   ]
 }
