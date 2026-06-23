@@ -11,6 +11,7 @@
   "packageScope": "@botfather",
   "verifyOidcExchange": true,
   "publishAllowedPackages": [
+    "@botfather/units",
     "@botfather/units-tools",
     "@botfather/vite-plugin-units",
     "@botfather/units-slack-block-kit",
