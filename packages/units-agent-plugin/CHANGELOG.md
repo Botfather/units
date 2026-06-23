@@ -1,5 +1,13 @@
 # @botfather/units-agent-plugin
 
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @botfather/units-agent-middleware@0.1.2
+  - @botfather/units-compiler@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes

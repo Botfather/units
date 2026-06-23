@@ -1,6 +1,6 @@
 {
   "name": "@botfather/vite-plugin-units",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Vite plugin for loading Units .ui files as AST.",
   "license": "MIT",
   "type": "module",

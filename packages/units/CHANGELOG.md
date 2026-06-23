@@ -1,5 +1,11 @@
 # @botfather/units
 
+## 2.0.1
+
+### Patch Changes
+
+- [#46](https://github.com/Botfather/units/pull/46) [`d47734a`](https://github.com/Botfather/units/commit/d47734aac56f2ac6ff8199ef6dbeb3fd68eacf70) Thanks [@Botfather](https://github.com/Botfather)! - updates axios version
+
 ## 2.0.0
 
 ### Major Changes
