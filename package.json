@@ -44,6 +44,7 @@
     "test:units-agent-service": "node --test ./test/units-agent-service.test.mjs",
     "test:units-incremental": "node --test ./test/units-incremental.test.mjs",
     "test:units-compiler": "node --test ./test/units-compiler.test.mjs",
+    "test:units-slack-block-kit": "node --test ./test/units-slack-block-kit.test.mjs",
     "test:units-tools-transform-verify": "node --test ./test/units-tools-transform-verify.test.mjs",
     "test:ui-ps-bench": "node --test ./test/ui-ps-bench.test.mjs",
     "test:ui-ps-gate-check": "node --test ./test/ui-ps-gate-check.test.mjs",

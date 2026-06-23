@@ -1,0 +1,35 @@
+{
+  "name": "@botfather/units-slack-block-kit",
+  "version": "0.0.0",
+  "description": "Convert Units DSL or AST into Slack Block Kit payloads.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Botfather/units.git",
+    "directory": "packages/units-slack-block-kit"
+  },
+  "homepage": "https://github.com/Botfather/units/tree/main/packages/units-slack-block-kit",
+  "bugs": {
+    "url": "https://github.com/Botfather/units/issues"
+  },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "dependencies": {
+    "@botfather/units": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
