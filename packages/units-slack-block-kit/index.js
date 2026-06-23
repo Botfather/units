@@ -209,6 +209,153 @@ const MESSAGE_PROPS = new Set([
   "parse",
 ]);
 
+const STRUCTURED_ROOT_KEYS = new Set([
+  "type",
+  "blocks",
+  "children",
+  "props",
+]);
+
+const STRUCTURED_NODE_KEYS = new Set([
+  "type",
+  "blocks",
+  "children",
+  "elements",
+  "fields",
+  "accessory",
+  "element",
+  "props",
+  "payload",
+]);
+
+const STRUCTURED_NODE_TYPES = [
+  "Actions",
+  "Blockquote",
+  "Button",
+  "Channel",
+  "Code",
+  "Context",
+  "Date",
+  "DatePicker",
+  "DateTimePicker",
+  "Divider",
+  "Emphasis",
+  "ExternalSelect",
+  "Field",
+  "Header",
+  "Image",
+  "Input",
+  "Link",
+  "Markdown",
+  "Mention",
+  "MultiStaticSelect",
+  "PlainText",
+  "PlainTextInput",
+  "Pre",
+  "RawBlock",
+  "RawElement",
+  "Section",
+  "SpecialMention",
+  "StaticSelect",
+  "Strike",
+  "Strong",
+  "Text",
+  "TimePicker",
+  "UserGroup",
+];
+
+export const SLACK_UNITS_STRUCTURED_OUTPUT_SCHEMA = {
+  name: "slack_units_message",
+  strict: true,
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    required: ["type", "blocks"],
+    properties: {
+      type: { const: "SlackMessage" },
+      channel: { type: "string" },
+      text: { type: "string" },
+      username: { type: "string" },
+      threadTs: { type: "string" },
+      blocks: {
+        type: "array",
+        minItems: 1,
+        items: { $ref: "#/$defs/node" },
+      },
+    },
+    $defs: {
+      node: {
+        type: "object",
+        additionalProperties: false,
+        required: ["type"],
+        properties: {
+          type: { enum: STRUCTURED_NODE_TYPES },
+          text: { type: "string" },
+          name: { type: "string" },
+          blockId: { type: "string" },
+          actionId: { type: "string" },
+          style: { enum: ["primary", "danger"] },
+          value: { type: "string" },
+          href: { type: "string" },
+          url: { type: "string" },
+          src: { type: "string" },
+          imageUrl: { type: "string" },
+          alt: { type: "string" },
+          title: { type: "string" },
+          label: { type: "string" },
+          hint: { type: "string" },
+          placeholder: { type: "string" },
+          userId: { type: "string" },
+          channelId: { type: "string" },
+          userGroupId: { type: "string" },
+          timestamp: { type: "string" },
+          format: { type: "string" },
+          fallback: { type: "string" },
+          special: { enum: ["here", "channel", "everyone"] },
+          optional: { type: "boolean" },
+          multiline: { type: "boolean" },
+          options: {
+            type: "array",
+            items: { $ref: "#/$defs/option" },
+          },
+          fields: {
+            type: "array",
+            items: { $ref: "#/$defs/node" },
+          },
+          accessory: { $ref: "#/$defs/node" },
+          element: { $ref: "#/$defs/node" },
+          elements: {
+            type: "array",
+            items: { $ref: "#/$defs/node" },
+          },
+          children: {
+            type: "array",
+            items: {
+              anyOf: [
+                { type: "string" },
+                { $ref: "#/$defs/node" },
+              ],
+            },
+          },
+          payload: { type: "object" },
+        },
+      },
+      option: {
+        type: "object",
+        additionalProperties: false,
+        required: ["text", "value"],
+        properties: {
+          text: { type: "string" },
+          value: { type: "string" },
+          description: { type: "string" },
+        },
+      },
+    },
+  },
+};
+
+export const SLACK_UNITS_JSON_SCHEMA = SLACK_UNITS_STRUCTURED_OUTPUT_SCHEMA.schema;
+
 function isObject(value) {
   return value != null && typeof value === "object" && !Array.isArray(value);
 }
@@ -345,6 +492,214 @@ function parseInput(input, options) {
     tree: input,
     parsed: false,
   };
+}
+
+function validationIssue(path, message) {
+  return {
+    path: path.join(".") || "$",
+    message,
+  };
+}
+
+function validateStructuredNode(node, path, out) {
+  if (typeof node === "string") return;
+  if (!isObject(node)) {
+    out.errors.push(validationIssue(path, "Expected a string or structured node object."));
+    return;
+  }
+
+  const type = String(node.type || "");
+  if (!type) {
+    out.errors.push(validationIssue(path, "Structured nodes must include a type."));
+    return;
+  }
+
+  if (!STRUCTURED_NODE_TYPES.includes(type)) {
+    out.errors.push(validationIssue(path, `Unsupported structured Slack node type: ${type}.`));
+  }
+
+  if (type === "RawBlock" || type === "RawElement") {
+    if (!isObject(node.payload) || typeof node.payload.type !== "string") {
+      out.errors.push(validationIssue([...path, "payload"], `${type} requires payload.type.`));
+    }
+  }
+
+  if (type === "Image" && !node.src && !node.imageUrl && !node.url) {
+    out.errors.push(validationIssue(path, "Image requires src, imageUrl, or url."));
+  }
+
+  if (type === "Link" && !node.href && !node.url) {
+    out.errors.push(validationIssue(path, "Link requires href or url."));
+  }
+
+  if (type === "Mention" && !node.userId) {
+    out.errors.push(validationIssue(path, "Mention requires userId."));
+  }
+
+  if (type === "Channel" && !node.channelId) {
+    out.errors.push(validationIssue(path, "Channel requires channelId."));
+  }
+
+  if (type === "UserGroup" && !node.userGroupId) {
+    out.errors.push(validationIssue(path, "UserGroup requires userGroupId."));
+  }
+
+  if (type === "Date" && !node.timestamp) {
+    out.errors.push(validationIssue(path, "Date requires timestamp."));
+  }
+
+  if (Array.isArray(node.children)) {
+    node.children.forEach((child, index) => validateStructuredNode(child, [...path, "children", index], out));
+  }
+
+  if (Array.isArray(node.fields)) {
+    node.fields.forEach((child, index) => validateStructuredNode(child, [...path, "fields", index], out));
+  }
+
+  if (Array.isArray(node.elements)) {
+    node.elements.forEach((child, index) => validateStructuredNode(child, [...path, "elements", index], out));
+  }
+
+  if (node.accessory != null) validateStructuredNode(node.accessory, [...path, "accessory"], out);
+  if (node.element != null) validateStructuredNode(node.element, [...path, "element"], out);
+
+  if (Array.isArray(node.options)) {
+    node.options.forEach((option, index) => {
+      if (!isObject(option)) {
+        out.errors.push(validationIssue([...path, "options", index], "Options must be objects."));
+        return;
+      }
+      if (typeof option.text !== "string" || typeof option.value !== "string") {
+        out.errors.push(validationIssue([...path, "options", index], "Options require text and value strings."));
+      }
+    });
+  }
+}
+
+export function validateStructuredSlack(input) {
+  const out = {
+    ok: true,
+    errors: [],
+    warnings: [],
+  };
+
+  if (!isObject(input)) {
+    out.errors.push(validationIssue([], "Structured Slack output must be an object."));
+  } else {
+    if (input.type !== "SlackMessage") {
+      out.errors.push(validationIssue(["type"], "Root type must be SlackMessage."));
+    }
+    if (!Array.isArray(input.blocks) || input.blocks.length === 0) {
+      out.errors.push(validationIssue(["blocks"], "Root blocks must be a non-empty array."));
+    } else {
+      input.blocks.forEach((block, index) => validateStructuredNode(block, ["blocks", index], out));
+    }
+  }
+
+  out.ok = out.errors.length === 0;
+  return out;
+}
+
+function structuredProps(node, root = false) {
+  const skip = root ? STRUCTURED_ROOT_KEYS : STRUCTURED_NODE_KEYS;
+  const props = isObject(node?.props) ? { ...node.props } : {};
+  for (const [key, value] of Object.entries(node || {})) {
+    if (skip.has(key)) continue;
+    if (value !== undefined) props[key] = value;
+  }
+  return props;
+}
+
+function structuredChildToUnitsTree(value, fallbackType = "Text") {
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return {
+      kind: TEXT_KIND,
+      value: String(value),
+    };
+  }
+  if (!isObject(value)) return null;
+  return structuredNodeToUnitsTree(value.type ? value : { ...value, type: fallbackType });
+}
+
+function structuredNodeToUnitsTree(node) {
+  if (!isObject(node)) return structuredChildToUnitsTree(node);
+
+  if (node.type === "Text") {
+    return {
+      kind: TEXT_KIND,
+      value: String(node.text ?? ""),
+    };
+  }
+
+  const children = [];
+  for (const child of asArray(node.children)) {
+    const rendered = structuredChildToUnitsTree(child);
+    if (rendered) children.push(rendered);
+  }
+
+  for (const field of asArray(node.fields)) {
+    const rendered = typeof field === "string"
+      ? structuredNodeToUnitsTree({ type: "Field", children: [field] })
+      : structuredChildToUnitsTree(field, "Field");
+    if (rendered) children.push(rendered);
+  }
+
+  for (const element of asArray(node.elements)) {
+    const rendered = structuredChildToUnitsTree(element);
+    if (rendered) children.push(rendered);
+  }
+
+  if (node.accessory != null) {
+    const rendered = structuredChildToUnitsTree(node.accessory);
+    if (rendered) children.push(rendered);
+  }
+
+  if (node.element != null) {
+    const rendered = structuredChildToUnitsTree(node.element);
+    if (rendered) children.push(rendered);
+  }
+
+  return {
+    kind: "element",
+    name: String(node.type || "Text"),
+    props: structuredProps(node),
+    events: {},
+    children,
+  };
+}
+
+export function structuredSlackToUnitsTree(input) {
+  const children = asArray(input?.blocks).map((block) => structuredChildToUnitsTree(block)).filter(Boolean);
+  return {
+    kind: "element",
+    name: "SlackMessage",
+    props: structuredProps(input, true),
+    events: {},
+    children,
+  };
+}
+
+function validationError(validation) {
+  const error = new Error(`Invalid structured Slack output: ${validation.errors.map((one) => `${one.path}: ${one.message}`).join("; ")}`);
+  error.validation = validation;
+  return error;
+}
+
+export function compileStructuredSlackToBlockKit(input, options = {}) {
+  const validation = validateStructuredSlack(input);
+  if (!validation.ok && options.strict) throw validationError(validation);
+
+  const tree = structuredSlackToUnitsTree(input);
+  const result = compileUnitsToSlackBlockKit(tree, options);
+  return {
+    ...result,
+    validation,
+    warnings: [...validation.warnings, ...result.warnings],
+  };
+}
+
+export function structuredSlackToBlockKit(input, options = {}) {
+  return compileStructuredSlackToBlockKit(input, options).payload;
 }
 
 function textObject(value, type = "mrkdwn", props = {}) {
