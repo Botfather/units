@@ -1,6 +1,6 @@
 {
   "name": "@botfather/units-agent-middleware",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Agent-agnostic middleware for rewriting UI trees with Units transform programs.",
   "license": "MIT",
   "type": "module",
