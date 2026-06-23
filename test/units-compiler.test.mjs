@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { parseUnits } from "../packages/units/units-parser.js";
-import { compileUiToUnits } from "../packages/units-compiler/index.js";
+import { compileUiToUnits, compileUiToUnitsDsl } from "../packages/units-compiler/index.js";
 
 const REACT_ELEMENT_TYPE = Symbol.for("react.element");
 
@@ -441,4 +441,120 @@ test("compileUiToUnits accepts Slack Block Kit mrkdwn payloads", () => {
 
   const reparsed = parseUnits(result.dsl);
   assert.equal(reparsed.type, "document");
+});
+
+test("compileUiToUnits emits conditional wrappers, unknown roles, ids, state, props, and hidden nodes", () => {
+  const uiTree = {
+    id: "root",
+    role: "container",
+    name: "Root",
+    text: "",
+    props: {
+      blockId: "root-block",
+      actionId: "root-action",
+      style: "primary",
+      timestamp: 1700000000,
+      fallback: "Root fallback",
+      ignoredFalse: false,
+    },
+    state: {
+      when: "canRender",
+      disabled: true,
+      selected: false,
+      count: 2,
+      note: "active",
+      hidden: false,
+    },
+    actions: ["custom", "custom"],
+    meta: {},
+    children: [
+      {
+        id: "copy",
+        role: "text",
+        name: "",
+        text: "  keep   spacing's \\ slash  ",
+        props: {},
+        state: {},
+        actions: [],
+        meta: { preserveWhitespace: true },
+        children: [],
+      },
+      {
+        id: "panel",
+        role: "3d-panel",
+        name: "Panel",
+        text: "Panel copy",
+        props: {
+          placeholder: "Pick",
+          href: "/panel",
+          value: 7,
+          title: "Panel title",
+          alt: "Panel alt",
+          ariaLabel: "Panel aria",
+          src: "https://example.com/panel.png",
+          channelId: "C123",
+          userId: "U123",
+          groupId: "S123",
+          special: "here",
+          format: "{date_short}",
+        },
+        state: {
+          expanded: true,
+          hidden: false,
+        },
+        actions: ["open"],
+        meta: {},
+        children: [],
+      },
+      {
+        id: "hidden",
+        role: "button",
+        name: "Hidden",
+        text: "Hidden",
+        props: {},
+        state: { hidden: true },
+        actions: ["click"],
+        meta: {},
+        children: [],
+      },
+    ],
+  };
+
+  const dsl = compileUiToUnitsDsl(uiTree, {
+    sourceType: "ir",
+    includeRootContainer: true,
+    includeId: true,
+    includeRoleProp: true,
+    includeImplicitActions: true,
+    enableLoopHeuristic: false,
+  });
+
+  assert.match(dsl, /#if @\(canRender\)/);
+  assert.match(dsl, /Container \(/);
+  for (const fragment of [
+    "id:'root'",
+    "name:'Root'",
+    "actions:'custom'",
+    "count:2",
+    "disabled:true",
+    "note:'active'",
+    "blockId:'root-block'",
+    "actionId:'root-action'",
+    "timestamp:1700000000",
+  ]) {
+    assert.match(dsl, new RegExp(fragment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
+  assert.match(dsl, /'keep   spacing\\'s \\\\ slash'/);
+  assert.match(dsl, /Node3dPanel \([^)]*id:'panel'[^)]*name:'Panel'[^)]*actions:'open'[^)]*expanded:true[^)]*placeholder:'Pick'[^)]*href:'\/panel'[^)]*value:7[^)]*role:'3d-panel'/s);
+  assert.doesNotMatch(dsl, /Hidden/);
+  assert.equal(parseUnits(dsl).type, "document");
+
+  const withHidden = compileUiToUnitsDsl(uiTree, {
+    sourceType: "ir",
+    includeHidden: true,
+    includeRootContainer: true,
+    includeImplicitActions: true,
+    enableLoopHeuristic: false,
+  });
+  assert.match(withHidden, /Button \([^)]*name:'Hidden'[^)]*actions:'click'/s);
 });

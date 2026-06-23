@@ -65,7 +65,7 @@
     "changeset:version": "changeset version",
     "changeset:status": "changeset status --verbose",
     "release:guard": "node ./tools/release-publish-guard.mjs",
-    "release": "pnpm release:guard && changeset publish",
+    "release": "node ./tools/release-publish.mjs",
     "publish:dry": "pnpm -r --filter \"./packages/**\" publish --dry-run --access public --no-git-checks",
     "publish:ci": "pnpm -r --filter \"./packages/**\" publish --access public --no-git-checks"
   },

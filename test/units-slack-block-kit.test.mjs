@@ -9,11 +9,31 @@ import {
   serializeSlackMrkdwn,
   structuredSlackToBlockKit,
   structuredSlackToUnitsTree,
+  unitsTreeToSlackBlockKit,
   unitsAstToSlackBlockKit,
   unitsToSlackBlockKit,
   validateStructuredSlack,
 } from "../packages/units-slack-block-kit/index.js";
 import { parseUnits } from "../packages/units/units-parser.js";
+
+const SLACK_TEXT_KIND = "units-slack-text";
+
+function slackText(value) {
+  return {
+    kind: SLACK_TEXT_KIND,
+    value,
+  };
+}
+
+function slackElement(name, props = {}, children = []) {
+  return {
+    kind: "element",
+    name,
+    props,
+    events: {},
+    children,
+  };
+}
 
 test("converts a simple SlackMessage DSL into Block Kit payload", () => {
   const payload = unitsToSlackBlockKit(`
@@ -417,4 +437,272 @@ test("exports a schema for structured model outputs", () => {
   assert.equal(SLACK_UNITS_STRUCTURED_OUTPUT_SCHEMA.schema.properties.type.const, "SlackMessage");
   assert.ok(SLACK_UNITS_STRUCTURED_OUTPUT_SCHEMA.schema.$defs.node.properties.type.enum.includes("Section"));
   assert.ok(SLACK_UNITS_STRUCTURED_OUTPUT_SCHEMA.schema.$defs.node.properties.type.enum.includes("Button"));
+});
+
+test("maps advanced Block Kit blocks and interactive elements from rendered Units trees", () => {
+  const payload = unitsTreeToSlackBlockKit(slackElement("SlackMessage", {
+    channel: "C999",
+    threadTs: "1700000000.000100",
+    username: "release-bot",
+    iconEmoji: ":rocket:",
+    unfurlLinks: false,
+    parseMode: "none",
+  }, [
+    slackText("Loose text block"),
+    slackElement("Markdown", { blockId: "md", text: "*raw markdown*" }),
+    slackElement("Header", { blockId: "head", emoji: false }, [slackText("Launch window")]),
+    slackElement("Divider", { blockId: "line" }),
+    slackElement("Image", {
+      blockId: "hero",
+      imageUrl: "https://example.com/hero.png",
+      altText: "Launch chart",
+      title: "Launch chart",
+    }),
+    slackElement("Video", {
+      blockId: "video",
+      videoUrl: "https://example.com/demo.mp4",
+      thumbnailUrl: "https://example.com/thumb.png",
+      alt: "Demo",
+      title: "Launch demo",
+    }),
+    slackElement("File", { blockId: "file", externalId: "F123", source: "remote" }, [
+      slackText("Release notes"),
+    ]),
+    slackElement("RichText", {
+      blockId: "rich",
+      elements: [{ type: "rich_text_section", elements: [{ type: "text", text: "Rich" }] }],
+    }),
+    slackElement("Block", { slackType: "section", blockId: "generic" }, [
+      slackText("Generic section"),
+    ]),
+    slackElement("Actions", {
+      blockId: "controls",
+      elements: [{ type: "button", text: { type: "plain_text", text: "Raw" }, action_id: "raw" }],
+    }, [
+      slackElement("WorkflowButton", { text: "Run workflow", actionId: "workflow", workflow: { trigger: { url: "https://example.com/trigger" } } }),
+      slackElement("Overflow", {
+        actionId: "overflow",
+        text: "More",
+        options: [
+          "One",
+          { name: "Two", value: "two", description: "Second option" },
+        ],
+        confirm: {
+          title: "Confirm",
+          text: "Continue?",
+          confirm: "Yes",
+          deny: "No",
+        },
+      }),
+      slackElement("StaticSelect", {
+        actionId: "select",
+        placeholder: "Pick one",
+        options: [{ label: "Ada", value: "ada" }],
+        initialOption: { name: "Ada", value: "ada" },
+        optionGroups: [{ name: "People", options: ["Grace"] }],
+      }),
+      slackElement("PlainTextInput", {
+        actionId: "input",
+        value: "initial",
+        multiline: false,
+        dispatchActionConfig: { trigger_actions_on: ["on_enter_pressed"] },
+      }),
+      slackElement("RadioButtons", {
+        actionId: "radio",
+        text: "Priority",
+        options: [{ text: "High", value: "high" }],
+      }),
+      slackElement("Checkboxes", {
+        actionId: "checks",
+        text: "Flags",
+        options: [{ text: "QA", value: "qa" }],
+      }),
+      slackElement("Element", { slackType: "email_text_input", actionId: "email" }),
+      slackElement("RawElement", { payload: { type: "datepicker", action_id: "raw_date" } }),
+    ]),
+    slackElement("Input", { blockId: "fallback-input", optional: true }, [
+      slackElement("Label", {}, [slackText("Generated label")]),
+      slackElement("Hint", {}, [slackText("Generated hint")]),
+    ]),
+  ]));
+
+  assert.equal(payload.channel, "C999");
+  assert.equal(payload.thread_ts, "1700000000.000100");
+  assert.equal(payload.icon_emoji, ":rocket:");
+  assert.equal(payload.parse, "none");
+  assert.equal(payload.blocks[0].type, "section");
+  assert.equal(payload.blocks[1].type, "markdown");
+  assert.deepEqual(payload.blocks[2].text, { type: "plain_text", text: "Launch window", emoji: false });
+  assert.equal(payload.blocks[4].title.text, "Launch chart");
+  assert.equal(payload.blocks[5].type, "video");
+  assert.equal(payload.blocks[6].type, "file");
+  assert.equal(payload.blocks[7].type, "rich_text");
+  assert.equal(payload.blocks[8].text.text, "Generic section");
+
+  const actions = payload.blocks[9];
+  assert.equal(actions.elements[0].action_id, "raw");
+  assert.equal(actions.elements[1].type, "workflow_button");
+  assert.equal(actions.elements[2].confirm.confirm.text, "Yes");
+  assert.deepEqual(actions.elements[2].options.map((option) => option.text.text), ["One", "Two"]);
+  assert.equal(actions.elements[3].placeholder.text, "Pick one");
+  assert.equal(actions.elements[3].initial_option.text.text, "Ada");
+  assert.equal(actions.elements[3].option_groups[0].label.text, "People");
+  assert.equal(actions.elements[4].initial_value, "initial");
+  assert.equal(actions.elements[4].multiline, false);
+  assert.equal(actions.elements[5].text.text, "Priority");
+  assert.equal(actions.elements[6].text.text, "Flags");
+  assert.equal(actions.elements[7].type, "email_text_input");
+  assert.equal(actions.elements[8].action_id, "raw_date");
+
+  assert.deepEqual(payload.blocks[10], {
+    type: "input",
+    label: { type: "plain_text", text: "Generated label" },
+    block_id: "fallback-input",
+    hint: { type: "plain_text", text: "Generated hint" },
+    element: { type: "plain_text_input", block_id: "fallback-input", optional: true },
+    optional: true,
+  });
+});
+
+test("records non-strict Slack emitter warnings without dropping valid sibling blocks", () => {
+  const result = compileUnitsToSlackBlockKit(slackElement("SlackMessage", {}, [
+    slackElement("Section"),
+    slackElement("Context"),
+    slackElement("Actions", {}, [slackElement("UnknownElement")]),
+    slackElement("Image"),
+    slackElement("MysteryBlock", {}, [slackElement("Divider", { blockId: "nested" })]),
+  ]));
+
+  assert.deepEqual(result.warnings.map((warning) => warning.code), [
+    "empty_section",
+    "empty_context",
+    "unsupported_element",
+    "empty_actions",
+    "missing_image_url",
+  ]);
+  assert.ok(result.blocks.some((block) => block.block_id === "nested"));
+});
+
+test("validates every structured Slack requirement with useful paths", () => {
+  assert.deepEqual(validateStructuredSlack(null), {
+    ok: false,
+    errors: [{ path: "$", message: "Structured Slack output must be an object." }],
+    warnings: [],
+  });
+
+  const validation = validateStructuredSlack({
+    type: "NotSlack",
+    blocks: [
+      7,
+      {},
+      { type: "RawBlock", payload: {} },
+      { type: "RawElement" },
+      { type: "Image" },
+      { type: "Link" },
+      { type: "Channel" },
+      { type: "UserGroup" },
+      { type: "Date" },
+      {
+        type: "Section",
+        children: [false],
+        fields: ["field copy"],
+        elements: [{ type: "Button", name: "Action" }],
+        accessory: { type: "Mention" },
+        element: { type: "RawElement", payload: { type: "plain_text_input" } },
+        options: ["bad", { text: "Missing value" }],
+      },
+    ],
+  });
+
+  assert.equal(validation.ok, false);
+  assert.deepEqual(validation.errors.map((error) => `${error.path}: ${error.message}`), [
+    "type: Root type must be SlackMessage.",
+    "blocks.0: Expected a string or structured node object.",
+    "blocks.1: Structured nodes must include a type.",
+    "blocks.2.payload: RawBlock requires payload.type.",
+    "blocks.3.payload: RawElement requires payload.type.",
+    "blocks.4: Image requires src, imageUrl, or url.",
+    "blocks.5: Link requires href or url.",
+    "blocks.6: Channel requires channelId.",
+    "blocks.7: UserGroup requires userGroupId.",
+    "blocks.8: Date requires timestamp.",
+    "blocks.9.children.0: Expected a string or structured node object.",
+    "blocks.9.accessory: Mention requires userId.",
+    "blocks.9.options.0: Options must be objects.",
+    "blocks.9.options.1: Options require text and value strings.",
+  ]);
+
+  assert.equal(validateStructuredSlack({ type: "SlackMessage", blocks: [] }).errors[0].path, "blocks");
+});
+
+test("structured Slack conversion handles scalar children, field shorthand, and loose props", () => {
+  const tree = structuredSlackToUnitsTree({
+    type: "SlackMessage",
+    props: {
+      metadata: { event_type: "release" },
+    },
+    text: "Fallback",
+    blocks: [
+      {
+        type: "Section",
+        props: { blockId: "from-props" },
+        children: ["Count: ", 3, true, null],
+        fields: ["field shorthand"],
+        elements: [{ type: "Button", name: "Inline action", actionId: "inline" }],
+      },
+    ],
+  });
+
+  assert.equal(tree.props.metadata.event_type, "release");
+  assert.equal(tree.props.text, "Fallback");
+  assert.equal(tree.children[0].props.blockId, "from-props");
+  assert.deepEqual(
+    tree.children[0].children.map((child) => child.kind === SLACK_TEXT_KIND ? child.value : child.name),
+    ["Count: ", "3", "true", "Field", "Button"],
+  );
+
+  const payload = structuredSlackToBlockKit({
+    type: "SlackMessage",
+    text: "Fallback",
+    blocks: [
+      {
+        type: "Context",
+        children: [
+          { type: "PlainText", text: "Plain" },
+          { type: "Text", text: "Text node" },
+        ],
+      },
+    ],
+  });
+  assert.deepEqual(payload.blocks[0].elements, [
+    { type: "plain_text", text: "Plain" },
+    { type: "mrkdwn", text: "Text node" },
+  ]);
+});
+
+test("serializes Slack mrkdwn fallbacks and entity escaping edge cases", () => {
+  assert.equal(
+    serializeSlackMrkdwn([
+      42,
+      true,
+      slackElement("Link", {}, [slackText("No href <label>")]),
+      " ",
+      slackElement("Link", { href: "https://example.com/a|b" }),
+      " ",
+      slackElement("Mention", {}, [slackText("@U123")]),
+      " ",
+      slackElement("Channel", {}, [slackText("#C123")]),
+      " ",
+      slackElement("UserGroup", {}, [slackText("@S123")]),
+      " ",
+      slackElement("Date", { fallback: "No date" }),
+      " ",
+      slackElement("Emoji", { name: ":ship:" }),
+      " ",
+      slackElement("SpecialMention", { name: "not-real" }),
+      " ",
+      slackElement("Pre", {}, [slackText("```code```")]),
+    ]),
+    "42trueNo href &lt;label&gt; <https://example.com/a&#124;b> <@U123> <#C123> <!subteam^S123> No date :ship: <!here> ```'''code'''```",
+  );
 });

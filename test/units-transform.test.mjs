@@ -18,8 +18,13 @@ import {
   serializeAgentTree,
   scoreProgram,
   verifyProgram,
+  computeProgramFingerprint,
   createVerifiedProgramMetadata,
+  loadVerifiedLibrary,
+  dedupeLibraryEntries,
+  selectBestVerifiedProgram,
   writeVerifiedProgram,
+  rollbackProgram,
   runSynthesisLoop,
 } from "../packages/units/index.js";
 import { createUnitsAgentMiddleware } from "../packages/units-agent-middleware/index.js";
@@ -356,6 +361,125 @@ test("middleware rewrites with verified library and falls back when no program p
   const fallback = await emptyMiddleware.rewrite({ tree: rawTree, sourceType: "dom" });
   assert.equal(fallback.transformed, false);
   assert.deepEqual(fallback.tree, rawTree);
+});
+
+test("verified program library handles metadata fallbacks, filtering, dedupe, selection, and rollback", async () => {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "units-library-"));
+  const libraryDir = path.join(tempDir, "library");
+
+  assert.deepEqual(await loadVerifiedLibrary(path.join(tempDir, "missing")), []);
+  assert.notEqual(computeProgramFingerprint("Not valid {"), computeProgramFingerprint("Not valid {\n"));
+
+  const goodProgram = `
+Program (kind:'transform', source:'dom') {
+  Rule (match=@node.role == 'container') {
+    Pass
+  }
+}
+`;
+  const sameFingerprint = computeProgramFingerprint(goodProgram);
+  const older = createVerifiedProgramMetadata({
+    programSource: goodProgram,
+    sourceType: "dom",
+    scores: {
+      total: "1.0",
+      R_completeness: "0.9",
+      R_efficiency: "0.1",
+      metrics: { text_f1: 1 },
+    },
+    constraintsPassed: true,
+    programId: "dom older",
+    createdAt: "2024-01-01T00:00:00.000Z",
+    provenance: { generator: "test" },
+  });
+  const newer = createVerifiedProgramMetadata({
+    programSource: goodProgram,
+    sourceType: "any",
+    scores: {
+      total: 2,
+      R_completeness: 1,
+      R_efficiency: 1,
+    },
+    constraintsPassed: true,
+    programId: "dom/newer",
+    createdAt: "2024-02-01T00:00:00.000Z",
+  });
+  const inactive = createVerifiedProgramMetadata({
+    programSource: goodProgram,
+    sourceType: "dom",
+    scores: { total: 3 },
+    constraintsPassed: true,
+    programId: "inactive",
+  });
+  inactive.active = false;
+  const failing = createVerifiedProgramMetadata({
+    programSource: goodProgram,
+    sourceType: "dom",
+    scores: { total: "not-a-number", metrics: "ignored" },
+    constraintsPassed: false,
+    programId: "failing",
+    provenance: "ignored",
+  });
+
+  assert.equal(older.fingerprint, sameFingerprint);
+  assert.equal(failing.scores.total, 0);
+  assert.deepEqual(failing.scores.metrics, {});
+  assert.equal(failing.provenance, undefined);
+
+  await writeVerifiedProgram({ directory: libraryDir, programSource: goodProgram, metadata: older });
+  await writeVerifiedProgram({ directory: libraryDir, programSource: goodProgram, metadata: newer });
+  await writeVerifiedProgram({ directory: libraryDir, programSource: goodProgram, metadata: inactive });
+  await writeVerifiedProgram({ directory: libraryDir, programSource: goodProgram, metadata: failing });
+  await fs.writeFile(path.join(libraryDir, "bad.meta.json"), "{", "utf8");
+  await fs.writeFile(path.join(libraryDir, "missing-program.meta.json"), JSON.stringify({
+    program_id: "missing-program",
+    fingerprint: "missing",
+    source_type: "dom",
+    scores: { total: 4 },
+    constraints_passed: true,
+  }), "utf8");
+
+  await assert.rejects(
+    () => writeVerifiedProgram({ directory: libraryDir, programSource: goodProgram, metadata: {} }),
+    /requires metadata/,
+  );
+  await assert.rejects(
+    () => rollbackProgram({ directory: libraryDir }),
+    /requires programId/,
+  );
+
+  const domOnly = await loadVerifiedLibrary(libraryDir, { sourceType: "dom" });
+  assert.deepEqual(domOnly.map((entry) => entry.metadata.program_id), ["dom/newer", "dom older", "failing"]);
+
+  const withInactive = await loadVerifiedLibrary(libraryDir, { sourceType: "dom", includeInactive: true });
+  assert.ok(withInactive.some((entry) => entry.metadata.program_id === "inactive"));
+
+  const deduped = dedupeLibraryEntries(withInactive);
+  assert.equal(deduped.filter((entry) => entry.metadata.fingerprint === sameFingerprint).length, 1);
+  assert.equal(deduped[0].metadata.program_id, "inactive");
+
+  const selected = selectBestVerifiedProgram(domOnly, { sourceType: "dom" });
+  assert.equal(selected.metadata.program_id, "dom/newer");
+  assert.equal(
+    selectBestVerifiedProgram(domOnly.filter((entry) => entry.metadata.program_id === "failing"), { sourceType: "dom" }),
+    null,
+  );
+
+  const rollback = await rollbackProgram({
+    directory: libraryDir,
+    programId: "dom/newer",
+    rollbackReason: "coverage test",
+  });
+  assert.equal(rollback.metadata.active, false);
+  assert.equal(rollback.metadata.rollback_reason, "coverage test");
+  assert.ok(rollback.metadata.rolled_back_at);
+
+  const afterRollback = await loadVerifiedLibrary(libraryDir, { sourceType: "dom" });
+  assert.equal(afterRollback.some((entry) => entry.metadata.program_id === "dom/newer"), false);
+  await assert.rejects(
+    () => rollbackProgram({ directory: libraryDir, programId: "missing" }),
+    /not found/,
+  );
 });
 
 test("synthesis loop promotes candidates that improve reward by threshold", async () => {
