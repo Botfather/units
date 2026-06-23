@@ -53,8 +53,11 @@ test("ui-ps bench run computes selection + reward summary", async () => {
   assert.ok(result.library.program_count >= 5);
   assert.ok(result.cases.every((one) => Array.isArray(one.candidates)));
   assert.ok(result.cases.every((one) => one.compile && typeof one.compile.transformed_dsl_tokens === "number"));
+  assert.ok(result.cases.every((one) => one.agent && typeof one.agent.transformed_tokens === "number"));
   assert.ok(result.summary.avg_compiled_dsl_tokens > 0);
   assert.ok(result.summary.avg_compiled_token_reduction >= 0);
+  assert.ok(result.summary.avg_agent_tree_tokens > 0);
+  assert.ok(result.summary.avg_agent_tree_token_reduction >= 0);
   assert.ok(result.library.program_ids.includes("slack-compact-block-kit-v1"));
 
   const slackCase = result.cases.find((one) => one.id === "slack_release_approval");
@@ -66,7 +69,9 @@ test("ui-ps bench run computes selection + reward summary", async () => {
   assert.match(report, /UI-PS Baseline Report/);
   assert.match(report, /Candidate Leaderboard/);
   assert.match(report, /Avg compiled DSL token reduction/);
+  assert.match(report, /Avg agent-tree token reduction/);
   assert.match(report, /DSL Tokens/);
+  assert.match(report, /Agent Tokens/);
   assert.match(report, /slack_release_approval/);
 });
 
@@ -92,6 +97,8 @@ test("ui-ps bench CLI writes JSON payload and markdown report", async () => {
   assert.ok(Array.isArray(payload.selected_programs));
   assert.ok(typeof payload.summary.avg_compiled_dsl_tokens === "number");
   assert.ok(typeof payload.summary.avg_compiled_token_reduction === "number");
+  assert.ok(typeof payload.summary.avg_agent_tree_tokens === "number");
+  assert.ok(typeof payload.summary.avg_agent_tree_token_reduction === "number");
   assert.ok(payload.library.program_ids.includes("slack-compact-block-kit-v1"));
   assert.match(report, /Selected Program Summary/);
 });

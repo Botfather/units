@@ -741,14 +741,24 @@ function compactUiNode(node, options) {
   const includeMeta = options.includeMeta === true;
   const includeIds = options.includeIds !== false;
   const includeState = options.includeState !== false;
+  const includeRedundantNameText = options.includeRedundantNameText === true;
 
   const out = {
     role: node.role,
   };
 
   if (includeIds && node.id) out.id = node.id;
-  if (node.name) out.name = node.name;
-  if (node.text) out.text = node.text;
+  const hasName = typeof node.name === "string" && node.name.length > 0;
+  const hasText = typeof node.text === "string" && node.text.length > 0;
+  const sameNameText = hasName && hasText && node.name === node.text;
+
+  if (sameNameText && !includeRedundantNameText) {
+    if (node.role === "text") out.text = node.text;
+    else out.name = node.name;
+  } else {
+    if (hasName) out.name = node.name;
+    if (hasText) out.text = node.text;
+  }
   if (includeState && node.state && Object.keys(node.state).length > 0) out.state = node.state;
   if (node.actions && node.actions.length > 0) out.actions = node.actions;
   if (includeProps && node.props && Object.keys(node.props).length > 0) out.props = node.props;

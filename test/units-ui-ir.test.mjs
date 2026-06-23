@@ -120,6 +120,30 @@ test("normalizeUiNode + compact serializer produce deterministic agent payloads"
   assert.equal(aliasDom.role, "link");
 });
 
+test("serializeCompactUiTree deduplicates redundant name/text by default", () => {
+  const ir = normalizeUiNode({
+    id: "n1",
+    role: "button",
+    name: "Save",
+    text: "Save",
+    actions: ["click"],
+    children: [],
+  });
+
+  const compact = serializeCompactUiTree(ir, {
+    includeIds: false,
+  });
+  assert.equal(compact.name, "Save");
+  assert.ok(!("text" in compact));
+
+  const explicit = serializeCompactUiTree(ir, {
+    includeIds: false,
+    includeRedundantNameText: true,
+  });
+  assert.equal(explicit.name, "Save");
+  assert.equal(explicit.text, "Save");
+});
+
 test("parseSlackMrkdwn recognizes Block Kit markdown entities", () => {
   const nodes = parseSlackMrkdwn(
     "Hello *bold* _em_ ~old~ `x * y` <https://example.com|site> <@U012AB3CD> <#C123ABC456|ops> <!date^1392734382^{date_short}|Feb 18, 2014> &lt;safe&gt;",

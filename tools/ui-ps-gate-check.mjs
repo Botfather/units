@@ -105,6 +105,12 @@ function buildChecks(payload, gates) {
       min: toFinite(gates.min_avg_compiled_token_reduction),
     },
     {
+      key: "min_avg_agent_tree_token_reduction",
+      label: "Average agent-tree token reduction",
+      actual: toFinite(summary.avg_agent_tree_token_reduction),
+      min: toFinite(gates.min_avg_agent_tree_token_reduction),
+    },
+    {
       key: "min_avg_total_score",
       label: "Average total score",
       actual: toFinite(summary.avg_total_score),
