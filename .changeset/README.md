@@ -20,3 +20,19 @@ pnpm changeset:version
 ```bash
 pnpm release
 ```
+
+`pnpm release` first runs `pnpm release:guard`. The guard blocks before
+`changeset publish` if npm token auth is present, if GitHub OIDC is missing, or
+if an unpublished package is not listed in `.github/npm-publish-policy.json`
+after its npm trusted publisher has been configured.
+
+For each blocked package, configure npm trusted publishing with:
+
+- Organization/user: `Botfather`
+- Repository: `units`
+- Workflow filename: `publish.yml`
+- Allowed action: `npm publish`
+
+Then add the package name to `publishAllowedPackages`. In CI, the guard also
+performs an npm OIDC token-exchange preflight for every allowlisted publish
+candidate before any package is published.

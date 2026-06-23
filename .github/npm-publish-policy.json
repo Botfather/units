@@ -1,0 +1,14 @@
+{
+  "authMode": "trusted-publishing",
+  "trustedPublisher": {
+    "owner": "Botfather",
+    "repository": "units",
+    "repositoryUrl": "git+https://github.com/Botfather/units.git",
+    "workflow": "publish.yml",
+    "branch": "main",
+    "allowedAction": "npm publish"
+  },
+  "packageScope": "@botfather",
+  "verifyOidcExchange": true,
+  "publishAllowedPackages": []
+}
