@@ -1,6 +1,6 @@
 {
   "name": "@botfather/units-agent-plugin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Agent-facing UI compression plugin for Units DSL context generation.",
   "license": "MIT",
   "type": "module",
