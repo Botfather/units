@@ -20,6 +20,7 @@ export type CompileUiOptions = {
   includeActions?: boolean;
   includeImplicitActions?: boolean;
   includeRedundantName?: boolean;
+  includeRedundantLeafText?: boolean;
   includeState?: boolean;
   includeRoleProp?: boolean;
   includeHidden?: boolean;

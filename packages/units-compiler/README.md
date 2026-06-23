@@ -38,7 +38,7 @@ const slackResult = compileUiToUnits(blockKitPayload, {
 
 For token efficiency, implicit actions are omitted by default (`button -> click`, `input -> input`, etc). Set `includeImplicitActions: true` to always emit explicit action props.
 
-The compiler also omits redundant `name` props when they exactly match emitted leaf text (for example `Button(name:'Save'){ 'Save' }` becomes `Button { 'Save' }`). Set `includeRedundantName: true` to keep explicit `name` props.
+The compiler also compacts redundant leaf `name`/text duplication by default. When a leaf node has identical `name` and text, it emits a single compact form (`Button (name:'Save')`) instead of both representations. Set `includeRedundantName: true` and/or `includeRedundantLeafText: true` to keep explicit duplicates.
 
 ## Exports
 

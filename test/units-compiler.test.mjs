@@ -252,7 +252,7 @@ test("compileUiToUnits omits implicit role actions unless explicitly requested",
   assert.match(explicit.dsl, /Button \([^)]*name:'Save'[^)]*actions:'click'/s);
 });
 
-test("compileUiToUnits omits redundant leaf name props unless explicitly requested", () => {
+test("compileUiToUnits compacts redundant leaf name/text values unless explicitly requested", () => {
   const uiTree = {
     id: "root",
     role: "container",
@@ -282,16 +282,64 @@ test("compileUiToUnits omits redundant leaf name props unless explicitly request
     enableLoopHeuristic: false,
   });
 
-  assert.doesNotMatch(optimized.dsl, /Button \([^)]*name:'Save'/s);
-  assert.match(optimized.dsl, /Button[^{]*\{\s*'Save'/s);
+  assert.match(optimized.dsl, /Button \([^)]*name:'Save'/s);
+  assert.doesNotMatch(optimized.dsl, /Button[^{]*\{\s*'Save'/s);
 
   const explicit = compileUiToUnits(uiTree, {
     sourceType: "ir",
     enableLoopHeuristic: false,
     includeRedundantName: true,
+    includeRedundantLeafText: true,
   });
 
   assert.match(explicit.dsl, /Button \([^)]*name:'Save'/s);
+  assert.match(explicit.dsl, /Button[^{]*\{\s*'Save'/s);
+});
+
+test("compileUiToUnits supports explicit leaf redundancy toggles", () => {
+  const uiTree = {
+    id: "root",
+    role: "container",
+    name: "",
+    text: "",
+    props: {},
+    state: {},
+    actions: [],
+    meta: {},
+    children: [
+      {
+        id: "save",
+        role: "button",
+        name: "Save",
+        text: "Save",
+        props: {},
+        state: {},
+        actions: ["click"],
+        meta: {},
+        children: [],
+      },
+    ],
+  };
+
+  const explicit = compileUiToUnits(uiTree, {
+    sourceType: "ir",
+    enableLoopHeuristic: false,
+    includeRedundantName: true,
+    includeRedundantLeafText: false,
+  });
+
+  assert.match(explicit.dsl, /Button \([^)]*name:'Save'/s);
+  assert.doesNotMatch(explicit.dsl, /Button[^{]*\{\s*'Save'/s);
+
+  const textPreferred = compileUiToUnits(uiTree, {
+    sourceType: "ir",
+    enableLoopHeuristic: false,
+    includeRedundantName: false,
+    includeRedundantLeafText: true,
+  });
+
+  assert.doesNotMatch(textPreferred.dsl, /Button \([^)]*name:'Save'/s);
+  assert.match(textPreferred.dsl, /Button[^{]*\{\s*'Save'/s);
 });
 
 test("compileUiToUnits accepts Slack Block Kit mrkdwn payloads", () => {

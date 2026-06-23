@@ -394,6 +394,7 @@ function buildNodeProps(node, tagInfo, ctx, config, emission = {}) {
   const name = cleanText(node.name);
   const leafText = cleanText(emission.leafText);
   const omitRedundantName = config.includeRedundantName !== true
+    && emission.omitLeafText !== true
     && !dynamicFields.has("name")
     && name
     && leafText
@@ -520,11 +521,17 @@ function emitNode(node, indent, config, state, ctx = {}) {
       ? `@{${ctx.loopVar}.text}`
       : cleanText(node.text))
     : "";
-  const props = buildNodeProps(node, tagInfo, ctx, config, { leafText });
+  const omitLeafText = children.length === 0
+    && !ctx.dynamicFields?.has("text")
+    && config.includeRedundantLeafText !== true
+    && cleanText(node.name)
+    && leafText
+    && cleanText(node.name) === leafText;
+  const props = buildNodeProps(node, tagInfo, ctx, config, { leafText, omitLeafText });
 
   let childLines = emitChildren(children, indent + 1, config, state);
 
-  if (childLines.length === 0) {
+  if (childLines.length === 0 && !omitLeafText) {
     if (leafText) {
       childLines = [`${"  ".repeat(indent + 1)}'${escapeUnitsString(leafText)}'`];
     }
@@ -600,6 +607,7 @@ function normalizeCompileArgs(programOrOptions, maybeOptions) {
       || "includeActions" in programOrOptions
       || "includeImplicitActions" in programOrOptions
       || "includeRedundantName" in programOrOptions
+      || "includeRedundantLeafText" in programOrOptions
       || "includeState" in programOrOptions
       || "includeRoleProp" in programOrOptions
       || "includeHidden" in programOrOptions
@@ -629,6 +637,7 @@ export function compileUiToUnits(uiRoot, programOrOptions = null, maybeOptions =
     includeActions: true,
     includeImplicitActions: false,
     includeRedundantName: false,
+    includeRedundantLeafText: false,
     includeState: true,
     includeRoleProp: false,
     includeHidden: false,
