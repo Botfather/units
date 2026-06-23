@@ -1,4 +1,6 @@
 import { spawn } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
 
 const THRESHOLDS = {
   lines: Number.parseFloat(process.env.COVERAGE_LINES_MIN ?? "94"),
@@ -6,8 +8,44 @@ const THRESHOLDS = {
   functions: Number.parseFloat(process.env.COVERAGE_FUNCTIONS_MIN ?? "93"),
 };
 
+function collectTestFiles(dir) {
+  const root = process.cwd();
+  const files = [];
+
+  function walk(currentDir) {
+    for (const entry of fs.readdirSync(currentDir, { withFileTypes: true })) {
+      const fullPath = path.join(currentDir, entry.name);
+      if (entry.isDirectory()) {
+        walk(fullPath);
+        continue;
+      }
+
+      if (entry.isFile() && entry.name.endsWith(".test.mjs")) {
+        files.push(path.relative(root, fullPath));
+      }
+    }
+  }
+
+  walk(dir);
+  return files.sort();
+}
+
+function expandTestTarget(target) {
+  const fullPath = path.resolve(process.cwd(), target);
+  if (!fs.existsSync(fullPath)) return [target];
+
+  const stat = fs.statSync(fullPath);
+  if (stat.isDirectory()) return collectTestFiles(fullPath);
+  return [target];
+}
+
+function listDefaultTestTargets() {
+  return collectTestFiles(path.join(process.cwd(), "test"));
+}
+
 const requestedTests = process.argv.slice(2);
-const testTargets = requestedTests.length > 0 ? requestedTests : ["./test"];
+const testTargets =
+  requestedTests.length > 0 ? requestedTests.flatMap(expandTestTarget) : listDefaultTestTargets();
 const nodeArgs = ["--test", "--experimental-test-coverage", ...testTargets];
 
 const child = spawn(process.execPath, nodeArgs, {
