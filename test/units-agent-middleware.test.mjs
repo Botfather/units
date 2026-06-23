@@ -3,6 +3,18 @@ import test from "node:test";
 
 import { createUnitsAgentMiddleware } from "../packages/units-agent-middleware/index.js";
 
+function flattenNodes(nodeOrNodes) {
+  const out = [];
+  const stack = Array.isArray(nodeOrNodes) ? [...nodeOrNodes] : [nodeOrNodes];
+  while (stack.length > 0) {
+    const node = stack.shift();
+    if (!node || typeof node !== "object") continue;
+    out.push(node);
+    stack.unshift(...(node.children || []));
+  }
+  return out;
+}
+
 const DOM_PASS_PROGRAM = `
 Program (kind:'transform', source:'dom') {
   Rule (id:'root_passthrough', match=@node.role == 'container') {
@@ -165,6 +177,19 @@ test("middleware rewrite normalizes Slack Block Kit aliases", async () => {
             text: "*Release:* <https://example.com/release|View request> for <@U012AB3CD>",
           },
         },
+        {
+          type: "actions",
+          elements: [
+            {
+              type: "button",
+              action_id: "approve",
+              text: {
+                type: "plain_text",
+                text: "Approve",
+              },
+            },
+          ],
+        },
       ],
     },
     expectations: {
@@ -177,4 +202,8 @@ test("middleware rewrite normalizes Slack Block Kit aliases", async () => {
   assert.equal(result.selected_program.program_id, "slack-pass");
   assert.equal(result.input_tree.meta.source, "slack");
   assert.ok(result.agent_tree.children.some((node) => node.role === "section"));
+  const flat = flattenNodes(result.agent_tree);
+  const button = flat.find((node) => node.role === "button");
+  assert.ok(button);
+  assert.ok(!("actions" in button));
 });

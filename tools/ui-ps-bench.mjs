@@ -355,9 +355,11 @@ export async function runBench(options = {}) {
       : 0;
     const legacyAgentTree = serializeAgentTree(outputTree, {
       includeRedundantNameText: true,
+      includeImplicitActions: true,
     });
     const transformedAgentTree = serializeAgentTree(outputTree, {
       includeRedundantNameText: false,
+      includeImplicitActions: false,
     });
     const legacyAgentTokens = estimateJsonTokens(legacyAgentTree);
     const transformedAgentTokens = estimateJsonTokens(transformedAgentTree);

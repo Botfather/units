@@ -16,6 +16,7 @@ export type CompactSerializeOptions = {
   includeIds?: boolean;
   includeState?: boolean;
   includeRedundantNameText?: boolean;
+  includeImplicitActions?: boolean;
 };
 
 export function inferRoleFromTag(tagName: any, explicitRole?: any): string;

@@ -135,13 +135,16 @@ test("serializeCompactUiTree deduplicates redundant name/text by default", () =>
   });
   assert.equal(compact.name, "Save");
   assert.ok(!("text" in compact));
+  assert.ok(!("actions" in compact));
 
   const explicit = serializeCompactUiTree(ir, {
     includeIds: false,
     includeRedundantNameText: true,
+    includeImplicitActions: true,
   });
   assert.equal(explicit.name, "Save");
   assert.equal(explicit.text, "Save");
+  assert.deepEqual(explicit.actions, ["click"]);
 });
 
 test("parseSlackMrkdwn recognizes Block Kit markdown entities", () => {

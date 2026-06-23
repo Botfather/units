@@ -33,4 +33,4 @@ Supported `sourceType` values include `dom`, `a11y`, `ir`, `react`, and `slack`.
 
 `rewrite` returns transformed tree output, trace metadata, chosen program metadata, and fallback pass-through output when no verified program passes gates.
 
-Returned `agent_tree` payloads use compact serialization defaults optimized for token usage (including redundant `name`/`text` dedupe). Pass `serializerOptions: { includeRedundantNameText: true }` to preserve both fields when needed.
+Returned `agent_tree` payloads use compact serialization defaults optimized for token usage (including redundant `name`/`text` dedupe and implicit-action omission). Pass `serializerOptions: { includeRedundantNameText: true, includeImplicitActions: true }` to preserve both fields and role-implicit actions when needed.

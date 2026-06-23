@@ -49,6 +49,7 @@
     "test:ui-ps-gate-check": "node --test ./test/ui-ps-gate-check.test.mjs",
     "test:units-ui-ir": "node --test ./test/units-ui-ir.test.mjs",
     "test:units-react-adapter": "node --test ./test/units-react-adapter.test.mjs",
+    "test:units-tree-ir": "node --test ./test/units-tree-ir.test.mjs",
     "test:dsl-bench": "node --test ./test/dsl-bench.test.mjs",
     "test:dsl-autoresearch-runner": "node --test ./test/dsl-autoresearch-runner.test.mjs",
     "test:vite-plugin-units-tools-agent": "node --test ./test/vite-plugin-units-tools-agent.test.mjs",

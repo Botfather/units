@@ -361,6 +361,13 @@ export function inferRoleFromTag(tagName, explicitRole = "") {
   return "container";
 }
 
+function implicitActionsForRole(role) {
+  if (role === "button" || role === "link") return ["click"];
+  if (role === "input") return ["input"];
+  if (role === "checkbox" || role === "radio" || role === "switch") return ["toggle"];
+  return [];
+}
+
 function inferActions(role, inputActions) {
   const explicit = asArray(inputActions)
     .map((item) => (typeof item === "string" ? item : item?.name))
@@ -369,10 +376,7 @@ function inferActions(role, inputActions) {
 
   if (explicit.length > 0) return [...new Set(explicit)];
 
-  if (role === "button" || role === "link") return ["click"];
-  if (role === "input") return ["input"];
-  if (role === "checkbox" || role === "radio" || role === "switch") return ["toggle"];
-  return [];
+  return implicitActionsForRole(role);
 }
 
 function inferDomName(node, tagName) {
@@ -742,6 +746,7 @@ function compactUiNode(node, options) {
   const includeIds = options.includeIds !== false;
   const includeState = options.includeState !== false;
   const includeRedundantNameText = options.includeRedundantNameText === true;
+  const includeImplicitActions = options.includeImplicitActions === true;
 
   const out = {
     role: node.role,
@@ -760,7 +765,16 @@ function compactUiNode(node, options) {
     if (hasText) out.text = node.text;
   }
   if (includeState && node.state && Object.keys(node.state).length > 0) out.state = node.state;
-  if (node.actions && node.actions.length > 0) out.actions = node.actions;
+  if (node.actions && node.actions.length > 0) {
+    const actions = [...new Set(node.actions.map((value) => cleanText(value)).filter(Boolean))];
+    const implicit = implicitActionsForRole(cleanText(node.role).toLowerCase());
+    const allImplicit = actions.length > 0
+      && implicit.length > 0
+      && actions.every((action) => implicit.includes(action));
+    if (actions.length > 0 && (!allImplicit || includeImplicitActions)) {
+      out.actions = actions;
+    }
+  }
   if (includeProps && node.props && Object.keys(node.props).length > 0) out.props = node.props;
   if (includeMeta && node.meta && Object.keys(node.meta).length > 0) out.meta = node.meta;
 

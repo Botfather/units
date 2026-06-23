@@ -29,7 +29,7 @@ console.log(result.programId);
 
 For Slack Block Kit, pass the message payload or `blocks` array with `sourceType: "slack"` (aliases: `block-kit`, `blockkit`, `mrkdwn`). Slack `mrkdwn` is normalized before transform and compile.
 
-Compiler output is token-optimized by default (implicit role actions and redundant leaf `name`/text duplicates are omitted unless explicitly requested in compiler options). The middleware `agent_tree` payload also deduplicates redundant `name`/`text` pairs by default.
+Compiler output is token-optimized by default (implicit role actions and redundant leaf `name`/text duplicates are omitted unless explicitly requested in compiler options). The middleware `agent_tree` payload also deduplicates redundant `name`/`text` pairs and omits role-implicit actions by default.
 
 Returns:
 - `dsl`: compressed Units source text
