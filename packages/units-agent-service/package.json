@@ -1,6 +1,6 @@
 {
   "name": "@botfather/units-agent-service",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Node HTTP service wrapper for Units agent UI compression.",
   "license": "MIT",
   "type": "module",

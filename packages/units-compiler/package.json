@@ -1,6 +1,6 @@
 {
   "name": "@botfather/units-compiler",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Compile host-agnostic UI trees into Units AST/DSL with optional transform programs.",
   "license": "MIT",
   "type": "module",
