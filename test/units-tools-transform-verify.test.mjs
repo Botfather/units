@@ -22,6 +22,19 @@ Program (kind:'transform', source:'ir') {
 }
 `;
 
+const SLACK_TRANSFORM_PROGRAM = `
+Program (kind:'transform', source:'slack') {
+  Rule (id:'drop_empty_text', match=@node.role == 'text') {
+    Filter (when=@node.text.trim() != '')
+    Pass
+  }
+  Rule (id:'merge_slack_text', match=@node.role == 'container' || @node.role == 'section') {
+    Merge (strategy:'adjacentText', when=@child.role == 'text')
+    Pass
+  }
+}
+`;
+
 const REACT_TREE = {
   type: "div",
   props: {
@@ -46,6 +59,32 @@ const REACT_TREE = {
       },
     ],
   },
+};
+
+const SLACK_TREE = {
+  text: "Release request",
+  blocks: [
+    {
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: "*Release:* <https://example.com/release|View request> for <@U012AB3CD>",
+      },
+    },
+    {
+      type: "actions",
+      elements: [
+        {
+          type: "button",
+          action_id: "approve",
+          text: {
+            type: "plain_text",
+            text: "Approve",
+          },
+        },
+      ],
+    },
+  ],
 };
 
 test("units-transform normalizes react input through IR pipeline", async () => {
@@ -104,4 +143,47 @@ test("units-verify supports react source for program execution", async () => {
   assert.equal(payload.normalized_source_type, "ir");
   assert.ok(payload.score.metrics.action_recall >= 1);
   assert.ok(payload.verification.passed);
+});
+
+test("units-transform and units-verify support Slack Block Kit sources", async () => {
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "units-tools-slack-"));
+  const programPath = path.join(tempDir, "program.ui");
+  const inputPath = path.join(tempDir, "input.slack.json");
+  const transformPath = path.join(tempDir, "transform.json");
+  const verifyPath = path.join(tempDir, "verify.json");
+
+  await fs.writeFile(programPath, SLACK_TRANSFORM_PROGRAM, "utf-8");
+  await fs.writeFile(inputPath, `${JSON.stringify(SLACK_TREE, null, 2)}\n`, "utf-8");
+
+  await execFileAsync(process.execPath, [
+    path.join(process.cwd(), "packages/units-tools/units-transform.mjs"),
+    "--program", programPath,
+    "--input", inputPath,
+    "--source", "slack",
+    "--out", transformPath,
+  ], {
+    cwd: process.cwd(),
+  });
+
+  const transformPayload = JSON.parse(await fs.readFile(transformPath, "utf-8"));
+  assert.equal(transformPayload.source_type, "slack");
+  assert.equal(transformPayload.normalized_source_type, "slack");
+  assert.equal(transformPayload.tree.meta.source, "slack");
+  assert.ok(transformPayload.tree.children.some((node) => node.role === "section"));
+
+  await execFileAsync(process.execPath, [
+    path.join(process.cwd(), "packages/units-tools/units-verify.mjs"),
+    "--program", programPath,
+    "--input", inputPath,
+    "--source", "mrkdwn",
+    "--out", verifyPath,
+  ], {
+    cwd: process.cwd(),
+  });
+
+  const verifyPayload = JSON.parse(await fs.readFile(verifyPath, "utf-8"));
+  assert.equal(verifyPayload.source_type, "slack");
+  assert.equal(verifyPayload.normalized_source_type, "slack");
+  assert.ok(verifyPayload.score.metrics.action_recall >= 1);
+  assert.ok(verifyPayload.verification.passed);
 });

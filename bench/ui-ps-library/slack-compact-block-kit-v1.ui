@@ -1,0 +1,10 @@
+Program (kind:'transform', source:'slack') {
+  Rule (id:'drop_empty_text', match=@node.role == 'text') {
+    Filter (when=@node.text.trim() != '')
+    Pass
+  }
+  Rule (id:'merge_slack_text', match=@node.role == 'container' || @node.role == 'section' || @node.role == 'context' || @node.role == 'field' || @node.role == 'group') {
+    Merge (strategy:'adjacentText', when=@child.role == 'text')
+    Pass
+  }
+}

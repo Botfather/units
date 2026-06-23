@@ -40,6 +40,7 @@
     "dsl:autoresearch:codex:trial": "node ./tools/dsl-autoresearch-runner.mjs trial --runtime codex --codex-full-auto --codex-sandbox workspace-write",
     "dsl:autoresearch:codex:loop": "node ./tools/dsl-autoresearch-runner.mjs loop --runtime codex --iterations ${AUTORESEARCH_ITERATIONS:-3} --codex-full-auto --codex-sandbox workspace-write",
     "test:units-agent-plugin": "node --test ./test/units-agent-plugin.test.mjs",
+    "test:units-agent-middleware": "node --test ./test/units-agent-middleware.test.mjs",
     "test:units-agent-service": "node --test ./test/units-agent-service.test.mjs",
     "test:units-incremental": "node --test ./test/units-incremental.test.mjs",
     "test:units-compiler": "node --test ./test/units-compiler.test.mjs",

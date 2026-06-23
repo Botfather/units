@@ -18,6 +18,7 @@ export type CompileUiOptions = {
   context?: Record<string, any>;
   includeId?: boolean;
   includeActions?: boolean;
+  includeImplicitActions?: boolean;
   includeState?: boolean;
   includeRoleProp?: boolean;
   includeHidden?: boolean;

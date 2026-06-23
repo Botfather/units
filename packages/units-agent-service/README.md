@@ -38,6 +38,8 @@ Request payload for `POST /compress-ui`:
 }
 ```
 
+`sourceType` supports `dom`, `a11y`, `ir`, `react`, and `slack`. For Slack Block Kit, send the message payload or `blocks` array as `tree` with `sourceType: "slack"` (aliases: `block-kit`, `blockkit`, `mrkdwn`).
+
 Response payload includes:
 - `dsl`
 - `unitsAst`

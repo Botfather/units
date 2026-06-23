@@ -108,6 +108,14 @@ function cleanText(value) {
   return String(value ?? "").trim();
 }
 
+function implicitActionsForRole(role) {
+  const normalized = cleanText(role).toLowerCase();
+  if (normalized === "button" || normalized === "link") return ["click"];
+  if (normalized === "input" || normalized === "textbox") return ["input"];
+  if (normalized === "checkbox" || normalized === "radio" || normalized === "switch") return ["toggle"];
+  return [];
+}
+
 function escapeUnitsString(value) {
   return String(value ?? "")
     .replace(/\\/g, "\\\\")
@@ -391,8 +399,14 @@ function buildNodeProps(node, tagInfo, ctx, config) {
   }
 
   if (config.includeActions) {
-    const actions = asArray(node.actions).map((value) => cleanText(value)).filter(Boolean);
-    if (actions.length > 0) addValue("actions", actions.join("|"));
+    const actions = [...new Set(asArray(node.actions).map((value) => cleanText(value)).filter(Boolean))];
+    const implicit = implicitActionsForRole(node.role);
+    const allImplicit = actions.length > 0
+      && implicit.length > 0
+      && actions.every((action) => implicit.includes(action));
+    if (actions.length > 0 && (!allImplicit || config.includeImplicitActions === true)) {
+      addValue("actions", actions.join("|"));
+    }
   }
 
   if (config.includeState) {
@@ -597,6 +611,7 @@ export function compileUiToUnits(uiRoot, programOrOptions = null, maybeOptions =
     sourceType: "auto",
     includeId: false,
     includeActions: true,
+    includeImplicitActions: false,
     includeState: true,
     includeRoleProp: false,
     includeHidden: false,

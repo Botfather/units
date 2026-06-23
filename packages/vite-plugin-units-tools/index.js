@@ -1,6 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
-import { formatUnits } from "@botfather/units/print";
+
+let printMod;
+try {
+  printMod = await import("@botfather/units/print");
+} catch {
+  // Monorepo fallback for direct node execution without workspace linking.
+  printMod = await import("../units/units-print.js");
+}
+
+const { formatUnits } = printMod;
 
 function tokenizeUnits(input) {
   const s = String(input ?? "");

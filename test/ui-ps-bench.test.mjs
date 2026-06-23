@@ -34,7 +34,9 @@ test("ui-ps bench parseArgs supports fixture/library overrides", () => {
 test("ui-ps fixtures loader resolves bundled fixture corpus", async () => {
   const fixtures = await loadFixtures("bench/ui-ps-fixtures.json");
   assert.equal(fixtures.name, "ui-ps-fixtures-v2");
-  assert.ok(fixtures.cases.length >= 18);
+  assert.ok(fixtures.cases.length >= 20);
+  assert.ok(fixtures.cases.some((one) => one.id === "slack_release_approval" && one.sourceType === "slack"));
+  assert.ok(fixtures.cases.some((one) => one.id === "slack_semantic_loss_dual_actions" && one.tags.includes("semantic-loss")));
   assert.equal(fixtures.gates.action_recall, 1);
 });
 
@@ -44,16 +46,28 @@ test("ui-ps bench run computes selection + reward summary", async () => {
     library: "bench/ui-ps-library",
   });
 
-  assert.ok(result.summary.case_count >= 18);
-  assert.ok(result.summary.semantic_loss_case_count >= 4);
-  assert.ok(result.summary.semantic_loss_gate_pass_count >= 4);
+  assert.ok(result.summary.case_count >= 20);
+  assert.ok(result.summary.semantic_loss_case_count >= 5);
+  assert.ok(result.summary.semantic_loss_gate_pass_count >= 5);
   assert.ok(result.summary.avg_action_recall >= 0.9);
-  assert.ok(result.library.program_count >= 4);
+  assert.ok(result.library.program_count >= 5);
   assert.ok(result.cases.every((one) => Array.isArray(one.candidates)));
+  assert.ok(result.cases.every((one) => one.compile && typeof one.compile.transformed_dsl_tokens === "number"));
+  assert.ok(result.summary.avg_compiled_dsl_tokens > 0);
+  assert.ok(result.summary.avg_compiled_token_reduction >= 0);
+  assert.ok(result.library.program_ids.includes("slack-compact-block-kit-v1"));
+
+  const slackCase = result.cases.find((one) => one.id === "slack_release_approval");
+  assert.equal(slackCase.source_type, "slack");
+  assert.equal(slackCase.selected_program_id, "slack-compact-block-kit-v1");
+  assert.equal(slackCase.verification.passed, true);
 
   const report = markdownReport(result);
   assert.match(report, /UI-PS Baseline Report/);
   assert.match(report, /Candidate Leaderboard/);
+  assert.match(report, /Avg compiled DSL token reduction/);
+  assert.match(report, /DSL Tokens/);
+  assert.match(report, /slack_release_approval/);
 });
 
 test("ui-ps bench CLI writes JSON payload and markdown report", async () => {
@@ -74,7 +88,10 @@ test("ui-ps bench CLI writes JSON payload and markdown report", async () => {
   const payload = JSON.parse(await fs.readFile(outPath, "utf-8"));
   const report = await fs.readFile(reportPath, "utf-8");
 
-  assert.ok(payload.summary.case_count >= 18);
+  assert.ok(payload.summary.case_count >= 20);
   assert.ok(Array.isArray(payload.selected_programs));
+  assert.ok(typeof payload.summary.avg_compiled_dsl_tokens === "number");
+  assert.ok(typeof payload.summary.avg_compiled_token_reduction === "number");
+  assert.ok(payload.library.program_ids.includes("slack-compact-block-kit-v1"));
   assert.match(report, /Selected Program Summary/);
 });

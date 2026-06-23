@@ -19,6 +19,14 @@ Program (kind:'transform', source:'a11y') {
 }
 `;
 
+const SLACK_PASS_PROGRAM = `
+Program (kind:'transform', source:'slack') {
+  Rule (id:'section_passthrough', match=@node.role == 'section') {
+    Pass
+  }
+}
+`;
+
 test("middleware normalizes manual programs and listPrograms aliases", async () => {
   const single = createUnitsAgentMiddleware({
     programs: DOM_PASS_PROGRAM,
@@ -129,4 +137,44 @@ test("middleware rewrite normalizes a11y aliases", async () => {
   assert.equal(result.source_type, "a11y");
   assert.equal(result.transformed, true);
   assert.equal(result.selected_program.program_id, "a11y-pass");
+});
+
+test("middleware rewrite normalizes Slack Block Kit aliases", async () => {
+  const middleware = createUnitsAgentMiddleware({
+    programs: [
+      {
+        source: SLACK_PASS_PROGRAM,
+        metadata: {
+          program_id: "slack-pass",
+          source_type: "slack",
+          constraints_passed: true,
+        },
+      },
+    ],
+  });
+
+  const result = await middleware.rewrite({
+    sourceType: "block-kit",
+    tree: {
+      text: "Release request",
+      blocks: [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: "*Release:* <https://example.com/release|View request> for <@U012AB3CD>",
+          },
+        },
+      ],
+    },
+    expectations: {
+      expectedNames: ["Release request", "View request", "@U012AB3CD"],
+    },
+  });
+
+  assert.equal(result.source_type, "slack");
+  assert.equal(result.transformed, true);
+  assert.equal(result.selected_program.program_id, "slack-pass");
+  assert.equal(result.input_tree.meta.source, "slack");
+  assert.ok(result.agent_tree.children.some((node) => node.role === "section"));
 });

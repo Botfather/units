@@ -85,6 +85,7 @@ function sourceTypeFromOptions(options, config) {
   if (explicit === "accessibility") return "a11y";
   if (explicit === "ax") return "a11y";
   if (explicit === "jsx") return "react";
+  if (explicit === "block-kit" || explicit === "blockkit" || explicit === "mrkdwn") return "slack";
   return explicit;
 }
 

@@ -7,6 +7,9 @@ import {
   createUnitsAgentMiddleware,
 } from "../packages/units-agent-middleware/index.js";
 import {
+  compileUiToUnits,
+} from "../packages/units-compiler/index.js";
+import {
   loadVerifiedLibrary,
 } from "../packages/units/transform-library.js";
 import {
@@ -40,6 +43,12 @@ function compactNumber(value, digits = 4) {
   const n = round(value, digits);
   if (n == null) return "-";
   return String(n);
+}
+
+function estimateDslTokens(source) {
+  const text = String(source || "").trim();
+  if (!text) return 0;
+  return text.split(/\s+/).length;
 }
 
 async function writeFileSafe(filePath, content) {
@@ -198,17 +207,19 @@ export function markdownReport(payload) {
   lines.push(`- Semantic-loss gate pass: \`${payload.summary.semantic_loss_gate_pass_count}\``);
   lines.push(`- Avg action recall: \`${compactNumber(payload.summary.avg_action_recall)}\``);
   lines.push(`- Avg token reduction: \`${compactNumber(payload.summary.avg_token_reduction)}\``);
+  lines.push(`- Avg compiled DSL tokens: \`${compactNumber(payload.summary.avg_compiled_dsl_tokens, 2)}\``);
+  lines.push(`- Avg compiled DSL token reduction: \`${compactNumber(payload.summary.avg_compiled_token_reduction)}\``);
   lines.push(`- Avg total score: \`${compactNumber(payload.summary.avg_total_score)}\``);
   lines.push(`- Avg score delta vs identity baseline: \`${compactNumber(payload.summary.avg_delta_from_baseline)}\``);
   lines.push("");
 
   lines.push("## Per-case");
   lines.push("");
-  lines.push("| Case | Tags | Source | Selected Program | Transformed | Action Recall | Token Reduction | Total | Delta vs Baseline | Gate Pass |");
-  lines.push("|---|---|---|---|---:|---:|---:|---:|---:|---:|");
+  lines.push("| Case | Tags | Source | Selected Program | Transformed | Action Recall | Token Reduction | DSL Tokens | DSL Token Reduction | Total | Delta vs Baseline | Gate Pass |");
+  lines.push("|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|");
   for (const one of payload.cases) {
     const tags = one.tags && one.tags.length > 0 ? one.tags.join(", ") : "-";
-    lines.push(`| ${one.id} | ${tags} | ${one.source_type} | ${one.selected_program_id || "-"} | ${one.transformed ? "yes" : "no"} | ${compactNumber(one.score.metrics.action_recall)} | ${compactNumber(one.score.metrics.token_reduction)} | ${compactNumber(one.score.total)} | ${compactNumber(one.delta_from_baseline)} | ${one.verification.passed ? "yes" : "no"} |`);
+    lines.push(`| ${one.id} | ${tags} | ${one.source_type} | ${one.selected_program_id || "-"} | ${one.transformed ? "yes" : "no"} | ${compactNumber(one.score.metrics.action_recall)} | ${compactNumber(one.score.metrics.token_reduction)} | ${compactNumber(one.compile.transformed_dsl_tokens, 2)} | ${compactNumber(one.compile.token_reduction)} | ${compactNumber(one.score.total)} | ${compactNumber(one.delta_from_baseline)} | ${one.verification.passed ? "yes" : "no"} |`);
   }
   lines.push("");
 
@@ -297,6 +308,32 @@ export async function runBench(options = {}) {
 
     const transformedVerification = rewrite.verification || verifyProgram(transformedScore, gates);
 
+    const compileOptions = {
+      sourceType: "ir",
+      includeId: false,
+      includeActions: true,
+      includeImplicitActions: false,
+      includeState: true,
+      includeRoleProp: false,
+      includeHidden: false,
+      enableLoopHeuristic: true,
+      minLoopGroupSize: 3,
+      enableIfHeuristic: true,
+    };
+    const legacyCompileOptions = {
+      ...compileOptions,
+      includeImplicitActions: true,
+    };
+    const baselineCompile = compileUiToUnits(inputTree, compileOptions);
+    const legacyTransformedCompile = compileUiToUnits(outputTree, legacyCompileOptions);
+    const transformedCompile = compileUiToUnits(outputTree, compileOptions);
+    const baselineDslTokens = estimateDslTokens(baselineCompile.dsl);
+    const legacyTransformedDslTokens = estimateDslTokens(legacyTransformedCompile.dsl);
+    const transformedDslTokens = estimateDslTokens(transformedCompile.dsl);
+    const compileTokenReduction = legacyTransformedDslTokens > 0
+      ? round((legacyTransformedDslTokens - transformedDslTokens) / legacyTransformedDslTokens)
+      : 0;
+
     const candidates = Array.isArray(rewrite.candidate_scores)
       ? rewrite.candidate_scores.map((item) => asCompactCandidate(item))
       : [];
@@ -339,6 +376,12 @@ export async function runBench(options = {}) {
         passed: transformedVerification.passed === true,
         failures: transformedVerification.failures || [],
       },
+      compile: {
+        baseline_dsl_tokens: baselineDslTokens,
+        legacy_transformed_dsl_tokens: legacyTransformedDslTokens,
+        transformed_dsl_tokens: transformedDslTokens,
+        token_reduction: compileTokenReduction,
+      },
       candidates,
     });
   }
@@ -351,6 +394,8 @@ export async function runBench(options = {}) {
     semantic_loss_gate_pass_count: cases.filter((one) => one.tags.includes("semantic-loss") && one.verification.passed).length,
     avg_action_recall: round(average(cases.map((one) => one.score.metrics.action_recall))),
     avg_token_reduction: round(average(cases.map((one) => one.score.metrics.token_reduction))),
+    avg_compiled_dsl_tokens: round(average(cases.map((one) => one.compile.transformed_dsl_tokens)), 2),
+    avg_compiled_token_reduction: round(average(cases.map((one) => one.compile.token_reduction))),
     avg_total_score: round(average(cases.map((one) => one.score.total))),
     avg_delta_from_baseline: round(average(cases.map((one) => one.delta_from_baseline))),
   };

@@ -14,7 +14,7 @@ npm install @botfather/units-agent-plugin
 import { compressUiForAgent } from "@botfather/units-agent-plugin";
 
 const result = await compressUiForAgent(uiTree, {
-  sourceType: "dom", // also supports "a11y", "ir", and "react"
+  sourceType: "dom", // also supports "a11y", "ir", "react", and "slack"
   target: "planner",
   maxTokens: 600,
   pluginConfig: {
@@ -26,6 +26,8 @@ console.log(result.dsl);
 console.log(result.unitsAst);
 console.log(result.programId);
 ```
+
+For Slack Block Kit, pass the message payload or `blocks` array with `sourceType: "slack"` (aliases: `block-kit`, `blockkit`, `mrkdwn`). Slack `mrkdwn` is normalized before transform and compile.
 
 Returns:
 - `dsl`: compressed Units source text

@@ -18,6 +18,9 @@ try {
 const normalizeDomTree = uiIrMod.normalizeDomTree || uiIrMod.normalizeDomUiTree;
 const normalizeA11yTree = uiIrMod.normalizeA11yTree || uiIrMod.normalizeA11yUiTree;
 const normalizeIrNode = uiIrMod.normalizeIrNode || uiIrMod.normalizeUiNode;
+const normalizeSlackBlockKitTree = uiIrMod.normalizeSlackBlockKitTree
+  || uiIrMod.normalizeSlackTree
+  || ((tree) => normalizeIrNode(tree));
 const serializeAgentTree = uiIrMod.serializeAgentTree || uiIrMod.serializeCompactUiTree;
 const normalizeReactTree = reactAdapterMod.normalizeReactTree || ((tree) => normalizeIrNode(tree));
 
@@ -26,6 +29,7 @@ export function normalizeSourceType(sourceType, fallback = "dom") {
   if (!text) return fallback;
   if (text === "accessibility" || text === "ax") return "a11y";
   if (text === "jsx") return "react";
+  if (text === "block-kit" || text === "blockkit" || text === "mrkdwn") return "slack";
   return text;
 }
 
@@ -40,6 +44,7 @@ export function normalizeUiInputTree(sourceType, tree) {
   if (normalized === "dom") return normalizeDomTree(tree);
   if (normalized === "a11y") return normalizeA11yTree(tree);
   if (normalized === "react") return normalizeReactTree(tree);
+  if (normalized === "slack") return normalizeSlackBlockKitTree(tree);
   return normalizeIrNode(tree);
 }
 
@@ -48,5 +53,6 @@ export {
   normalizeA11yTree,
   normalizeIrNode,
   normalizeReactTree,
+  normalizeSlackBlockKitTree,
   serializeAgentTree,
 };

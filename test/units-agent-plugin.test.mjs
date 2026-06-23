@@ -7,7 +7,7 @@ import test from "node:test";
 import {
   createVerifiedProgramMetadata,
   writeVerifiedProgram,
-} from "../packages/units/index.js";
+} from "../packages/units/transform-library.js";
 import {
   createUnitsAgentPlugin,
   compressUiForAgent,
@@ -172,6 +172,45 @@ test("compressUiForAgent supports sourceType react and rewrites through IR", asy
   assert.equal(result.programId, null);
   assert.equal(result.sourceType, "react");
   assert.equal(result.rewriteSourceType, "ir");
+  assert.match(result.dsl, /Button/);
+  assert.equal(result.unitsAst.type, "document");
+});
+
+test("compressUiForAgent supports Slack Block Kit sources", async () => {
+  const result = await compressUiForAgent({
+    text: "Incident alert",
+    blocks: [
+      {
+        type: "markdown",
+        text: "See <https://example.com/runbook|Runbook> and notify <!channel>",
+      },
+      {
+        type: "actions",
+        elements: [
+          {
+            type: "button",
+            action_id: "ack",
+            text: {
+              type: "plain_text",
+              text: "Acknowledge",
+            },
+          },
+        ],
+      },
+    ],
+  }, {
+    sourceType: "block-kit",
+    target: "chat",
+    pluginConfig: {
+      libraryDir: path.join(os.tmpdir(), `units-slack-empty-${Date.now()}`),
+    },
+  });
+
+  assert.equal(result.programId, null);
+  assert.equal(result.sourceType, "slack");
+  assert.equal(result.rewriteSourceType, "slack");
+  assert.match(result.dsl, /Link/);
+  assert.match(result.dsl, /SpecialMention/);
   assert.match(result.dsl, /Button/);
   assert.equal(result.unitsAst.type, "document");
 });

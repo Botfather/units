@@ -30,6 +30,14 @@ console.log(result.ast);
 
 Slack Block Kit payloads can be compiled with `sourceType: "slack"`. Text objects using `type: "mrkdwn"` are normalized into regular IR nodes for Slack styles, links, mentions, channels, special mentions, dates, quotes, and code spans without changing the Units grammar.
 
+```js
+const slackResult = compileUiToUnits(blockKitPayload, {
+  sourceType: "slack",
+});
+```
+
+For token efficiency, implicit actions are omitted by default (`button -> click`, `input -> input`, etc). Set `includeImplicitActions: true` to always emit explicit action props.
+
 ## Exports
 
 - `compileUiToUnits(uiRoot, programOrOptions?, maybeOptions?)`

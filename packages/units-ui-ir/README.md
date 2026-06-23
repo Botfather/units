@@ -29,6 +29,8 @@ const compact = serializeCompactUiTree(ir, {
 });
 ```
 
+Slack Block Kit payloads may be passed as a full message (`{ blocks: [...] }`), a `blocks` array, a single block, a Slack text object, or a raw `mrkdwn` string. `mrkdwn` text is normalized into IR roles for styles, links, mentions, channels, user groups, special mentions, dates, quotes, and code spans.
+
 ## Exports
 
 - `inferRoleFromTag(tagName, explicitRole?)`

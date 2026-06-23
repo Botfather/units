@@ -197,6 +197,9 @@ importers:
       '@botfather/units':
         specifier: workspace:*
         version: link:../units
+      '@botfather/units-ui-ir':
+        specifier: workspace:*
+        version: link:../units-ui-ir
 
   packages/units-agent-plugin:
     dependencies:

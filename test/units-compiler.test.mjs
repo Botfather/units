@@ -200,6 +200,57 @@ test("compileUiToUnits accepts sourceType react and normalizes JSX-style trees",
   assert.equal(reparsed.type, "document");
 });
 
+test("compileUiToUnits omits implicit role actions unless explicitly requested", () => {
+  const uiTree = {
+    id: "root",
+    role: "container",
+    name: "",
+    text: "",
+    props: {},
+    state: {},
+    actions: [],
+    meta: {},
+    children: [
+      {
+        id: "save",
+        role: "button",
+        name: "Save",
+        text: "Save",
+        props: {},
+        state: {},
+        actions: ["click"],
+        meta: {},
+        children: [],
+      },
+      {
+        id: "danger",
+        role: "button",
+        name: "Escalate",
+        text: "Escalate",
+        props: {},
+        state: {},
+        actions: ["click", "longpress"],
+        meta: {},
+        children: [],
+      },
+    ],
+  };
+
+  const optimized = compileUiToUnits(uiTree, {
+    sourceType: "ir",
+    enableLoopHeuristic: false,
+  });
+  assert.doesNotMatch(optimized.dsl, /Button \([^)]*name:'Save'[^)]*actions:'click'/s);
+  assert.match(optimized.dsl, /Button \([^)]*name:'Escalate'[^)]*actions:'click\|longpress'/s);
+
+  const explicit = compileUiToUnits(uiTree, {
+    sourceType: "ir",
+    enableLoopHeuristic: false,
+    includeImplicitActions: true,
+  });
+  assert.match(explicit.dsl, /Button \([^)]*name:'Save'[^)]*actions:'click'/s);
+});
+
 test("compileUiToUnits accepts Slack Block Kit mrkdwn payloads", () => {
   const slackPayload = {
     channel: "C123ABC456",

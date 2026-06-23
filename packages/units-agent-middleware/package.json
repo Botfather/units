@@ -21,7 +21,8 @@
     "README.md"
   ],
   "dependencies": {
-    "@botfather/units": "workspace:*"
+    "@botfather/units": "workspace:*",
+    "@botfather/units-ui-ir": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

@@ -2,15 +2,24 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import {
-  compileTransformProgram,
-  runTransformProgram,
-} from "@botfather/units/transform";
-import {
   normalizeSourceType,
   normalizeUiInputTree,
   runtimeSourceType,
   serializeAgentTree,
 } from "./ui-normalize.mjs";
+
+let transformMod;
+try {
+  transformMod = await import("@botfather/units/transform");
+} catch {
+  // Monorepo fallback for direct node execution without workspace linking.
+  transformMod = await import("../units/transform.js");
+}
+
+const {
+  compileTransformProgram,
+  runTransformProgram,
+} = transformMod;
 
 function parseArgs(argv) {
   const out = {
@@ -35,7 +44,7 @@ function parseArgs(argv) {
 }
 
 function usage() {
-  return `\nUsage:\n  units-transform --program <program.ui> --input <tree.json>\n                  [--source dom|a11y|react|ir]\n                  [--context context.json]\n                  [--out result.json]\n                  [--trace-out trace.json]\n                  [--agent-out agent.json]\n`;
+  return `\nUsage:\n  units-transform --program <program.ui> --input <tree.json>\n                  [--source dom|a11y|react|slack|ir]\n                  [--context context.json]\n                  [--out result.json]\n                  [--trace-out trace.json]\n                  [--agent-out agent.json]\n`;
 }
 
 async function readJson(file) {
