@@ -1,5 +1,11 @@
 # @botfather/units-slack-block-kit
 
+## 0.2.0
+
+### Minor Changes
+
+- Add schema-constrained structured Slack output helpers for model-generated Block Kit workflows.
+
 ## 0.1.0
 
 ### Minor Changes
