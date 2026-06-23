@@ -34,6 +34,7 @@ Units is a lightweight DSL for interactive UI. The monorepo covers the language 
 | `@botfather/units-ui-ir` | Neutral IR | `UiNode` schema plus DOM, accessibility, and Slack Block Kit adapters |
 | `@botfather/units-react-adapter` | React adapter | React or JSX element tree to `UiNode` IR |
 | `@botfather/units-compiler` | Compiler | `UiNode` or IR to Units AST and DSL |
+| `@botfather/units-slack-block-kit` | Slack emitter | Units DSL/AST to Slack Block Kit payloads |
 | `@botfather/units-uikit-shadcn` | UI kit | ShadCN-style component layer authored in Units |
 
 ## Examples
